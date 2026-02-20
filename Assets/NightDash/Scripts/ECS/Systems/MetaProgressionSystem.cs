@@ -1,34 +1,44 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(EvolutionSystem))]
+    [UpdateAfter(typeof(StageProgressSystem))]
     public partial struct MetaProgressionSystem : ISystem
     {
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GameLoopState>();
             state.RequireForUpdate<MetaProgress>();
+            state.RequireForUpdate<StageRuntimeConfig>();
+            state.RequireForUpdate<DifficultyState>();
+            state.RequireForUpdate<GameLoopState>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var loop = SystemAPI.GetSingletonRW<GameLoopState>();
-            if (loop.ValueRO.RunEnded == 0 || loop.ValueRO.RewardGranted == 1)
+            RefRW<MetaProgress> meta = SystemAPI.GetSingletonRW<MetaProgress>();
+            StageRuntimeConfig stage = SystemAPI.GetSingleton<StageRuntimeConfig>();
+            DifficultyState difficulty = SystemAPI.GetSingleton<DifficultyState>();
+            GameLoopState loop = SystemAPI.GetSingleton<GameLoopState>();
+
+            if (stage.IsStageCleared == 0 || loop.IsRunActive == 1)
             {
                 return;
             }
 
-            var meta = SystemAPI.GetSingletonRW<MetaProgress>();
-            int reward = 100 + (loop.ValueRO.RiskScore * 2);
-            meta.ValueRW.ConquestPoint += reward;
-            loop.ValueRW.RewardGranted = 1;
+            if (meta.ValueRO.LastRunReward > 0)
+            {
+                return;
+            }
+
+            int reward = (int)(10 * difficulty.RewardMultiplier);
+            meta.ValueRW.ConquestPoints += reward;
+            meta.ValueRW.LastRunReward = reward;
         }
     }
 }

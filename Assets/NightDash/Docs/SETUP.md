@@ -1,32 +1,40 @@
-# NightDash Unity DOTS 초기 환경
+# NightDash Initial Setup (Unity ECS)
 
-## 1. 권장 Unity 패키지
-- Entities (DOTS)
-- Burst
-- Mathematics
-- Collections
+## 1. Package check
 
-## 2. 씬 배치 순서
-1. 빈 GameObject 생성 후 `NightDashBootstrapAuthoring` 추가
-2. 플레이어 프리팹에 `PlayerAuthoring` 추가
-3. 적 프리팹에 `EnemyAuthoring` 추가
-4. `NightDashBootstrapAuthoring`에 플레이어/적 프리팹 연결
-5. 타임라인 포인트, 난이도 체크리스트 기본값 입력
+`Packages/manifest.json` must include:
 
-## 3. 현재 포함된 시스템
-- GameLoopSystem
-- StageTimelineSystem
-- EnemySpawnSystem
-- WeaponSystem
-- CombatSystem
-- EvolutionSystem
-- DifficultySystem
-- MetaProgressionSystem
-- SaveSystem
+- `com.unity.entities`
+- `com.unity.burst`
+- `com.unity.collections`
+- `com.unity.mathematics`
 
-## 4. MVP 연결 포인트
-- 이동 + 적 스폰: EnemySpawnSystem + EnemyChase
-- 자동 공격 1종: WeaponSystem + Projectile
-- 레벨업: GameLoopSystem
-- 체크리스트 위험도: DifficultySystem
-- 보스 후 진화 플래그: EvolutionSystem
+After opening Unity, wait for package import and script compilation.
+
+## 2. Scene objects
+
+In your main scene, create:
+
+1. `NightDashBootstrap` GameObject and add `NightDashBootstrapAuthoring`
+2. Player prefab/object with `PlayerAuthoring`
+3. Enemy prefab with `EnemyAuthoring`
+4. (Optional) Boss prefab with `EnemyAuthoring` and `isBoss = true`
+
+Then wire `enemyPrefab` / `bossPrefab` on `NightDashBootstrapAuthoring`.
+
+## 3. Runtime verification checklist
+
+Play mode should show:
+
+- `GameLoopState.ElapsedTime` increases over time
+- `DifficultyState.RiskScore` is calculated from checklist buffer
+- enemies spawn periodically around the player
+- stage ends at `stageDurationSeconds`
+- run reward is written to `MetaProgress.ConquestPoints`
+
+## 4. Core paths
+
+- Data SO definitions: `Assets/NightDash/Scripts/Data`
+- ECS components: `Assets/NightDash/Scripts/ECS/Components`
+- ECS systems: `Assets/NightDash/Scripts/ECS/Systems`
+- Authoring/Baking: `Assets/NightDash/Scripts/ECS/Authoring`

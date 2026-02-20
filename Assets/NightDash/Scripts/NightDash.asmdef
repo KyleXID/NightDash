@@ -3,10 +3,12 @@
   "rootNamespace": "NightDash",
   "references": [
     "Unity.Entities",
-    "Unity.Transforms",
+    "Unity.Entities.Hybrid",
     "Unity.Mathematics",
+    "Unity.Burst",
     "Unity.Collections",
-    "Unity.Burst"
+    "Unity.Transforms",
+    "UnityEngine.CoreModule"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

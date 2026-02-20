@@ -2,14 +2,16 @@ using UnityEngine;
 
 namespace NightDash.Data
 {
-    [CreateAssetMenu(menuName = "NightDash/Data/Passive Data")]
-    public class PassiveData : ScriptableObject
+    [CreateAssetMenu(menuName = "NightDash/Data/Passive Data", fileName = "PassiveData")]
+    public sealed class PassiveData : ScriptableObject
     {
         public string passiveId;
         public string displayName;
-        public string description;
-        public float flatValue;
-        public float multiplierValue = 1f;
-        public int maxLevel = 5;
+        [TextArea] public string description;
+
+        [Header("Stat Modifiers")]
+        public float healthMultiplier = 1f;
+        public float damageMultiplier = 1f;
+        public float cooldownMultiplier = 1f;
     }
 }

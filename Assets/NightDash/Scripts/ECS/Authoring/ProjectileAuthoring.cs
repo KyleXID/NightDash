@@ -4,22 +4,23 @@ using UnityEngine;
 
 namespace NightDash.ECS.Authoring
 {
-    public class ProjectileAuthoring : MonoBehaviour
+    public sealed class ProjectileAuthoring : MonoBehaviour
     {
-        public class Baker : Baker<ProjectileAuthoring>
+        public float damage = 10f;
+        public float lifetime = 2f;
+        public bool isPlayerOwned = true;
+
+        private sealed class ProjectileBaker : Unity.Entities.Baker<ProjectileAuthoring>
         {
             public override void Bake(ProjectileAuthoring authoring)
             {
                 Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent<ProjectileTag>(entity);
                 AddComponent(entity, new ProjectileData
                 {
-                    Speed = 0f,
-                    Damage = 0f,
-                    LifeTime = 1f,
-                    Age = 0f
+                    Damage = authoring.damage,
+                    Lifetime = authoring.lifetime,
+                    IsPlayerOwned = authoring.isPlayerOwned ? (byte)1 : (byte)0
                 });
-                AddComponent(entity, new PhysicsVelocity2D());
             }
         }
     }

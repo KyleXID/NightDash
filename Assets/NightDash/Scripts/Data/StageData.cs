@@ -2,13 +2,13 @@ using UnityEngine;
 
 namespace NightDash.Data
 {
-    [CreateAssetMenu(menuName = "NightDash/Data/Stage Data")]
-    public class StageData : ScriptableObject
+    [CreateAssetMenu(menuName = "NightDash/Data/Stage Data", fileName = "StageData")]
+    public sealed class StageData : ScriptableObject
     {
-        public int stageIndex;
-        public string stageName;
-        public float clearTimeSeconds = 900f;
+        public string stageId;
+        public string displayName;
+        public float stageDurationSeconds = 900f;
         public float bossSpawnTimeSeconds = 900f;
-        public int baseConquestPointReward = 100;
+        public int baseRewardPoints = 10;
     }
 }

@@ -1,0 +1,5 @@
+﻿<Solution>
+  <Project Path="MCPForUnity.Editor.csproj" />
+  <Project Path="NightDash.csproj" />
+  <Project Path="MCPForUnity.Runtime.csproj" />
+</Solution>

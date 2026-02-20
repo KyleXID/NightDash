@@ -1,9 +1,8 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -15,90 +14,45 @@ namespace NightDash.ECS.Systems
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<PlayerTag>();
+            state.RequireForUpdate<CombatStats>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            float dt = SystemAPI.Time.DeltaTime;
-            var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-            var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+            float3 playerPosition = float3.zero;
+            bool hasPlayer = false;
 
-            float3 playerPos = float3.zero;
             foreach (var transform in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<PlayerTag>())
             {
-                playerPos = transform.ValueRO.Position;
+                playerPosition = transform.ValueRO.Position;
+                hasPlayer = true;
                 break;
             }
 
-            foreach (var (enemyTransform, enemyStats) in
-                SystemAPI.Query<RefRW<LocalTransform>, RefRO<CombatStats>>().WithAll<EnemyTag>())
+            if (!hasPlayer)
             {
-                float3 dir = math.normalizesafe(playerPos - enemyTransform.ValueRO.Position);
-                enemyTransform.ValueRW.Position += dir * enemyStats.ValueRO.MoveSpeed * dt;
+                return;
             }
 
-            foreach (var (projTransform, projectile, velocity, projectileEntity) in
-                SystemAPI.Query<RefRW<LocalTransform>, RefRW<ProjectileData>, RefRO<PhysicsVelocity2D>>()
-                    .WithAll<ProjectileTag>()
-                    .WithEntityAccess())
-            {
-                projTransform.ValueRW.Position += velocity.ValueRO.Value * dt;
-                projectile.ValueRW.Age += dt;
+            float dt = SystemAPI.Time.DeltaTime;
 
-                if (projectile.ValueRO.Age >= projectile.ValueRO.LifeTime)
+            foreach (var (transform, stats) in SystemAPI.Query<RefRW<LocalTransform>, RefRO<CombatStats>>().WithAll<EnemyTag>())
+            {
+                float3 toPlayer = playerPosition - transform.ValueRO.Position;
+                float lengthSq = math.lengthsq(toPlayer);
+                if (lengthSq <= 0.0001f)
                 {
-                    ecb.DestroyEntity(projectileEntity);
+                    continue;
                 }
+
+                float3 direction = math.normalize(toPlayer);
+                transform.ValueRW.Position += direction * stats.ValueRO.MoveSpeed * dt;
             }
 
-            var enemyQuery = SystemAPI.QueryBuilder().WithAll<EnemyTag, CombatStats, LocalTransform>().Build();
-            var enemyEntities = enemyQuery.ToEntityArray(Allocator.Temp);
-            var enemyStats = enemyQuery.ToComponentDataArray<CombatStats>(Allocator.Temp);
-            var enemyTransforms = enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-
-            float gainedExp = 0f;
-
-            foreach (var (projTransform, projectile, projectileEntity) in
-                SystemAPI.Query<RefRO<LocalTransform>, RefRO<ProjectileData>>()
-                    .WithAll<ProjectileTag>()
-                    .WithEntityAccess())
+            foreach (var projectile in SystemAPI.Query<RefRW<ProjectileData>>())
             {
-                for (int i = 0; i < enemyEntities.Length; i++)
-                {
-                    float dist = math.distance(projTransform.ValueRO.Position, enemyTransforms[i].Position);
-                    if (dist > 0.45f)
-                    {
-                        continue;
-                    }
-
-                    var nextStats = enemyStats[i];
-                    nextStats.Health -= projectile.ValueRO.Damage;
-
-                    if (nextStats.Health <= 0f)
-                    {
-                        ecb.DestroyEntity(enemyEntities[i]);
-                        gainedExp += 3f;
-                    }
-                    else
-                    {
-                        ecb.SetComponent(enemyEntities[i], nextStats);
-                    }
-
-                    ecb.DestroyEntity(projectileEntity);
-                    break;
-                }
-            }
-
-            enemyEntities.Dispose();
-            enemyStats.Dispose();
-            enemyTransforms.Dispose();
-
-            if (gainedExp > 0f && SystemAPI.HasSingleton<GameLoopState>())
-            {
-                var loop = SystemAPI.GetSingletonRW<GameLoopState>();
-                loop.ValueRW.Experience += gainedExp;
+                projectile.ValueRW.Lifetime -= dt;
             }
         }
     }

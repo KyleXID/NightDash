@@ -1,6 +1,6 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -13,31 +13,33 @@ namespace NightDash.ECS.Systems
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameLoopState>();
-            state.RequireForUpdate<EnemySpawnConfig>();
+            state.RequireForUpdate<StageRuntimeConfig>();
             state.RequireForUpdate<StageTimelineElement>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var gameLoop = SystemAPI.GetSingleton<GameLoopState>();
-            var spawnConfig = SystemAPI.GetSingletonRW<EnemySpawnConfig>();
-            var timeline = SystemAPI.GetSingletonBuffer<StageTimelineElement>(true);
+            float elapsed = SystemAPI.GetSingleton<GameLoopState>().ElapsedTime;
 
-            float intervalMultiplier = 1f;
-            int spawnCountBonus = 0;
-
-            for (int i = 0; i < timeline.Length; i++)
+            foreach (var (stage, timeline) in SystemAPI
+                         .Query<RefRW<StageRuntimeConfig>, DynamicBuffer<StageTimelineElement>>())
             {
-                if (gameLoop.ElapsedTime >= timeline[i].StartTime)
-                {
-                    intervalMultiplier = timeline[i].SpawnIntervalMultiplier;
-                    spawnCountBonus = timeline[i].SpawnCountBonus;
-                }
-            }
+                float spawnRateMultiplier = 1f;
 
-            spawnConfig.ValueRW.RuntimeIntervalMultiplier = intervalMultiplier;
-            spawnConfig.ValueRW.RuntimeSpawnCountBonus = spawnCountBonus;
+                for (int i = 0; i < timeline.Length; i++)
+                {
+                    StageTimelineElement step = timeline[i];
+                    if (elapsed >= step.StartTime && elapsed < step.EndTime)
+                    {
+                        spawnRateMultiplier = step.SpawnMultiplier;
+                        break;
+                    }
+                }
+
+                stage.ValueRW.SpawnRateMultiplier = spawnRateMultiplier;
+                break;
+            }
         }
     }
 }

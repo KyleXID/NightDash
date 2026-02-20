@@ -1,6 +1,6 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -17,21 +17,22 @@ namespace NightDash.ECS.Systems
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var gameLoop = SystemAPI.GetSingletonRW<GameLoopState>();
-            ref var loop = ref gameLoop.ValueRW;
+            float dt = SystemAPI.Time.DeltaTime;
+            RefRW<GameLoopState> loop = SystemAPI.GetSingletonRW<GameLoopState>();
 
-            if (loop.RunEnded == 1)
+            if (loop.ValueRO.IsRunActive == 0)
             {
                 return;
             }
 
-            loop.ElapsedTime += SystemAPI.Time.DeltaTime;
+            loop.ValueRW.ElapsedTime += dt;
+            loop.ValueRW.Experience += dt * 2f;
 
-            while (loop.Experience >= loop.NextLevelExperience)
+            if (loop.ValueRO.Experience >= loop.ValueRO.NextLevelExperience)
             {
-                loop.Experience -= loop.NextLevelExperience;
-                loop.Level += 1;
-                loop.NextLevelExperience *= 1.2f;
+                loop.ValueRW.Experience -= loop.ValueRO.NextLevelExperience;
+                loop.ValueRW.Level += 1;
+                loop.ValueRW.NextLevelExperience = loop.ValueRO.NextLevelExperience * 1.2f;
             }
         }
     }

@@ -1,49 +1,33 @@
-using System;
-using NightDash.ECS.Components;
 using Unity.Entities;
 using UnityEngine;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
-    [Serializable]
-    public struct MetaSaveData
-    {
-        public int conquestPoint;
-        public int attackNodeLevel;
-        public int survivalNodeLevel;
-        public int abyssNodeLevel;
-    }
-
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct SaveSystem : ISystem
     {
-        private const string SaveKey = "nightdash_meta_progress_v1";
+        private const string ConquestPointKey = "NightDash_ConquestPoints";
 
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MetaProgress>();
-            state.RequireForUpdate<GameLoopState>();
+            state.RequireForUpdate<SaveState>();
         }
 
         public void OnUpdate(ref SystemState state)
         {
-            var loop = SystemAPI.GetSingleton<GameLoopState>();
-            if (loop.RunEnded == 0)
+            RefRW<MetaProgress> meta = SystemAPI.GetSingletonRW<MetaProgress>();
+            RefRW<SaveState> saveState = SystemAPI.GetSingletonRW<SaveState>();
+
+            if (saveState.ValueRO.LastSavedConquestPoints == meta.ValueRO.ConquestPoints)
             {
                 return;
             }
 
-            var meta = SystemAPI.GetSingleton<MetaProgress>();
-            var saveData = new MetaSaveData
-            {
-                conquestPoint = meta.ConquestPoint,
-                attackNodeLevel = meta.AttackNodeLevel,
-                survivalNodeLevel = meta.SurvivalNodeLevel,
-                abyssNodeLevel = meta.AbyssNodeLevel
-            };
-
-            PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(saveData));
+            PlayerPrefs.SetInt(ConquestPointKey, meta.ValueRO.ConquestPoints);
             PlayerPrefs.Save();
+            saveState.ValueRW.LastSavedConquestPoints = meta.ValueRO.ConquestPoints;
         }
     }
 }
