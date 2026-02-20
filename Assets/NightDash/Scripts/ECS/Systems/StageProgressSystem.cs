@@ -1,12 +1,12 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(GameLoopSystem))]
+    [UpdateAfter(typeof(EvolutionSystem))]
     public partial struct StageProgressSystem : ISystem
     {
         [BurstCompile]
@@ -14,27 +14,30 @@ namespace NightDash.ECS.Systems
         {
             state.RequireForUpdate<GameLoopState>();
             state.RequireForUpdate<StageRuntimeConfig>();
+            state.RequireForUpdate<BossSpawnState>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var loop = SystemAPI.GetSingletonRW<GameLoopState>();
-            var config = SystemAPI.GetSingleton<StageRuntimeConfig>();
+            RefRW<GameLoopState> loop = SystemAPI.GetSingletonRW<GameLoopState>();
+            RefRW<StageRuntimeConfig> stage = SystemAPI.GetSingletonRW<StageRuntimeConfig>();
+            RefRW<BossSpawnState> bossState = SystemAPI.GetSingletonRW<BossSpawnState>();
 
-            if (loop.ValueRO.RunEnded == 1)
+            if (loop.ValueRO.IsRunActive == 0)
             {
                 return;
             }
 
-            if (loop.ValueRO.ElapsedTime >= config.BossSpawnTime)
+            if (bossState.ValueRO.HasSpawnedBoss == 0 && loop.ValueRO.ElapsedTime >= stage.ValueRO.BossSpawnTime)
             {
-                loop.ValueRW.IsBossSpawned = 1;
+                bossState.ValueRW.HasSpawnedBoss = 1;
             }
 
-            if (loop.ValueRO.ElapsedTime >= config.ClearTime)
+            if (loop.ValueRO.ElapsedTime >= stage.ValueRO.StageDuration)
             {
-                loop.ValueRW.RunEnded = 1;
+                stage.ValueRW.IsStageCleared = 1;
+                loop.ValueRW.IsRunActive = 0;
             }
         }
     }

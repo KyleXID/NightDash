@@ -1,6 +1,6 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -12,19 +12,31 @@ namespace NightDash.ECS.Systems
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GameLoopState>();
             state.RequireForUpdate<EvolutionState>();
+            state.RequireForUpdate<StageRuntimeConfig>();
+            state.RequireForUpdate<DifficultyState>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var loop = SystemAPI.GetSingleton<GameLoopState>();
-            var evolution = SystemAPI.GetSingletonRW<EvolutionState>();
+            RefRW<EvolutionState> evolution = SystemAPI.GetSingletonRW<EvolutionState>();
+            StageRuntimeConfig stage = SystemAPI.GetSingleton<StageRuntimeConfig>();
+            DifficultyState difficulty = SystemAPI.GetSingleton<DifficultyState>();
 
-            if (loop.IsBossDefeated == 1 && loop.RiskScore >= 40)
+            if (stage.IsStageCleared == 0)
             {
-                evolution.ValueRW.CanAbyssEvolution = 1;
+                return;
+            }
+
+            if (evolution.ValueRO.HasNormalEvolution == 0)
+            {
+                evolution.ValueRW.HasNormalEvolution = 1;
+            }
+
+            if (evolution.ValueRO.HasAbyssEvolution == 0 && evolution.ValueRO.CanAttemptAbyss == 1 && difficulty.RiskScore >= 10)
+            {
+                evolution.ValueRW.HasAbyssEvolution = 1;
             }
         }
     }

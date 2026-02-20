@@ -1,6 +1,6 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -12,26 +12,29 @@ namespace NightDash.ECS.Systems
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GameLoopState>();
+            state.RequireForUpdate<DifficultyState>();
             state.RequireForUpdate<DifficultyModifierElement>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var gameLoop = SystemAPI.GetSingletonRW<GameLoopState>();
-            var modifiers = SystemAPI.GetSingletonBuffer<DifficultyModifierElement>(true);
-
-            int riskSum = 0;
-            for (int i = 0; i < modifiers.Length; i++)
+            foreach (var (difficulty, modifiers) in SystemAPI
+                         .Query<RefRW<DifficultyState>, DynamicBuffer<DifficultyModifierElement>>())
             {
-                if (modifiers[i].Enabled == 1)
-                {
-                    riskSum += (int)modifiers[i].RiskValue;
-                }
-            }
+                int risk = 0;
+                float rewardMultiplier = 1f;
 
-            gameLoop.ValueRW.RiskScore = riskSum;
+                for (int i = 0; i < modifiers.Length; i++)
+                {
+                    risk += modifiers[i].RiskScore;
+                    rewardMultiplier += modifiers[i].RewardMultiplierBonus;
+                }
+
+                difficulty.ValueRW.RiskScore = risk;
+                difficulty.ValueRW.RewardMultiplier = rewardMultiplier;
+                break;
+            }
         }
     }
 }

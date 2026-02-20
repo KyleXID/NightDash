@@ -1,8 +1,8 @@
-using NightDash.ECS.Components;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
@@ -15,56 +15,54 @@ namespace NightDash.ECS.Systems
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<EnemySpawnConfig>();
-            state.RequireForUpdate<PlayerTag>();
-            state.RequireForUpdate<RandomState>();
+            state.RequireForUpdate<StageRuntimeConfig>();
+            state.RequireForUpdate<GameLoopState>();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var spawnConfigRW = SystemAPI.GetSingletonRW<EnemySpawnConfig>();
-            ref var spawnConfig = ref spawnConfigRW.ValueRW;
+            GameLoopState loop = SystemAPI.GetSingleton<GameLoopState>();
+            StageRuntimeConfig stageConfig = SystemAPI.GetSingleton<StageRuntimeConfig>();
+            RefRW<EnemySpawnConfig> spawnConfig = SystemAPI.GetSingletonRW<EnemySpawnConfig>();
 
-            if (spawnConfig.EnemyPrefab == Entity.Null)
+            if (loop.IsRunActive == 0 || stageConfig.IsStageCleared == 1)
+            {
+                return;
+            }
+
+            if (spawnConfig.ValueRO.EnemyPrefab == Entity.Null)
             {
                 return;
             }
 
             float dt = SystemAPI.Time.DeltaTime;
-            float interval = math.max(0.1f, spawnConfig.BaseInterval * spawnConfig.RuntimeIntervalMultiplier);
-            spawnConfig.Timer -= dt;
-
-            if (spawnConfig.Timer > 0f)
+            spawnConfig.ValueRW.SpawnTimer -= dt;
+            if (spawnConfig.ValueRO.SpawnTimer > 0f)
             {
                 return;
             }
 
-            float3 playerPos = float3.zero;
+            float effectiveInterval = math.max(0.05f, spawnConfig.ValueRO.SpawnInterval / math.max(0.25f, stageConfig.SpawnRateMultiplier));
+            spawnConfig.ValueRW.SpawnTimer = effectiveInterval;
+
+            float3 playerPosition = float3.zero;
             foreach (var transform in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<PlayerTag>())
             {
-                playerPos = transform.ValueRO.Position;
+                playerPosition = transform.ValueRO.Position;
                 break;
             }
 
-            var randomState = SystemAPI.GetSingletonRW<RandomState>();
-            var random = randomState.ValueRW.Value;
+            var random = Unity.Mathematics.Random.CreateFromIndex(spawnConfig.ValueRO.RandomSeed == 0 ? 1u : spawnConfig.ValueRO.RandomSeed);
+            float2 offset = random.NextFloat2Direction() * random.NextFloat(6f, 12f);
+            spawnConfig.ValueRW.RandomSeed = random.NextUInt();
 
-            int spawnCount = math.max(1, spawnConfig.BaseSpawnCount + spawnConfig.RuntimeSpawnCountBonus);
-            var ecbSingleton = SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>();
-            var ecb = ecbSingleton.CreateCommandBuffer(state.WorldUnmanaged);
+            var ecb = SystemAPI
+                .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+                .CreateCommandBuffer(state.WorldUnmanaged);
 
-            for (int i = 0; i < spawnCount; i++)
-            {
-                Entity enemy = ecb.Instantiate(spawnConfig.EnemyPrefab);
-                float2 dir = random.NextFloat2Direction();
-                float distance = random.NextFloat(8f, 14f);
-                float3 spawnPos = playerPos + new float3(dir.x, dir.y, 0f) * distance;
-
-                ecb.SetComponent(enemy, LocalTransform.FromPositionRotationScale(spawnPos, quaternion.identity, 1f));
-            }
-
-            randomState.ValueRW.Value = random;
-            spawnConfig.Timer += interval;
+            Entity enemy = ecb.Instantiate(spawnConfig.ValueRO.EnemyPrefab);
+            ecb.SetComponent(enemy, LocalTransform.FromPosition(new float3(playerPosition.x + offset.x, playerPosition.y + offset.y, 0f)));
         }
     }
 }

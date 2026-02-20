@@ -2,15 +2,12 @@ using UnityEngine;
 
 namespace NightDash.Data
 {
-    [CreateAssetMenu(menuName = "NightDash/Data/Meta Tree Data")]
-    public class MetaTreeData : ScriptableObject
+    [CreateAssetMenu(menuName = "NightDash/Data/Meta Tree Data", fileName = "MetaTreeData")]
+    public sealed class MetaTreeData : ScriptableObject
     {
         public string classId;
-        public int attackNodeCost = 50;
-        public int survivalNodeCost = 50;
-        public int abyssNodeCost = 100;
-        public float attackBonusPerNode = 0.05f;
-        public float survivalBonusPerNode = 0.05f;
-        public float abyssBonusPerNode = 0.03f;
+        public int attackNodeCount = 5;
+        public int survivalNodeCount = 5;
+        public int abyssNodeCount = 5;
     }
 }

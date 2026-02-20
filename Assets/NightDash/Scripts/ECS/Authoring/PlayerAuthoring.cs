@@ -1,50 +1,38 @@
 using NightDash.ECS.Components;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace NightDash.ECS.Authoring
 {
-    public class PlayerAuthoring : MonoBehaviour
+    public sealed class PlayerAuthoring : MonoBehaviour
     {
-        public float health = 100f;
-        public float moveSpeed = 4f;
-        public float damage = 10f;
-        public float hitRadius = 0.4f;
+        public float maxHealth = 100f;
+        public float damage = 12f;
+        public float moveSpeed = 5f;
+        public float weaponCooldown = 0.8f;
+        public float weaponRange = 7f;
 
-        [Header("Weapon")]
-        public GameObject projectilePrefab;
-        public float weaponDamage = 10f;
-        public float weaponCooldown = 1.0f;
-        public float projectileSpeed = 8f;
-        public float projectileLifeTime = 2f;
-
-        public class Baker : Baker<PlayerAuthoring>
+        private sealed class PlayerBaker : Unity.Entities.Baker<PlayerAuthoring>
         {
             public override void Bake(PlayerAuthoring authoring)
             {
                 Entity entity = GetEntity(TransformUsageFlags.Dynamic);
-
                 AddComponent<PlayerTag>(entity);
+
                 AddComponent(entity, new CombatStats
                 {
-                    Health = math.max(1f, authoring.health),
-                    MaxHealth = math.max(1f, authoring.health),
-                    MoveSpeed = math.max(0.1f, authoring.moveSpeed),
-                    Damage = math.max(1f, authoring.damage),
-                    HitRadius = math.max(0.1f, authoring.hitRadius)
+                    CurrentHealth = authoring.maxHealth,
+                    MaxHealth = authoring.maxHealth,
+                    Damage = authoring.damage,
+                    MoveSpeed = authoring.moveSpeed
                 });
 
                 AddComponent(entity, new WeaponRuntimeData
                 {
-                    ProjectilePrefab = authoring.projectilePrefab != null
-                        ? GetEntity(authoring.projectilePrefab, TransformUsageFlags.Dynamic)
-                        : Entity.Null,
-                    Damage = math.max(1f, authoring.weaponDamage),
-                    Cooldown = math.max(0.05f, authoring.weaponCooldown),
-                    Timer = 0f,
-                    ProjectileSpeed = math.max(0.1f, authoring.projectileSpeed),
-                    ProjectileLifeTime = math.max(0.1f, authoring.projectileLifeTime)
+                    Cooldown = authoring.weaponCooldown,
+                    CooldownRemaining = 0f,
+                    Damage = authoring.damage,
+                    Range = authoring.weaponRange
                 });
             }
         }

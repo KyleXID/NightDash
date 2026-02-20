@@ -1,54 +1,58 @@
-using System;
 using NightDash.ECS.Components;
 using Unity.Entities;
-using Unity.Mathematics;
 using UnityEngine;
 
 namespace NightDash.ECS.Authoring
 {
-    public class NightDashBootstrapAuthoring : MonoBehaviour
+    public sealed class NightDashBootstrapAuthoring : MonoBehaviour
     {
-        [Header("Prefabs")]
-        public GameObject enemyPrefab;
-
-        [Header("Game Loop")]
-        public int stageIndex = 1;
-        public int startLevel = 1;
-        public float startNextLevelExp = 10f;
-        public float bossSpawnTime = 900f;
-        public float clearTime = 1200f;
+        [Header("Run")]
+        public float stageDurationSeconds = 900f;
+        public float bossSpawnTimeSeconds = 900f;
+        public bool allowAbyssEvolution = true;
 
         [Header("Spawn")]
-        public float baseSpawnInterval = 1.5f;
-        public int baseSpawnCount = 1;
+        public GameObject enemyPrefab;
+        public GameObject bossPrefab;
+        public float spawnInterval = 1.5f;
+        public uint randomSeed = 2026;
 
-        [Header("Meta")]
-        public int startConquestPoint;
+        [Header("Timeline")]
+        public TimelineWindow[] timeline =
+        {
+            new TimelineWindow { startTime = 0f, endTime = 180f, spawnMultiplier = 1f, bonusSpawn = false },
+            new TimelineWindow { startTime = 180f, endTime = 360f, spawnMultiplier = 1.2f, bonusSpawn = false },
+            new TimelineWindow { startTime = 360f, endTime = 600f, spawnMultiplier = 1.4f, bonusSpawn = true },
+            new TimelineWindow { startTime = 600f, endTime = 840f, spawnMultiplier = 1.8f, bonusSpawn = true },
+            new TimelineWindow { startTime = 840f, endTime = 1200f, spawnMultiplier = 2.2f, bonusSpawn = true }
+        };
 
-        [Header("Random")]
-        public uint randomSeed = 12345;
+        [Header("Difficulty Checklist")]
+        public DifficultyEntry[] difficultyModifiers =
+        {
+            new DifficultyEntry { riskScore = 2, rewardMultiplierBonus = 0.2f, enemyHealthMultiplier = 1.2f, enemySpeedMultiplier = 1.1f },
+            new DifficultyEntry { riskScore = 3, rewardMultiplierBonus = 0.3f, enemyHealthMultiplier = 1.3f, enemySpeedMultiplier = 1.2f }
+        };
 
-        [Serializable]
-        public struct TimelinePoint
+        [System.Serializable]
+        public struct TimelineWindow
         {
             public float startTime;
-            public float spawnIntervalMultiplier;
-            public int spawnCountBonus;
+            public float endTime;
+            public float spawnMultiplier;
+            public bool bonusSpawn;
         }
 
-        [Serializable]
+        [System.Serializable]
         public struct DifficultyEntry
         {
-            public int modifierId;
-            public float riskValue;
-            public float rewardMultiplier;
-            public bool enabled;
+            public int riskScore;
+            public float rewardMultiplierBonus;
+            public float enemyHealthMultiplier;
+            public float enemySpeedMultiplier;
         }
 
-        public TimelinePoint[] timelinePoints;
-        public DifficultyEntry[] difficultyEntries;
-
-        public class Baker : Baker<NightDashBootstrapAuthoring>
+        private sealed class NightDashBootstrapBaker : Unity.Entities.Baker<NightDashBootstrapAuthoring>
         {
             public override void Bake(NightDashBootstrapAuthoring authoring)
             {
@@ -56,82 +60,67 @@ namespace NightDash.ECS.Authoring
 
                 AddComponent(entity, new GameLoopState
                 {
-                    StageIndex = authoring.stageIndex,
                     ElapsedTime = 0f,
-                    Level = math.max(1, authoring.startLevel),
+                    Level = 1,
                     Experience = 0f,
-                    NextLevelExperience = math.max(1f, authoring.startNextLevelExp),
-                    RiskScore = 0,
-                    IsBossSpawned = 0,
-                    IsBossDefeated = 0,
-                    RunEnded = 0,
-                    RewardGranted = 0
-                });
-
-                AddComponent(entity, new EvolutionState
-                {
-                    NormalEvolutionCount = 0,
-                    AbyssEvolutionCount = 0,
-                    CanAbyssEvolution = 0
-                });
-
-                AddComponent(entity, new MetaProgress
-                {
-                    ConquestPoint = math.max(0, authoring.startConquestPoint),
-                    AttackNodeLevel = 0,
-                    SurvivalNodeLevel = 0,
-                    AbyssNodeLevel = 0
-                });
-
-                AddComponent(entity, new EnemySpawnConfig
-                {
-                    EnemyPrefab = authoring.enemyPrefab != null
-                        ? GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic)
-                        : Entity.Null,
-                    BaseInterval = math.max(0.1f, authoring.baseSpawnInterval),
-                    Timer = math.max(0.1f, authoring.baseSpawnInterval),
-                    BaseSpawnCount = math.max(1, authoring.baseSpawnCount),
-                    RuntimeIntervalMultiplier = 1f,
-                    RuntimeSpawnCountBonus = 0
+                    NextLevelExperience = 10f,
+                    IsRunActive = 1
                 });
 
                 AddComponent(entity, new StageRuntimeConfig
                 {
-                    BossSpawnTime = math.max(10f, authoring.bossSpawnTime),
-                    ClearTime = math.max(30f, authoring.clearTime)
+                    StageDuration = authoring.stageDurationSeconds,
+                    BossSpawnTime = authoring.bossSpawnTimeSeconds,
+                    SpawnRateMultiplier = 1f,
+                    IsStageCleared = 0
                 });
 
-                uint seed = authoring.randomSeed == 0 ? 1u : authoring.randomSeed;
-                AddComponent(entity, new RandomState
+                AddComponent(entity, new BossSpawnState { HasSpawnedBoss = 0 });
+                AddComponent(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });
+                AddComponent(entity, new EvolutionState
                 {
-                    Value = Unity.Mathematics.Random.CreateFromIndex(seed)
+                    HasNormalEvolution = 0,
+                    HasAbyssEvolution = 0,
+                    CanAttemptAbyss = authoring.allowAbyssEvolution ? (byte)1 : (byte)0
+                });
+                AddComponent(entity, new MetaProgress { ConquestPoints = 0, LastRunReward = 0 });
+                AddComponent(entity, new SaveState { LastSavedConquestPoints = -1 });
+
+                AddComponent(entity, new EnemySpawnConfig
+                {
+                    EnemyPrefab = authoring.enemyPrefab != null ? GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
+                    BossPrefab = authoring.bossPrefab != null ? GetEntity(authoring.bossPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
+                    SpawnInterval = authoring.spawnInterval,
+                    SpawnTimer = authoring.spawnInterval,
+                    RandomSeed = authoring.randomSeed
                 });
 
-                var timelineBuffer = AddBuffer<StageTimelineElement>(entity);
-                if (authoring.timelinePoints != null)
+                DynamicBuffer<StageTimelineElement> timelineBuffer = AddBuffer<StageTimelineElement>(entity);
+                if (authoring.timeline != null)
                 {
-                    for (int i = 0; i < authoring.timelinePoints.Length; i++)
+                    for (int i = 0; i < authoring.timeline.Length; i++)
                     {
                         timelineBuffer.Add(new StageTimelineElement
                         {
-                            StartTime = math.max(0f, authoring.timelinePoints[i].startTime),
-                            SpawnIntervalMultiplier = math.max(0.2f, authoring.timelinePoints[i].spawnIntervalMultiplier),
-                            SpawnCountBonus = math.max(0, authoring.timelinePoints[i].spawnCountBonus)
+                            StartTime = authoring.timeline[i].startTime,
+                            EndTime = authoring.timeline[i].endTime,
+                            SpawnMultiplier = authoring.timeline[i].spawnMultiplier,
+                            EnableBonusSpawn = authoring.timeline[i].bonusSpawn ? (byte)1 : (byte)0
                         });
                     }
                 }
 
-                var difficultyBuffer = AddBuffer<DifficultyModifierElement>(entity);
-                if (authoring.difficultyEntries != null)
+                DynamicBuffer<DifficultyModifierElement> difficultyBuffer = AddBuffer<DifficultyModifierElement>(entity);
+                if (authoring.difficultyModifiers != null)
                 {
-                    for (int i = 0; i < authoring.difficultyEntries.Length; i++)
+                    for (int i = 0; i < authoring.difficultyModifiers.Length; i++)
                     {
                         difficultyBuffer.Add(new DifficultyModifierElement
                         {
-                            ModifierId = authoring.difficultyEntries[i].modifierId,
-                            RiskValue = math.max(0f, authoring.difficultyEntries[i].riskValue),
-                            RewardMultiplier = math.max(1f, authoring.difficultyEntries[i].rewardMultiplier),
-                            Enabled = authoring.difficultyEntries[i].enabled ? (byte)1 : (byte)0
+                            RiskScore = authoring.difficultyModifiers[i].riskScore,
+                            RewardMultiplierBonus = authoring.difficultyModifiers[i].rewardMultiplierBonus,
+                            EnemyHealthMultiplier = authoring.difficultyModifiers[i].enemyHealthMultiplier,
+                            EnemySpeedMultiplier = authoring.difficultyModifiers[i].enemySpeedMultiplier
                         });
                     }
                 }
