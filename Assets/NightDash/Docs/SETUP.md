@@ -1,4 +1,4 @@
-# NightDash Initial Setup (Unity ECS)
+# NightDash Initial Setup (Unity ECS + Data)
 
 ## 1. Package check
 
@@ -22,7 +22,15 @@ In your main scene, create:
 
 Then wire `enemyPrefab` / `bossPrefab` on `NightDashBootstrapAuthoring`.
 
-## 3. Runtime verification checklist
+## 3. Data setup workflow
+
+1. Run menu: `NightDash/Data/Create All Template Assets`
+2. Duplicate generated `tpl_*.asset` files and rename with real IDs
+3. Fill fields based on `Docs/GDD/specs/`
+4. Run menu: `NightDash/Validation/Run Data Validation`
+5. Resolve Console errors until 0 issues
+
+## 4. Runtime verification checklist
 
 Play mode should show:
 
@@ -32,9 +40,11 @@ Play mode should show:
 - stage ends at `stageDurationSeconds`
 - run reward is written to `MetaProgress.ConquestPoints`
 
-## 4. Core paths
+## 5. Core paths
 
 - Data SO definitions: `Assets/NightDash/Scripts/Data`
+- Data editor tools: `Assets/NightDash/Scripts/Editor`
+- Data assets: `Assets/NightDash/Data`
 - ECS components: `Assets/NightDash/Scripts/ECS/Components`
 - ECS systems: `Assets/NightDash/Scripts/ECS/Systems`
 - Authoring/Baking: `Assets/NightDash/Scripts/ECS/Authoring`

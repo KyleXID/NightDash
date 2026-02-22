@@ -56,6 +56,31 @@ namespace NightDash.ECS.Authoring
         {
             public override void Bake(NightDashBootstrapAuthoring authoring)
             {
+                GameObject enemyPrefab = authoring.enemyPrefab;
+                GameObject bossPrefab = authoring.bossPrefab;
+
+                Transform parent = authoring.transform.parent;
+                if (parent != null)
+                {
+                    if (enemyPrefab == null)
+                    {
+                        Transform enemyFallback = parent.Find("EnemyPrefab");
+                        if (enemyFallback != null)
+                        {
+                            enemyPrefab = enemyFallback.gameObject;
+                        }
+                    }
+
+                    if (bossPrefab == null)
+                    {
+                        Transform bossFallback = parent.Find("BossPrefab");
+                        if (bossFallback != null)
+                        {
+                            bossPrefab = bossFallback.gameObject;
+                        }
+                    }
+                }
+
                 Entity entity = GetEntity(TransformUsageFlags.None);
 
                 AddComponent(entity, new GameLoopState
@@ -88,8 +113,8 @@ namespace NightDash.ECS.Authoring
 
                 AddComponent(entity, new EnemySpawnConfig
                 {
-                    EnemyPrefab = authoring.enemyPrefab != null ? GetEntity(authoring.enemyPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
-                    BossPrefab = authoring.bossPrefab != null ? GetEntity(authoring.bossPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
+                    EnemyPrefab = enemyPrefab != null ? GetEntity(enemyPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
+                    BossPrefab = bossPrefab != null ? GetEntity(bossPrefab, TransformUsageFlags.Dynamic) : Entity.Null,
                     SpawnInterval = authoring.spawnInterval,
                     SpawnTimer = authoring.spawnInterval,
                     RandomSeed = authoring.randomSeed
