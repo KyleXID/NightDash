@@ -2,6 +2,7 @@ using NightDash.Data;
 using NightDash.ECS.Components;
 using NightDash.Runtime;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace NightDash.ECS.Systems
@@ -15,6 +16,8 @@ namespace NightDash.ECS.Systems
             state.RequireForUpdate<StageRuntimeConfig>();
             state.RequireForUpdate<RunSelection>();
             state.RequireForUpdate<DataLoadState>();
+            state.RequireForUpdate<EnemySpawnConfig>();
+            state.RequireForUpdate<StageTimelineElement>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -37,13 +40,16 @@ namespace NightDash.ECS.Systems
 
             if (!registry.TryGetStage(stageId, out StageData stageData))
             {
-                Debug.LogWarning($"[NightDash] StageData not found for '{stageId}', using baked defaults.");
+                NightDashLog.Warn($"[NightDash] StageData not found for '{stageId}', using baked defaults.");
             }
             else
             {
                 RefRW<StageRuntimeConfig> stageRuntime = SystemAPI.GetSingletonRW<StageRuntimeConfig>();
                 stageRuntime.ValueRW.StageDuration = stageData.durationSec;
                 stageRuntime.ValueRW.BossSpawnTime = stageData.bossSpawnSec;
+                stageRuntime.ValueRW.IsStageCleared = 0;
+
+                ApplyStageSpawnPhases(stageData);
 
                 RefRW<MetaProgress> meta = SystemAPI.GetSingletonRW<MetaProgress>();
                 meta.ValueRW.LastRunReward = 0;
@@ -51,7 +57,7 @@ namespace NightDash.ECS.Systems
 
             if (!registry.TryGetClass(classId, out ClassData classData))
             {
-                Debug.LogWarning($"[NightDash] ClassData not found for '{classId}', using baked defaults.");
+                NightDashLog.Warn($"[NightDash] ClassData not found for '{classId}', using baked defaults.");
             }
             else
             {
@@ -75,7 +81,54 @@ namespace NightDash.ECS.Systems
             }
 
             loadState.ValueRW.HasLoaded = 1;
-            Debug.Log($"[NightDash] DataBootstrap loaded stage='{stageId}', class='{classId}'.");
+            NightDashLog.Info($"[NightDash] DataBootstrap loaded stage='{stageId}', class='{classId}'.");
+        }
+
+        private void ApplyStageSpawnPhases(StageData stageData)
+        {
+            if (stageData.spawnPhases == null || stageData.spawnPhases.Count == 0)
+            {
+                return;
+            }
+
+            DynamicBuffer<StageTimelineElement> timeline = SystemAPI.GetSingletonBuffer<StageTimelineElement>();
+            EnemySpawnConfig spawn = SystemAPI.GetSingleton<EnemySpawnConfig>();
+
+            float baseSpawnPerMinute = 60f / math.max(0.1f, spawn.SpawnInterval);
+            timeline.Clear();
+
+            for (int i = 0; i < stageData.spawnPhases.Count; i++)
+            {
+                SpawnPhase phase = stageData.spawnPhases[i];
+                if (phase.toSec <= phase.fromSec)
+                {
+                    continue;
+                }
+
+                float totalSpawnPerMinute = 0f;
+                if (phase.entries != null)
+                {
+                    for (int j = 0; j < phase.entries.Count; j++)
+                    {
+                        totalSpawnPerMinute += math.max(0, phase.entries[j].spawnPerMin);
+                    }
+                }
+
+                if (totalSpawnPerMinute <= 0f)
+                {
+                    totalSpawnPerMinute = baseSpawnPerMinute;
+                }
+
+                timeline.Add(new StageTimelineElement
+                {
+                    StartTime = phase.fromSec,
+                    EndTime = phase.toSec,
+                    SpawnMultiplier = math.max(0.1f, totalSpawnPerMinute / baseSpawnPerMinute),
+                    EnableBonusSpawn = 0
+                });
+            }
+
+            NightDashLog.Info($"[NightDash] Stage spawn phases applied: stage='{stageData.id}', phases={timeline.Length}.");
         }
     }
 }

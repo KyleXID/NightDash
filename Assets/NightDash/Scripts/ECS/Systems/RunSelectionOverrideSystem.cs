@@ -2,7 +2,6 @@ using NightDash.ECS.Components;
 using NightDash.Runtime;
 using Unity.Collections;
 using Unity.Entities;
-using UnityEngine;
 
 namespace NightDash.ECS.Systems
 {
@@ -52,7 +51,7 @@ namespace NightDash.ECS.Systems
                 bossState.ValueRW.HasSpawnedBoss = 0;
             }
 
-            Debug.Log($"[NightDash] RunSelection override applied: stage='{stageId}', class='{classId}'.");
+            NightDashLog.Info($"[NightDash] RunSelection override applied: stage='{stageId}', class='{classId}'.");
         }
     }
 }

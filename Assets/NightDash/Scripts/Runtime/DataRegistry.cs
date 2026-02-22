@@ -51,7 +51,7 @@ namespace NightDash.Runtime
 
             if (dataCatalog == null)
             {
-                Debug.LogWarning("[NightDash] DataCatalog is not assigned.");
+                NightDashLog.Warn("[NightDash] DataCatalog is not assigned.");
                 return;
             }
 
@@ -63,7 +63,7 @@ namespace NightDash.Runtime
             AddRange(dataCatalog.difficultyModifiers, _difficultyById, x => x != null ? x.id : null, "DifficultyModifierData");
             AddRange(dataCatalog.metaTrees, _metaTreeByClassId, x => x != null ? x.classId : null, "MetaTreeData");
 
-            Debug.Log(
+            NightDashLog.Info(
                 $"[NightDash] DataRegistry ready: classes={_classById.Count}, weapons={_weaponById.Count}, passives={_passiveById.Count}, " +
                 $"evolutions={_evolutionById.Count}, stages={_stageById.Count}, difficulty={_difficultyById.Count}, metaTrees={_metaTreeByClassId.Count}");
         }
@@ -98,7 +98,7 @@ namespace NightDash.Runtime
 
                 if (!target.TryAdd(key, item))
                 {
-                    Debug.LogWarning($"[NightDash] Duplicate {typeName} key '{key}' in DataCatalog.");
+                    NightDashLog.Warn($"[NightDash] Duplicate {typeName} key '{key}' in DataCatalog.");
                 }
             }
         }

@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using NightDash.Data;
+using NightDash.ECS.Components;
+using Unity.Collections;
+using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,7 +13,7 @@ namespace NightDash.Runtime
         [Header("UI")]
         [SerializeField] private bool showOnStart = true;
         [SerializeField] private KeyCode toggleKey = KeyCode.F1;
-        [SerializeField] private string gameplaySceneName;
+        [SerializeField] private string gameplaySceneName = "";
 
         private readonly List<string> _stageIds = new();
         private readonly List<string> _classIds = new();
@@ -88,6 +91,8 @@ namespace NightDash.Runtime
 
             RunSelectionSession.SetPending(selectedStage, selectedClass);
             _isStartingRun = true;
+            NightDashLog.Info($"[NightDash] Start Run requested: stage='{selectedStage}', class='{selectedClass}'.");
+            bool appliedInWorld = TryApplySelectionToCurrentWorld(selectedStage, selectedClass);
 
             if (!string.IsNullOrWhiteSpace(gameplaySceneName))
             {
@@ -95,7 +100,29 @@ namespace NightDash.Runtime
                 return;
             }
 
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            Scene activeScene = SceneManager.GetActiveScene();
+            int buildIndex = activeScene.buildIndex;
+            if (buildIndex < 0 && !string.IsNullOrWhiteSpace(activeScene.path))
+            {
+                buildIndex = SceneUtility.GetBuildIndexByScenePath(activeScene.path);
+            }
+
+            if (buildIndex >= 0)
+            {
+                SceneManager.LoadScene(buildIndex);
+                return;
+            }
+
+            if (appliedInWorld)
+            {
+                _isVisible = false;
+                _isStartingRun = false;
+                NightDashLog.Info("[NightDash] Scene is not in Build Settings. Applied RunSelection to current ECS world without scene reload.");
+                return;
+            }
+
+            NightDashLog.Warn("[NightDash] Could not apply selection to ECS world directly. Falling back to scene-name reload.");
+            SceneManager.LoadScene(activeScene.name);
         }
 
         private static void DrawSelectionRow(string label, List<string> ids, ref int index)
@@ -210,6 +237,72 @@ namespace NightDash.Runtime
                 _isVisible = !_isVisible;
                 e.Use();
             }
+        }
+
+        private static bool TryApplySelectionToCurrentWorld(string stageId, string classId)
+        {
+            int worldCount = World.All.Count;
+            if (worldCount == 0)
+            {
+                NightDashLog.Warn("[NightDash] No ECS world exists yet.");
+                return false;
+            }
+
+            for (int i = 0; i < worldCount; i++)
+            {
+                World world = World.All[i];
+                if (world == null || !world.IsCreated)
+                {
+                    continue;
+                }
+
+                EntityManager entityManager = world.EntityManager;
+                using var query = entityManager.CreateEntityQuery(
+                    ComponentType.ReadWrite<RunSelection>(),
+                    ComponentType.ReadWrite<DataLoadState>());
+                if (query.IsEmptyIgnoreFilter)
+                {
+                    continue;
+                }
+
+                Entity singleton = query.GetSingletonEntity();
+                entityManager.SetComponentData(singleton, new RunSelection
+                {
+                    StageId = new FixedString64Bytes(stageId),
+                    ClassId = new FixedString64Bytes(classId)
+                });
+                entityManager.SetComponentData(singleton, new DataLoadState { HasLoaded = 0 });
+
+                if (entityManager.HasComponent<GameLoopState>(singleton))
+                {
+                    entityManager.SetComponentData(singleton, new GameLoopState
+                    {
+                        ElapsedTime = 0f,
+                        Level = 1,
+                        Experience = 0f,
+                        NextLevelExperience = 10f,
+                        IsRunActive = 1
+                    });
+                }
+
+                if (entityManager.HasComponent<StageRuntimeConfig>(singleton))
+                {
+                    StageRuntimeConfig stageRuntime = entityManager.GetComponentData<StageRuntimeConfig>(singleton);
+                    stageRuntime.IsStageCleared = 0;
+                    entityManager.SetComponentData(singleton, stageRuntime);
+                }
+
+                if (entityManager.HasComponent<BossSpawnState>(singleton))
+                {
+                    entityManager.SetComponentData(singleton, new BossSpawnState { HasSpawnedBoss = 0 });
+                }
+
+                NightDashLog.Info($"[NightDash] RunSelection applied directly to ECS world '{world.Name}': stage='{stageId}', class='{classId}'.");
+                return true;
+            }
+
+            NightDashLog.Warn("[NightDash] No entity with RunSelection + DataLoadState found in any ECS world.");
+            return false;
         }
     }
 }
