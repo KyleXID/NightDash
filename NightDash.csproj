@@ -78,10 +78,14 @@
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/NightDashBuffers.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Authoring/PlayerAuthoring.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/StageProgressSystem.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Data/DataCatalog.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/EvolutionSystem.cs" />
+    <Compile Include="Assets/NightDash/Scripts/ECS/Systems/DataBootstrapSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/WeaponData.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Data/DataTypes.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/ClassData.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/MetaTreeData.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/DataRegistry.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/PassiveData.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/MetaProgressionSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/NightDashComponents.cs" />

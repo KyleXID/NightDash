@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6db888ff982740b0b0c9d381616f87b, type: 3}
+  m_Name: tpl_modifier_enemy_hp_up
+  m_EditorClassIdentifier: NightDash::NightDash.Data.DifficultyModifierData
+  id: mod_enemy_hp_up
+  displayName: "\uB9C8\uACC4\uC758 \uAC01\uC131"
+  category: 0
+  riskPoint: 2
+  enemyModifiers:
+    hpPct: 0.4
+    moveSpeedPct: 0
+    spawnRatePct: 0
+  playerModifiers:
+    healRatePct: 0
+    cooldownPct: 0
+  runtimeEffects:
+    hazardMultiplier: 0
+    onKillExplosion: 0
+  rewardBonusPct: 0.2

@@ -129,8 +129,8 @@
     <Compile Include="Assets/MCPForUnity/Editor/Resources/Project/Layers.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Services/MCPServiceLocator.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Windows/Components/Validation/McpValidationSection.cs" />
-    <Compile Include="Assets/MCPForUnity/Editor/Tools/Vfx/LineCreate.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Helpers/AssetPathUtility.cs" />
+    <Compile Include="Assets/MCPForUnity/Editor/Tools/Vfx/LineCreate.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Tools/ManageComponents.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Services/Server/IProcessDetector.cs" />
     <Compile Include="Assets/MCPForUnity/Editor/Helpers/ObjectResolver.cs" />
