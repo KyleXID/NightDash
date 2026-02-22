@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Collections;
+using Unity.Mathematics;
 
 namespace NightDash.ECS.Components
 {
@@ -22,6 +23,9 @@ namespace NightDash.ECS.Components
         public float BossSpawnTime;
         public float SpawnRateMultiplier;
         public byte IsStageCleared;
+        public byte UseBounds;
+        public float2 BoundsMin;
+        public float2 BoundsMax;
     }
 
     public struct BossSpawnState : IComponentData

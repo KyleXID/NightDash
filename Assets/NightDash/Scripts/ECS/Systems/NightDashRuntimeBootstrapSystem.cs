@@ -3,6 +3,7 @@ using NightDash.ECS.Components;
 using NightDash.Runtime;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace NightDash.ECS.Systems
@@ -70,7 +71,10 @@ namespace NightDash.ECS.Systems
                 StageDuration = 900f,
                 BossSpawnTime = 900f,
                 SpawnRateMultiplier = 1f,
-                IsStageCleared = 0
+                IsStageCleared = 0,
+                UseBounds = 1,
+                BoundsMin = new float2(-30f, -18f),
+                BoundsMax = new float2(30f, 18f)
             });
             state.EntityManager.SetComponentData(entity, new BossSpawnState { HasSpawnedBoss = 0 });
             state.EntityManager.SetComponentData(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });

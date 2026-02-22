@@ -1,6 +1,7 @@
 using NightDash.ECS.Components;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace NightDash.ECS.Authoring
@@ -16,6 +17,9 @@ namespace NightDash.ECS.Authoring
         public float stageDurationSeconds = 900f;
         public float bossSpawnTimeSeconds = 900f;
         public bool allowAbyssEvolution = true;
+        public bool useMapBounds = true;
+        public Vector2 boundsCenter = Vector2.zero;
+        public Vector2 boundsSize = new Vector2(60f, 36f);
 
         [Header("Spawn")]
         public GameObject enemyPrefab;
@@ -148,7 +152,14 @@ namespace NightDash.ECS.Authoring
                     StageDuration = authoring.stageDurationSeconds,
                     BossSpawnTime = authoring.bossSpawnTimeSeconds,
                     SpawnRateMultiplier = 1f,
-                    IsStageCleared = 0
+                    IsStageCleared = 0,
+                    UseBounds = authoring.useMapBounds ? (byte)1 : (byte)0,
+                    BoundsMin = new float2(
+                        authoring.boundsCenter.x - authoring.boundsSize.x * 0.5f,
+                        authoring.boundsCenter.y - authoring.boundsSize.y * 0.5f),
+                    BoundsMax = new float2(
+                        authoring.boundsCenter.x + authoring.boundsSize.x * 0.5f,
+                        authoring.boundsCenter.y + authoring.boundsSize.y * 0.5f)
                 });
 
                 AddComponent(entity, new BossSpawnState { HasSpawnedBoss = 0 });
