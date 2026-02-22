@@ -1,13 +1,12 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NightDash.Data
 {
-    [CreateAssetMenu(menuName = "NightDash/Data/Meta Tree Data", fileName = "MetaTreeData")]
+    [CreateAssetMenu(menuName = "NightDash/Data/Meta Tree Data", fileName = "meta_tree_")]
     public sealed class MetaTreeData : ScriptableObject
     {
         public string classId;
-        public int attackNodeCount = 5;
-        public int survivalNodeCount = 5;
-        public int abyssNodeCount = 5;
+        public List<MetaNodeData> nodes = new();
     }
 }

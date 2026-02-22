@@ -1,14 +1,28 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NightDash.Data
 {
-    [CreateAssetMenu(menuName = "NightDash/Data/Stage Data", fileName = "StageData")]
+    [CreateAssetMenu(menuName = "NightDash/Data/Stage Data", fileName = "stage_")]
     public sealed class StageData : ScriptableObject
     {
-        public string stageId;
-        public string displayName;
-        public float stageDurationSeconds = 900f;
-        public float bossSpawnTimeSeconds = 900f;
-        public int baseRewardPoints = 10;
+        [Header("Identity")]
+        [FormerlySerializedAs("stageId")] public string id;
+        [FormerlySerializedAs("name")] public string displayName;
+
+        [Header("Timeline")]
+        [FormerlySerializedAs("stageDurationSeconds")] public int durationSec = 900;
+        [FormerlySerializedAs("bossSpawnTimeSeconds")] public int bossSpawnSec = 900;
+
+        [Header("Content")]
+        public List<string> environmentHazards = new();
+        public List<SpawnPhase> spawnPhases = new();
+        public List<EliteEvent> eliteEvents = new();
+
+        [Header("Boss/Reward")]
+        public string bossId;
+        public string rewardTableId;
+        [FormerlySerializedAs("baseRewardPoints")] public int baseRewardPoints = 10;
     }
 }
