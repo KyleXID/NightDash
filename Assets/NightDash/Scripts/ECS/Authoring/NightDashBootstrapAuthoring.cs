@@ -1,4 +1,5 @@
 using NightDash.ECS.Components;
+using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ namespace NightDash.ECS.Authoring
     public sealed class NightDashBootstrapAuthoring : MonoBehaviour
     {
         [Header("Run")]
+        public string selectedStageId = "stage_01";
+        public string selectedClassId = "class_warrior";
         public float stageDurationSeconds = 900f;
         public float bossSpawnTimeSeconds = 900f;
         public bool allowAbyssEvolution = true;
@@ -110,6 +113,12 @@ namespace NightDash.ECS.Authoring
                 });
                 AddComponent(entity, new MetaProgress { ConquestPoints = 0, LastRunReward = 0 });
                 AddComponent(entity, new SaveState { LastSavedConquestPoints = -1 });
+                AddComponent(entity, new DataLoadState { HasLoaded = 0 });
+                AddComponent(entity, new RunSelection
+                {
+                    StageId = new FixedString64Bytes(authoring.selectedStageId),
+                    ClassId = new FixedString64Bytes(authoring.selectedClassId)
+                });
 
                 AddComponent(entity, new EnemySpawnConfig
                 {

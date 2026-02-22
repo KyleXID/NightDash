@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bef07f52d7145d6afd1601c2fda76c, type: 3}
+  m_Name: weapon_hellflame_slash
+  m_EditorClassIdentifier: NightDash::NightDash.Data.WeaponData
+  id: weapon_hellflame_slash
+  displayName: "\uD751\uC5FC\uCC38"
+  weaponType: 0
+  maxLevel: 8
+  baseCooldown: 1.2
+  basePowerCoeff: 1.25
+  baseRange: 2.4
+  baseProjectileSpeed: 0
+  levelCurves: []
+  specialFlags:
+    canPierce: 0
+    canCrit: 0
+    hasKnockback: 0

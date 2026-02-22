@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 896615028d86246da996712a96d7c96b, type: 3}
+  m_Name: data_catalog
+  m_EditorClassIdentifier: NightDash::NightDash.Data.DataCatalog
+  classes:
+  - {fileID: 11400000, guid: 21ff25d39a115468f886d6916d5e5f3c, type: 2}
+  - {fileID: 11400000, guid: af3b605538658454694a0ea5d3320615, type: 2}
+  - {fileID: 11400000, guid: cc643ce4c7c5646548a35240258b29ae, type: 2}
+  weapons:
+  - {fileID: 11400000, guid: 01aead015663a4d69849407b62e45a02, type: 2}
+  - {fileID: 11400000, guid: 0408da4d03eef451183d2ef8b5d35f63, type: 2}
+  - {fileID: 11400000, guid: 7bcaecd7b5b5b4fe985375cf1285260f, type: 2}
+  - {fileID: 11400000, guid: ad4ecea8cbdc04347a8290e1dc11d497, type: 2}
+  - {fileID: 11400000, guid: 885fca348982c4c8daad9c5bc6787a77, type: 2}
+  passives:
+  - {fileID: 11400000, guid: 88d5bbf73653e49b1b609424dc2f5828, type: 2}
+  - {fileID: 11400000, guid: 9c0c3de1839334e1aa23c29134685c64, type: 2}
+  - {fileID: 11400000, guid: abc8091a125134f31826d9149c122535, type: 2}
+  - {fileID: 11400000, guid: 5dce80e653ec54b34a2a04ab074e0c7a, type: 2}
+  evolutions:
+  - {fileID: 11400000, guid: ad650368a4f4d43638c393114d8b2762, type: 2}
+  stages:
+  - {fileID: 11400000, guid: 2f1f53c86243240278bbf4d693914947, type: 2}
+  - {fileID: 11400000, guid: 0066c4cc758954064a365c1d39aaf22b, type: 2}
+  - {fileID: 11400000, guid: 98a1cd18f7e3d430197c487515837e43, type: 2}
+  - {fileID: 11400000, guid: bee66c68f163a4774a1dcca711dfa19a, type: 2}
+  - {fileID: 11400000, guid: 05ffe91583b3142fa8289b6c420036cf, type: 2}
+  - {fileID: 11400000, guid: 3c5243417124e4f09936387a0cb97598, type: 2}
+  - {fileID: 11400000, guid: 56e0f8fadf3454efcbe18352aa8109d0, type: 2}
+  - {fileID: 11400000, guid: 3ca654f42f0f64905924aab9b6785ae2, type: 2}
+  - {fileID: 11400000, guid: d5f0557e3336246f3a69b4690d91bb9a, type: 2}
+  difficultyModifiers:
+  - {fileID: 11400000, guid: ee59bdf4a6d3a4deda0f27f86cbd2bc0, type: 2}
+  metaTrees:
+  - {fileID: 11400000, guid: b6bc7aa410eaf40428c8efba0409a2e5, type: 2}

@@ -388,6 +388,51 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &798989121
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 798989123}
+  - component: {fileID: 798989122}
+  m_Layer: 0
+  m_Name: DataRegistry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &798989122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798989121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e8ba3b29d88f46e0a982ad1ca8a1419, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NightDash::NightDash.Runtime.DataRegistry
+  dataCatalog: {fileID: 11400000, guid: 19e765138fac54a07a11c132cbbdcf49, type: 2}
+--- !u!4 &798989123
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798989121}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &889907900
 GameObject:
   m_ObjectHideFlags: 0
@@ -467,6 +512,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 633fff2fd343a4f3b89fd49275f68f94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NightDash::NightDash.ECS.Authoring.NightDashBootstrapAuthoring
+  selectedStageId: stage_01
+  selectedClassId: class_warrior
   stageDurationSeconds: 900
   bossSpawnTimeSeconds: 900
   allowAbyssEvolution: 1
@@ -608,3 +655,4 @@ SceneRoots:
   - {fileID: 519420032}
   - {fileID: 619394802}
   - {fileID: 889907901}
+  - {fileID: 798989123}

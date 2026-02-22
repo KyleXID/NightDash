@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Collections;
 
 namespace NightDash.ECS.Components
 {
@@ -50,6 +51,17 @@ namespace NightDash.ECS.Components
     public struct SaveState : IComponentData
     {
         public int LastSavedConquestPoints;
+    }
+
+    public struct RunSelection : IComponentData
+    {
+        public FixedString64Bytes StageId;
+        public FixedString64Bytes ClassId;
+    }
+
+    public struct DataLoadState : IComponentData
+    {
+        public byte HasLoaded;
     }
 
     public struct CombatStats : IComponentData

@@ -5,8 +5,11 @@
 
 ## 2. 코드 위치
 - Data 클래스: `Assets/NightDash/Scripts/Data/`
+- 런타임 레지스트리: `Assets/NightDash/Scripts/Runtime/DataRegistry.cs`
+- 카탈로그 정의: `Assets/NightDash/Scripts/Data/DataCatalog.cs`
 - Editor 생성기: `Assets/NightDash/Scripts/Editor/DataTemplateGenerator.cs`
 - Editor 검증기: `Assets/NightDash/Scripts/Editor/DataValidator.cs`
+- Catalog 빌더: `Assets/NightDash/Scripts/Editor/DataCatalogBuilder.cs`
 
 ## 3. 생성 규칙
 - 파일명: `{type}_{id}.asset` 권장
@@ -23,13 +26,15 @@
 ## 4. Unity 메뉴
 - 템플릿 생성: `NightDash/Data/Create All Template Assets`
 - 데이터 검증: `NightDash/Validation/Run Data Validation`
+- 카탈로그 빌드: `NightDash/Data/Rebuild Data Catalog`
 
 ## 5. 작업 순서
 1. 템플릿 생성 메뉴 실행
 2. 생성된 `tpl_*.asset`를 복제해 실제 id로 이름 변경
 3. 문서(`Docs/GDD/specs/...`) 기준으로 필드 입력
 4. 데이터 검증 실행
-5. 오류 0 확인 후 커밋
+5. 카탈로그 빌드 실행
+6. `DataRegistry`가 붙은 부트스트랩 오브젝트에 `data_catalog.asset` 연결
 
 ## 6. 필수 검증 항목
 - ID 중복 없음
