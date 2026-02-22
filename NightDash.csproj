@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets/NightDash/Scripts/Data/StageData.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/RunSelectionLobbyUI.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Authoring/ProjectileAuthoring.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/SaveSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/GameComponents.cs" />
@@ -84,12 +85,14 @@
     <Compile Include="Assets/NightDash/Scripts/Data/WeaponData.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/DataTypes.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/ClassData.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/RunSelectionSession.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/MetaTreeData.cs" />
     <Compile Include="Assets/NightDash/Scripts/Runtime/DataRegistry.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/PassiveData.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/MetaProgressionSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/NightDashComponents.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/CombatComponents.cs" />
+    <Compile Include="Assets/NightDash/Scripts/ECS/Systems/RunSelectionOverrideSystem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/NightDash/Scripts/NightDash.asmdef" />
