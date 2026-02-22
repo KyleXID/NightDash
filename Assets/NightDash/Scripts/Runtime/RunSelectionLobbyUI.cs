@@ -25,16 +25,9 @@ namespace NightDash.Runtime
             RefreshOptions();
         }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(toggleKey))
-            {
-                _isVisible = !_isVisible;
-            }
-        }
-
         private void OnGUI()
         {
+            HandleToggleEvent();
             if (!_isVisible || _isStartingRun)
             {
                 return;
@@ -202,6 +195,21 @@ namespace NightDash.Runtime
             }
 
             return values[index];
+        }
+
+        private void HandleToggleEvent()
+        {
+            Event e = Event.current;
+            if (e == null)
+            {
+                return;
+            }
+
+            if (e.type == EventType.KeyDown && e.keyCode == toggleKey)
+            {
+                _isVisible = !_isVisible;
+                e.Use();
+            }
         }
     }
 }
