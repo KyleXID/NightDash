@@ -7,6 +7,9 @@ namespace NightDash.ECS.Authoring
 {
     public sealed class NightDashBootstrapAuthoring : MonoBehaviour
     {
+        private static readonly string[] EnemyNameCandidates = { "EnemyPrefab", "Enemy", "EnemyRoot" };
+        private static readonly string[] BossNameCandidates = { "BossPrefab", "Boss", "BossRoot" };
+
         [Header("Run")]
         public string selectedStageId = "stage_01";
         public string selectedClassId = "class_warrior";
@@ -55,34 +58,79 @@ namespace NightDash.ECS.Authoring
             public float enemySpeedMultiplier;
         }
 
+        private void OnValidate()
+        {
+            TryAutoAssignSpawnPrefabs();
+        }
+
+        [ContextMenu("Auto Assign Spawn Prefabs")]
+        public void TryAutoAssignSpawnPrefabs()
+        {
+            enemyPrefab = ResolveSpawnPrefab(transform, enemyPrefab, false);
+            bossPrefab = ResolveSpawnPrefab(transform, bossPrefab, true);
+        }
+
+        private static GameObject ResolveSpawnPrefab(Transform anchor, GameObject current, bool boss)
+        {
+            if (current != null)
+            {
+                return current;
+            }
+
+            string[] candidates = boss ? BossNameCandidates : EnemyNameCandidates;
+
+            Transform parent = anchor != null ? anchor.parent : null;
+            if (parent != null)
+            {
+                for (int i = 0; i < candidates.Length; i++)
+                {
+                    Transform child = parent.Find(candidates[i]);
+                    if (child != null)
+                    {
+                        return child.gameObject;
+                    }
+                }
+            }
+
+            EnemyAuthoring[] enemyAuthorings =
+                Object.FindObjectsByType<EnemyAuthoring>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < enemyAuthorings.Length; i++)
+            {
+                if (enemyAuthorings[i] != null && enemyAuthorings[i].isBoss == boss)
+                {
+                    return enemyAuthorings[i].gameObject;
+                }
+            }
+
+            Transform[] allTransforms =
+                Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            for (int i = 0; i < allTransforms.Length; i++)
+            {
+                Transform t = allTransforms[i];
+                if (t == null)
+                {
+                    continue;
+                }
+
+                string n = t.name;
+                for (int j = 0; j < candidates.Length; j++)
+                {
+                    if (n == candidates[j])
+                    {
+                        return t.gameObject;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         private sealed class NightDashBootstrapBaker : Unity.Entities.Baker<NightDashBootstrapAuthoring>
         {
             public override void Bake(NightDashBootstrapAuthoring authoring)
             {
-                GameObject enemyPrefab = authoring.enemyPrefab;
-                GameObject bossPrefab = authoring.bossPrefab;
-
-                Transform parent = authoring.transform.parent;
-                if (parent != null)
-                {
-                    if (enemyPrefab == null)
-                    {
-                        Transform enemyFallback = parent.Find("EnemyPrefab");
-                        if (enemyFallback != null)
-                        {
-                            enemyPrefab = enemyFallback.gameObject;
-                        }
-                    }
-
-                    if (bossPrefab == null)
-                    {
-                        Transform bossFallback = parent.Find("BossPrefab");
-                        if (bossFallback != null)
-                        {
-                            bossPrefab = bossFallback.gameObject;
-                        }
-                    }
-                }
+                GameObject enemyPrefab = ResolveSpawnPrefab(authoring.transform, authoring.enemyPrefab, false);
+                GameObject bossPrefab = ResolveSpawnPrefab(authoring.transform, authoring.bossPrefab, true);
 
                 Entity entity = GetEntity(TransformUsageFlags.None);
 
