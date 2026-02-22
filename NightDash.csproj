@@ -64,6 +64,7 @@
     <Compile Include="Assets/NightDash/Scripts/Runtime/RunSelectionLobbyUI.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Authoring/ProjectileAuthoring.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/SaveSystem.cs" />
+    <Compile Include="Assets/NightDash/Scripts/ECS/Systems/NightDashRuntimeBootstrapSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/GameComponents.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Authoring/EnemyAuthoring.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/EnemySpawnSystem.cs" />
@@ -86,6 +87,8 @@
     <Compile Include="Assets/NightDash/Scripts/Data/DataTypes.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/ClassData.cs" />
     <Compile Include="Assets/NightDash/Scripts/Runtime/RunSelectionSession.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/NightDashRuntimeToggles.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/NightDashLog.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/MetaTreeData.cs" />
     <Compile Include="Assets/NightDash/Scripts/Runtime/DataRegistry.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/PassiveData.cs" />

@@ -46,6 +46,13 @@ namespace NightDash.Editor
                 lobbyUi = uiGo.AddComponent<RunSelectionLobbyUI>();
             }
 
+            var runtimeToggles = Object.FindFirstObjectByType<NightDashRuntimeToggles>();
+            if (runtimeToggles == null)
+            {
+                var togglesGo = new GameObject("NightDashRuntimeToggles");
+                runtimeToggles = togglesGo.AddComponent<NightDashRuntimeToggles>();
+            }
+
             var serialized = new SerializedObject(registry);
             serialized.FindProperty("dataCatalog").objectReferenceValue = catalog;
             serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -53,10 +60,11 @@ namespace NightDash.Editor
             EditorUtility.SetDirty(bootstrap);
             EditorUtility.SetDirty(registry);
             EditorUtility.SetDirty(lobbyUi);
+            EditorUtility.SetDirty(runtimeToggles);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
-            Debug.Log("[NightDash] SampleScene bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + catalog).");
+            Debug.Log("[NightDash] SampleScene bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + RuntimeToggles + catalog).");
         }
     }
 }
