@@ -517,8 +517,8 @@ MonoBehaviour:
   stageDurationSeconds: 900
   bossSpawnTimeSeconds: 900
   allowAbyssEvolution: 1
-  enemyPrefab: {fileID: 0}
-  bossPrefab: {fileID: 0}
+  enemyPrefab: {fileID: 536594079}
+  bossPrefab: {fileID: 1094936651}
   spawnInterval: 1.5
   randomSeed: 2026
   timeline:

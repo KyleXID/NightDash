@@ -30,6 +30,7 @@ namespace NightDash.Editor
                 var bootstrapGo = new GameObject("NightDashBootstrap");
                 bootstrap = bootstrapGo.AddComponent<NightDashBootstrapAuthoring>();
             }
+            bootstrap.TryAutoAssignSpawnPrefabs();
 
             var registry = Object.FindFirstObjectByType<DataRegistry>();
             if (registry == null)
