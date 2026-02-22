@@ -15,8 +15,15 @@ namespace NightDash.Editor
         [MenuItem("NightDash/Scene/Setup SampleScene Bootstrap")]
         public static void SetupSampleSceneBootstrap()
         {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[NightDash] Stop Play Mode first, then run Scene/Setup SampleScene Bootstrap.");
+                return;
+            }
+
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var catalog = AssetDatabase.LoadAssetAtPath<DataCatalog>(CatalogPath);
+            var mainCamera = Camera.main;
 
             if (catalog == null)
             {
@@ -46,6 +53,26 @@ namespace NightDash.Editor
                 lobbyUi = uiGo.AddComponent<RunSelectionLobbyUI>();
             }
 
+            var inputRuntime = Object.FindFirstObjectByType<NightDashPlayerInputRuntime>();
+            if (inputRuntime == null)
+            {
+                var inputGo = new GameObject("NightDashPlayerInputRuntime");
+                inputRuntime = inputGo.AddComponent<NightDashPlayerInputRuntime>();
+            }
+
+            var visualBridge = Object.FindFirstObjectByType<NightDashDebugVisualBridge>();
+            if (visualBridge == null)
+            {
+                var viewGo = new GameObject("NightDashDebugVisualBridge");
+                visualBridge = viewGo.AddComponent<NightDashDebugVisualBridge>();
+            }
+
+            if (mainCamera != null && mainCamera.GetComponent<NightDashCameraFollow>() == null)
+            {
+                mainCamera.gameObject.AddComponent<NightDashCameraFollow>();
+                EditorUtility.SetDirty(mainCamera.gameObject);
+            }
+
             var runtimeToggles = Object.FindFirstObjectByType<NightDashRuntimeToggles>();
             if (runtimeToggles == null)
             {
@@ -60,11 +87,13 @@ namespace NightDash.Editor
             EditorUtility.SetDirty(bootstrap);
             EditorUtility.SetDirty(registry);
             EditorUtility.SetDirty(lobbyUi);
+            EditorUtility.SetDirty(inputRuntime);
+            EditorUtility.SetDirty(visualBridge);
             EditorUtility.SetDirty(runtimeToggles);
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
-            Debug.Log("[NightDash] SampleScene bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + RuntimeToggles + catalog).");
+            Debug.Log("[NightDash] SampleScene bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + PlayerInputRuntime + CameraFollow + DebugVisualBridge + RuntimeToggles + catalog).");
         }
     }
 }

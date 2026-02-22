@@ -94,6 +94,14 @@ namespace NightDash.Runtime
             NightDashLog.Info($"[NightDash] Start Run requested: stage='{selectedStage}', class='{selectedClass}'.");
             bool appliedInWorld = TryApplySelectionToCurrentWorld(selectedStage, selectedClass);
 
+            if (appliedInWorld)
+            {
+                _isVisible = false;
+                _isStartingRun = false;
+                NightDashLog.Info("[NightDash] Run started in current ECS world (no scene reload).");
+                return;
+            }
+
             if (!string.IsNullOrWhiteSpace(gameplaySceneName))
             {
                 SceneManager.LoadScene(gameplaySceneName);
@@ -110,14 +118,6 @@ namespace NightDash.Runtime
             if (buildIndex >= 0)
             {
                 SceneManager.LoadScene(buildIndex);
-                return;
-            }
-
-            if (appliedInWorld)
-            {
-                _isVisible = false;
-                _isStartingRun = false;
-                NightDashLog.Info("[NightDash] Scene is not in Build Settings. Applied RunSelection to current ECS world without scene reload.");
                 return;
             }
 

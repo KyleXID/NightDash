@@ -48,6 +48,12 @@ namespace NightDash.ECS.Systems
                 stageRuntime.ValueRW.StageDuration = stageData.durationSec;
                 stageRuntime.ValueRW.BossSpawnTime = stageData.bossSpawnSec;
                 stageRuntime.ValueRW.IsStageCleared = 0;
+                stageRuntime.ValueRW.UseBounds = stageData.useBounds ? (byte)1 : (byte)0;
+
+                float halfX = math.max(0.5f, stageData.boundsSize.x * 0.5f);
+                float halfY = math.max(0.5f, stageData.boundsSize.y * 0.5f);
+                stageRuntime.ValueRW.BoundsMin = new float2(stageData.boundsCenter.x - halfX, stageData.boundsCenter.y - halfY);
+                stageRuntime.ValueRW.BoundsMax = new float2(stageData.boundsCenter.x + halfX, stageData.boundsCenter.y + halfY);
 
                 ApplyStageSpawnPhases(stageData);
 
