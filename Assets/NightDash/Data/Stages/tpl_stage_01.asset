@@ -15,9 +15,54 @@ MonoBehaviour:
   id: stage_01
   displayName: "\uBD88\uD0C0\uB294 \uD669\uC57C"
   durationSec: 900
-  bossSpawnSec: 900
+  bossSpawnSec: 780
+  useBounds: 1
+  boundsCenter: {x: 0, y: 0}
+  boundsSize: {x: 72, y: 42}
   environmentHazards: []
-  spawnPhases: []
+  spawnPhases:
+  - fromSec: 0
+    toSec: 180
+    entries:
+    - enemyId: ghoul_scout
+      weight: 10
+      spawnPerMin: 36
+    - enemyId: ember_bat
+      weight: 5
+      spawnPerMin: 20
+  - fromSec: 180
+    toSec: 420
+    entries:
+    - enemyId: ghoul_scout
+      weight: 10
+      spawnPerMin: 42
+    - enemyId: ember_bat
+      weight: 7
+      spawnPerMin: 28
+    - enemyId: wasteland_brute
+      weight: 8
+      spawnPerMin: 24
+  - fromSec: 420
+    toSec: 780
+    entries:
+    - enemyId: ghoul_scout
+      weight: 6
+      spawnPerMin: 30
+    - enemyId: ember_bat
+      weight: 7
+      spawnPerMin: 30
+    - enemyId: wasteland_brute
+      weight: 10
+      spawnPerMin: 28
+    - enemyId: ash_caster
+      weight: 8
+      spawnPerMin: 24
+  - fromSec: 780
+    toSec: 900
+    entries:
+    - enemyId: boss_agron
+      weight: 1
+      spawnPerMin: 1
   eliteEvents: []
   bossId: boss_agron
   rewardTableId: reward_stage_01

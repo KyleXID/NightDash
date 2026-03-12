@@ -22,13 +22,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 7bcaecd7b5b5b4fe985375cf1285260f, type: 2}
   - {fileID: 11400000, guid: ad4ecea8cbdc04347a8290e1dc11d497, type: 2}
   - {fileID: 11400000, guid: 885fca348982c4c8daad9c5bc6787a77, type: 2}
+  - {fileID: 11400000, guid: 9734df57b2aa4d52a61da9445f0ad6da, type: 2}
   passives:
   - {fileID: 11400000, guid: 88d5bbf73653e49b1b609424dc2f5828, type: 2}
   - {fileID: 11400000, guid: 9c0c3de1839334e1aa23c29134685c64, type: 2}
   - {fileID: 11400000, guid: abc8091a125134f31826d9149c122535, type: 2}
   - {fileID: 11400000, guid: 5dce80e653ec54b34a2a04ab074e0c7a, type: 2}
+  - {fileID: 11400000, guid: cf2cd03a4c7d49a1bf6f7aad3911925a, type: 2}
+  - {fileID: 11400000, guid: f1373f6868044d30b2bec7780bb87b2b, type: 2}
   evolutions:
   - {fileID: 11400000, guid: ad650368a4f4d43638c393114d8b2762, type: 2}
+  - {fileID: 11400000, guid: 0c755c6ac48a4880a3600437ad166c27, type: 2}
   stages:
   - {fileID: 11400000, guid: 2f1f53c86243240278bbf4d693914947, type: 2}
   - {fileID: 11400000, guid: 0066c4cc758954064a365c1d39aaf22b, type: 2}

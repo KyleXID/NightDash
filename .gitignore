@@ -38,3 +38,7 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Unity crash dumps / local scratch files
+mono_crash*
+tmp_stage01_lava_patch_edit_snapshot.md

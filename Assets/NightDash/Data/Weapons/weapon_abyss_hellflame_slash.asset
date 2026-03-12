@@ -16,12 +16,13 @@ MonoBehaviour:
   displayName: "\uC2EC\uC5F0 \uD751\uC5FC\uCC38"
   weaponType: 0
   maxLevel: 8
-  baseCooldown: 1.2
+  baseCooldown: 0.8
   basePowerCoeff: 1.6
-  baseRange: 2.4
+  baseRange: 3.2
   baseProjectileSpeed: 0
+  includeInUpgradePool: 0
   levelCurves: []
   specialFlags:
     canPierce: 0
-    canCrit: 0
-    hasKnockback: 0
+    canCrit: 1
+    hasKnockback: 1

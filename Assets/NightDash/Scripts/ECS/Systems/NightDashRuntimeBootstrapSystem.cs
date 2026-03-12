@@ -53,8 +53,15 @@ namespace NightDash.ECS.Systems
                 typeof(DifficultyState),
                 typeof(EvolutionState),
                 typeof(MetaProgress),
+                typeof(RunResultStats),
+                typeof(BossRewardState),
+                typeof(BossRewardConfirmRequest),
+                typeof(ResultSnapshot),
                 typeof(SaveState),
                 typeof(DataLoadState),
+                typeof(PlayerProgressionState),
+                typeof(UpgradeSelectionRequest),
+                typeof(RunNavigationRequest),
                 typeof(RunSelection),
                 typeof(EnemySpawnConfig));
 
@@ -64,7 +71,9 @@ namespace NightDash.ECS.Systems
                 Level = 1,
                 Experience = 0f,
                 NextLevelExperience = 10f,
-                IsRunActive = 1
+                IsRunActive = 0,
+                Status = RunStatus.Loading,
+                PendingLevelUps = 0
             });
             state.EntityManager.SetComponentData(entity, new StageRuntimeConfig
             {
@@ -76,7 +85,13 @@ namespace NightDash.ECS.Systems
                 BoundsMin = new float2(-30f, -18f),
                 BoundsMax = new float2(30f, 18f)
             });
-            state.EntityManager.SetComponentData(entity, new BossSpawnState { HasSpawnedBoss = 0 });
+            state.EntityManager.SetComponentData(entity, new BossSpawnState
+            {
+                HasSpawnedBoss = 0,
+                BossKilled = 0,
+                ChestPending = 0,
+                ChestOpened = 0
+            });
             state.EntityManager.SetComponentData(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });
             state.EntityManager.SetComponentData(entity, new EvolutionState
             {
@@ -85,8 +100,50 @@ namespace NightDash.ECS.Systems
                 CanAttemptAbyss = 1
             });
             state.EntityManager.SetComponentData(entity, new MetaProgress { ConquestPoints = 0, LastRunReward = 0 });
+            state.EntityManager.SetComponentData(entity, new RunResultStats
+            {
+                KillCount = 0,
+                GoldEarned = 0,
+                SoulsEarned = 0,
+                CurrentWave = 0,
+                RewardCommitted = 0
+            });
+            state.EntityManager.SetComponentData(entity, new BossRewardState
+            {
+                HasPendingReward = 0,
+                EvolutionResolved = 0
+            });
+            state.EntityManager.SetComponentData(entity, new BossRewardConfirmRequest { IsPending = 0 });
+            state.EntityManager.SetComponentData(entity, new ResultSnapshot
+            {
+                HasSnapshot = 0,
+                IsVictory = 0,
+                ElapsedTime = 0f,
+                FinalLevel = 1,
+                KillCount = 0,
+                GoldEarned = 0,
+                SoulsEarned = 0,
+                RewardGranted = 0
+            });
             state.EntityManager.SetComponentData(entity, new SaveState { LastSavedConquestPoints = -1 });
             state.EntityManager.SetComponentData(entity, new DataLoadState { HasLoaded = 0 });
+            state.EntityManager.SetComponentData(entity, new PlayerProgressionState
+            {
+                WeaponSlotLimit = 6,
+                PassiveSlotLimit = 6,
+                RerollsRemaining = 1
+            });
+            state.EntityManager.SetComponentData(entity, new UpgradeSelectionRequest
+            {
+                SelectedOptionIndex = -1,
+                HasSelection = 0,
+                RerollRequested = 0
+            });
+            state.EntityManager.SetComponentData(entity, new RunNavigationRequest
+            {
+                Action = RunNavigationAction.None,
+                IsPending = 0
+            });
             state.EntityManager.SetComponentData(entity, new RunSelection
             {
                 StageId = new FixedString64Bytes("stage_01"),
@@ -101,13 +158,39 @@ namespace NightDash.ECS.Systems
                 RandomSeed = 2026
             });
 
-            DynamicBuffer<StageTimelineElement> timeline = state.EntityManager.AddBuffer<StageTimelineElement>(entity);
+            state.EntityManager.AddBuffer<StageTimelineElement>(entity);
+            state.EntityManager.AddBuffer<SpawnArchetypeElement>(entity);
+            state.EntityManager.AddBuffer<OwnedWeaponElement>(entity);
+            state.EntityManager.AddBuffer<OwnedPassiveElement>(entity);
+            state.EntityManager.AddBuffer<UpgradeOptionElement>(entity);
+            state.EntityManager.AddBuffer<AvailableWeaponElement>(entity);
+            state.EntityManager.AddBuffer<AvailablePassiveElement>(entity);
+            DynamicBuffer<StageTimelineElement> timeline = state.EntityManager.GetBuffer<StageTimelineElement>(entity);
+            DynamicBuffer<SpawnArchetypeElement> spawnArchetypes = state.EntityManager.GetBuffer<SpawnArchetypeElement>(entity);
             timeline.Add(new StageTimelineElement
             {
                 StartTime = 0f,
                 EndTime = 1200f,
                 SpawnMultiplier = 1f,
                 EnableBonusSpawn = 0
+            });
+            spawnArchetypes.Add(new SpawnArchetypeElement
+            {
+                StartTime = 0f,
+                EndTime = 1200f,
+                EnemyId = new FixedString64Bytes("ghoul_scout"),
+                Weight = 10,
+                SpawnPerMinute = 24,
+                IsBoss = 0
+            });
+            spawnArchetypes.Add(new SpawnArchetypeElement
+            {
+                StartTime = 900f,
+                EndTime = 1200f,
+                EnemyId = new FixedString64Bytes("boss_agron"),
+                Weight = 1,
+                SpawnPerMinute = 1,
+                IsBoss = 1
             });
 
             DynamicBuffer<DifficultyModifierElement> difficulty = state.EntityManager.AddBuffer<DifficultyModifierElement>(entity);

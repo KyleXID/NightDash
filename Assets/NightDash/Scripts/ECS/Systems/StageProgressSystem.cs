@@ -24,20 +24,17 @@ namespace NightDash.ECS.Systems
             RefRW<StageRuntimeConfig> stage = SystemAPI.GetSingletonRW<StageRuntimeConfig>();
             RefRW<BossSpawnState> bossState = SystemAPI.GetSingletonRW<BossSpawnState>();
 
-            if (loop.ValueRO.IsRunActive == 0)
+            if (loop.ValueRO.IsRunActive == 0 || loop.ValueRO.Status != RunStatus.Playing)
             {
                 return;
             }
 
-            if (bossState.ValueRO.HasSpawnedBoss == 0 && loop.ValueRO.ElapsedTime >= stage.ValueRO.BossSpawnTime)
-            {
-                bossState.ValueRW.HasSpawnedBoss = 1;
-            }
-
-            if (loop.ValueRO.ElapsedTime >= stage.ValueRO.StageDuration)
+            if (bossState.ValueRO.BossKilled == 1)
             {
                 stage.ValueRW.IsStageCleared = 1;
                 loop.ValueRW.IsRunActive = 0;
+                loop.ValueRW.Status = RunStatus.Victory;
+                bossState.ValueRW.ChestPending = 1;
             }
         }
     }

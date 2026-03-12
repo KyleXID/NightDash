@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
   id: passive_astrologer_reroll_free
   displayName: "\uB9AC\uB864 \uBB34\uB8CC"
-  description: "\uACF5\uACA9\uB825\uC744 \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4."
+  description: "\uD22C\uC0AC\uCCB4 \uC0AC\uC815\uAC70\uB9AC\uC640 \uBE44\uD589 \uC18D\uB3C4\uB97C \uB192\uC5EC \uC911\uAC70\uB9AC \uC804\uD22C\uB97C \uAC15\uD654\uD569\uB2C8\uB2E4."
   category: 1
   maxLevel: 5
-  effects: []
+  effects:
+  - stat: range
+    op: 1
+    value: 0.1
+  - stat: projectile_speed
+    op: 1
+    value: 0.12
   condition:
     type: 0
     arg: 

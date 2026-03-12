@@ -11,6 +11,8 @@ namespace NightDash.Editor
     {
         private const string ScenePath = "Assets/Scenes/SampleScene.unity";
         private const string CatalogPath = "Assets/NightDash/Data/data_catalog.asset";
+        private const string TitleImagePath = "Assets/NightDash/Art/UI/Title/nightdash_title.png";
+        private const string TitleLogoPath = "Assets/NightDash/Art/UI/Title/nightdash_logo.png";
 
         [MenuItem("NightDash/Scene/Setup SampleScene Bootstrap")]
         public static void SetupSampleSceneBootstrap()
@@ -52,6 +54,28 @@ namespace NightDash.Editor
                 var uiGo = new GameObject("RunSelectionLobbyUI");
                 lobbyUi = uiGo.AddComponent<RunSelectionLobbyUI>();
             }
+            var titleImage = AssetDatabase.LoadAssetAtPath<Texture2D>(TitleImagePath);
+            var titleLogo = AssetDatabase.LoadAssetAtPath<Texture2D>(TitleLogoPath);
+            var lobbySerialized = new SerializedObject(lobbyUi);
+            if (titleImage != null)
+            {
+                lobbySerialized.FindProperty("titleImage").objectReferenceValue = titleImage;
+            }
+            if (titleLogo != null)
+            {
+                lobbySerialized.FindProperty("titleLogoImage").objectReferenceValue = titleLogo;
+            }
+            lobbySerialized.FindProperty("showTitleOnStart").boolValue = false;
+            lobbySerialized.ApplyModifiedPropertiesWithoutUndo();
+
+            var titleUi = Object.FindFirstObjectByType<NightDashTitleScreenUI>();
+            if (titleUi == null)
+            {
+                var titleGo = new GameObject("NightDashTitleScreenUI");
+                titleUi = titleGo.AddComponent<NightDashTitleScreenUI>();
+            }
+            titleUi.SetTitleTexture(titleImage);
+            titleUi.SetLogoTexture(titleLogo);
 
             var inputRuntime = Object.FindFirstObjectByType<NightDashPlayerInputRuntime>();
             if (inputRuntime == null)
@@ -87,6 +111,7 @@ namespace NightDash.Editor
             EditorUtility.SetDirty(bootstrap);
             EditorUtility.SetDirty(registry);
             EditorUtility.SetDirty(lobbyUi);
+            EditorUtility.SetDirty(titleUi);
             EditorUtility.SetDirty(inputRuntime);
             EditorUtility.SetDirty(visualBridge);
             EditorUtility.SetDirty(runtimeToggles);

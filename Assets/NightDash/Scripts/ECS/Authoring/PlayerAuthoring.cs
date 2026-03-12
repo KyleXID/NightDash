@@ -32,7 +32,8 @@ namespace NightDash.ECS.Authoring
                     Cooldown = authoring.weaponCooldown,
                     CooldownRemaining = 0f,
                     Damage = authoring.damage,
-                    Range = authoring.weaponRange
+                    Range = authoring.weaponRange,
+                    ProjectileSpeed = 10f
                 });
             }
         }

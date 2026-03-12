@@ -14,13 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
   id: passive_strength
   displayName: "\uADFC\uB825 \uAC15\uD654"
-  description: "\uACF5\uACA9\uB825\uC744 \uC99D\uAC00\uC2DC\uD0B5\uB2C8\uB2E4."
+  description: "\uBAA8\uB4E0 \uBB34\uAE30 \uC704\uB825\uC744 \uB192\uC785\uB2C8\uB2E4."
   category: 0
   maxLevel: 5
-  effects: []
+  effects:
+  - stat: damage
+    op: 1
+    value: 0.12
   condition:
     type: 0
     arg: 
   legacyHealthMultiplier: 1
-  legacyDamageMultiplier: 1
+  legacyDamageMultiplier: 1.03
   legacyCooldownMultiplier: 1

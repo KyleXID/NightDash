@@ -13,12 +13,27 @@ namespace NightDash.ECS.Systems
         {
             state.RequireForUpdate<MetaProgress>();
             state.RequireForUpdate<SaveState>();
+            state.RequireForUpdate<RunResultStats>();
         }
 
         public void OnUpdate(ref SystemState state)
         {
             RefRW<MetaProgress> meta = SystemAPI.GetSingletonRW<MetaProgress>();
             RefRW<SaveState> saveState = SystemAPI.GetSingletonRW<SaveState>();
+            RunResultStats result = SystemAPI.GetSingleton<RunResultStats>();
+
+            if (saveState.ValueRO.LastSavedConquestPoints < 0)
+            {
+                int loadedPoints = PlayerPrefs.GetInt(ConquestPointKey, meta.ValueRO.ConquestPoints);
+                meta.ValueRW.ConquestPoints = loadedPoints;
+                saveState.ValueRW.LastSavedConquestPoints = loadedPoints;
+                return;
+            }
+
+            if (result.RewardCommitted == 0)
+            {
+                return;
+            }
 
             if (saveState.ValueRO.LastSavedConquestPoints == meta.ValueRO.ConquestPoints)
             {

@@ -69,6 +69,7 @@
     <Compile Include="Assets/NightDash/Scripts/ECS/Authoring/EnemyAuthoring.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/EnemySpawnSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/Runtime/NightDashPlayerInputRuntime.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/NightDashHudResultUI.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/PlayerMovementSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/DifficultySystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Components/SpawnWeaponComponents.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Assets/NightDash/Scripts/Data/DataCatalog.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/EvolutionSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/DataBootstrapSystem.cs" />
+    <Compile Include="Assets/NightDash/Scripts/Runtime/NightDashTitleScreenUI.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/WeaponData.cs" />
     <Compile Include="Assets/NightDash/Scripts/ECS/Systems/NightDashPlayableFallbackSystem.cs" />
     <Compile Include="Assets/NightDash/Scripts/Data/DataTypes.cs" />

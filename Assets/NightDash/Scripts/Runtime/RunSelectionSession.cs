@@ -27,6 +27,19 @@ namespace NightDash.Runtime
             PlayerPrefs.Save();
         }
 
+        public static void SetCurrent(string stageId, string classId)
+        {
+            EnsureInitialized();
+
+            _pendingStageId = Normalize(stageId, DefaultStageId);
+            _pendingClassId = Normalize(classId, DefaultClassId);
+            _hasPendingSelection = false;
+
+            PlayerPrefs.SetString(StagePrefKey, _pendingStageId);
+            PlayerPrefs.SetString(ClassPrefKey, _pendingClassId);
+            PlayerPrefs.Save();
+        }
+
         public static bool TryConsumePending(out string stageId, out string classId)
         {
             EnsureInitialized();

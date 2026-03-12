@@ -25,6 +25,7 @@ baseCooldown: float
 basePowerCoeff: float
 baseRange: float
 baseProjectileSpeed: float
+includeInUpgradePool: bool
 levelCurves:
   - level: int
     powerCoeff: float

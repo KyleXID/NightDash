@@ -144,7 +144,9 @@ namespace NightDash.ECS.Authoring
                     Level = 1,
                     Experience = 0f,
                     NextLevelExperience = 10f,
-                    IsRunActive = 1
+                    IsRunActive = 0,
+                    Status = RunStatus.Loading,
+                    PendingLevelUps = 0
                 });
 
                 AddComponent(entity, new StageRuntimeConfig
@@ -162,7 +164,13 @@ namespace NightDash.ECS.Authoring
                         authoring.boundsCenter.y + authoring.boundsSize.y * 0.5f)
                 });
 
-                AddComponent(entity, new BossSpawnState { HasSpawnedBoss = 0 });
+                AddComponent(entity, new BossSpawnState
+                {
+                    HasSpawnedBoss = 0,
+                    BossKilled = 0,
+                    ChestPending = 0,
+                    ChestOpened = 0
+                });
                 AddComponent(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });
                 AddComponent(entity, new EvolutionState
                 {
@@ -171,8 +179,50 @@ namespace NightDash.ECS.Authoring
                     CanAttemptAbyss = authoring.allowAbyssEvolution ? (byte)1 : (byte)0
                 });
                 AddComponent(entity, new MetaProgress { ConquestPoints = 0, LastRunReward = 0 });
+                AddComponent(entity, new RunResultStats
+                {
+                    KillCount = 0,
+                    GoldEarned = 0,
+                    SoulsEarned = 0,
+                    CurrentWave = 0,
+                    RewardCommitted = 0
+                });
+                AddComponent(entity, new BossRewardState
+                {
+                    HasPendingReward = 0,
+                    EvolutionResolved = 0
+                });
+                AddComponent(entity, new BossRewardConfirmRequest { IsPending = 0 });
+                AddComponent(entity, new ResultSnapshot
+                {
+                    HasSnapshot = 0,
+                    IsVictory = 0,
+                    ElapsedTime = 0f,
+                    FinalLevel = 1,
+                    KillCount = 0,
+                    GoldEarned = 0,
+                    SoulsEarned = 0,
+                    RewardGranted = 0
+                });
                 AddComponent(entity, new SaveState { LastSavedConquestPoints = -1 });
                 AddComponent(entity, new DataLoadState { HasLoaded = 0 });
+                AddComponent(entity, new PlayerProgressionState
+                {
+                    WeaponSlotLimit = 6,
+                    PassiveSlotLimit = 6,
+                    RerollsRemaining = 1
+                });
+                AddComponent(entity, new UpgradeSelectionRequest
+                {
+                    SelectedOptionIndex = -1,
+                    HasSelection = 0,
+                    RerollRequested = 0
+                });
+                AddComponent(entity, new RunNavigationRequest
+                {
+                    Action = RunNavigationAction.None,
+                    IsPending = 0
+                });
                 AddComponent(entity, new RunSelection
                 {
                     StageId = new FixedString64Bytes(authoring.selectedStageId),
@@ -189,6 +239,12 @@ namespace NightDash.ECS.Authoring
                 });
 
                 DynamicBuffer<StageTimelineElement> timelineBuffer = AddBuffer<StageTimelineElement>(entity);
+                AddBuffer<SpawnArchetypeElement>(entity);
+                AddBuffer<OwnedWeaponElement>(entity);
+                AddBuffer<OwnedPassiveElement>(entity);
+                AddBuffer<UpgradeOptionElement>(entity);
+                AddBuffer<AvailableWeaponElement>(entity);
+                AddBuffer<AvailablePassiveElement>(entity);
                 if (authoring.timeline != null)
                 {
                     for (int i = 0; i < authoring.timeline.Length; i++)

@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: NightDash::NightDash.Data.WeaponData
   id: weapon_starfall
   displayName: "\uBCC4\uC758 \uB099\uD558"
-  weaponType: 0
+  weaponType: 1
   maxLevel: 8
-  baseCooldown: 1.2
-  basePowerCoeff: 1.1
-  baseRange: 2.4
-  baseProjectileSpeed: 0
+  baseCooldown: 1.35
+  basePowerCoeff: 1.2
+  baseRange: 8.5
+  baseProjectileSpeed: 9
+  includeInUpgradePool: 1
   levelCurves: []
   specialFlags:
     canPierce: 0
-    canCrit: 0
+    canCrit: 1
     hasKnockback: 0
