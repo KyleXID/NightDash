@@ -16,7 +16,9 @@ MonoBehaviour:
   resultWeaponId: weapon_abyss_hellflame_slash
   requiredWeaponId: weapon_hellflame_slash
   requiredWeaponLevel: 8
-  requiredPassiveIds: []
+  requiredPassiveIds:
+  - passive_strength
+  - passive_warrior_guard_stack
   requiredRiskScoreMin: 0
   requiredModifiers: []
   isAbyss: 0

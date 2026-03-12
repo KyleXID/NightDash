@@ -3,7 +3,6 @@ using NightDash.ECS.Components;
 using NightDash.Runtime;
 using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
 namespace NightDash.ECS.Systems
 {
@@ -18,6 +17,14 @@ namespace NightDash.ECS.Systems
             state.RequireForUpdate<DataLoadState>();
             state.RequireForUpdate<EnemySpawnConfig>();
             state.RequireForUpdate<StageTimelineElement>();
+            state.RequireForUpdate<SpawnArchetypeElement>();
+            state.RequireForUpdate<PlayerProgressionState>();
+            state.RequireForUpdate<RunResultStats>();
+            state.RequireForUpdate<BossRewardState>();
+            state.RequireForUpdate<BossRewardConfirmRequest>();
+            state.RequireForUpdate<ResultSnapshot>();
+            state.RequireForUpdate<RunNavigationRequest>();
+            state.RequireForUpdate<OwnedWeaponElement>();
         }
 
         public void OnUpdate(ref SystemState state)
@@ -61,29 +68,70 @@ namespace NightDash.ECS.Systems
                 meta.ValueRW.LastRunReward = 0;
             }
 
+            RuntimeBalanceUtility.ResetRunBuffers(ref state);
+            RuntimeBalanceUtility.PopulateAvailableUpgrades(ref state, registry);
+            RuntimeBalanceUtility.AddStartingLoadout(ref state, registry, classId);
+
+            RefRW<PlayerProgressionState> progression = SystemAPI.GetSingletonRW<PlayerProgressionState>();
+            progression.ValueRW.WeaponSlotLimit = 6;
+            progression.ValueRW.PassiveSlotLimit = 6;
+            progression.ValueRW.RerollsRemaining = 1;
+
+            RefRW<UpgradeSelectionRequest> selectionRequest = SystemAPI.GetSingletonRW<UpgradeSelectionRequest>();
+            selectionRequest.ValueRW.SelectedOptionIndex = -1;
+            selectionRequest.ValueRW.HasSelection = 0;
+            selectionRequest.ValueRW.RerollRequested = 0;
+
+            RefRW<RunResultStats> resultStats = SystemAPI.GetSingletonRW<RunResultStats>();
+            resultStats.ValueRW.KillCount = 0;
+            resultStats.ValueRW.GoldEarned = 0;
+            resultStats.ValueRW.SoulsEarned = 0;
+            resultStats.ValueRW.CurrentWave = 0;
+            resultStats.ValueRW.RewardCommitted = 0;
+
+            RefRW<BossSpawnState> bossState = SystemAPI.GetSingletonRW<BossSpawnState>();
+            bossState.ValueRW.HasSpawnedBoss = 0;
+            bossState.ValueRW.BossKilled = 0;
+            bossState.ValueRW.ChestPending = 0;
+            bossState.ValueRW.ChestOpened = 0;
+
+            RefRW<BossRewardState> bossReward = SystemAPI.GetSingletonRW<BossRewardState>();
+            bossReward.ValueRW.HasPendingReward = 0;
+            bossReward.ValueRW.EvolutionResolved = 0;
+
+            RefRW<BossRewardConfirmRequest> bossRewardConfirm = SystemAPI.GetSingletonRW<BossRewardConfirmRequest>();
+            bossRewardConfirm.ValueRW.IsPending = 0;
+
+            RefRW<ResultSnapshot> snapshot = SystemAPI.GetSingletonRW<ResultSnapshot>();
+            snapshot.ValueRW.HasSnapshot = 0;
+            snapshot.ValueRW.IsVictory = 0;
+            snapshot.ValueRW.ElapsedTime = 0f;
+            snapshot.ValueRW.FinalLevel = 1;
+            snapshot.ValueRW.KillCount = 0;
+            snapshot.ValueRW.GoldEarned = 0;
+            snapshot.ValueRW.SoulsEarned = 0;
+            snapshot.ValueRW.RewardGranted = 0;
+
+            RefRW<RunNavigationRequest> navigation = SystemAPI.GetSingletonRW<RunNavigationRequest>();
+            navigation.ValueRW.Action = RunNavigationAction.None;
+            navigation.ValueRW.IsPending = 0;
+
+            RefRW<GameLoopState> loop = SystemAPI.GetSingletonRW<GameLoopState>();
+            loop.ValueRW.ElapsedTime = 0f;
+            loop.ValueRW.Level = 1;
+            loop.ValueRW.Experience = 0f;
+            loop.ValueRW.NextLevelExperience = 28f;
+            loop.ValueRW.IsRunActive = 1;
+            loop.ValueRW.Status = RunStatus.Playing;
+            loop.ValueRW.PendingLevelUps = 0;
+
             if (!registry.TryGetClass(classId, out ClassData classData))
             {
                 NightDashLog.Warn($"[NightDash] ClassData not found for '{classId}', using baked defaults.");
             }
             else
             {
-                bool hasWeapon = registry.TryGetWeapon(classData.startWeaponId, out WeaponData weaponData);
-                float weaponDamage = hasWeapon ? classData.basePower * weaponData.basePowerCoeff : classData.basePower;
-                float weaponCooldown = hasWeapon ? weaponData.baseCooldown : 1f;
-                float weaponRange = hasWeapon ? weaponData.baseRange : 3f;
-
-                foreach (var (stats, weapon) in SystemAPI.Query<RefRW<CombatStats>, RefRW<WeaponRuntimeData>>().WithAll<PlayerTag>())
-                {
-                    stats.ValueRW.MaxHealth = classData.baseHp;
-                    stats.ValueRW.CurrentHealth = classData.baseHp;
-                    stats.ValueRW.Damage = classData.basePower;
-                    stats.ValueRW.MoveSpeed = classData.baseMoveSpeed;
-
-                    weapon.ValueRW.Damage = weaponDamage;
-                    weapon.ValueRW.Cooldown = weaponCooldown;
-                    weapon.ValueRW.Range = weaponRange;
-                    weapon.ValueRW.CooldownRemaining = 0f;
-                }
+                RuntimeBalanceUtility.RefreshPlayerRuntime(ref state, registry, classId);
             }
 
             loadState.ValueRW.HasLoaded = 1;
@@ -98,10 +146,12 @@ namespace NightDash.ECS.Systems
             }
 
             DynamicBuffer<StageTimelineElement> timeline = SystemAPI.GetSingletonBuffer<StageTimelineElement>();
+            DynamicBuffer<SpawnArchetypeElement> spawnArchetypes = SystemAPI.GetSingletonBuffer<SpawnArchetypeElement>();
             EnemySpawnConfig spawn = SystemAPI.GetSingleton<EnemySpawnConfig>();
 
             float baseSpawnPerMinute = 60f / math.max(0.1f, spawn.SpawnInterval);
             timeline.Clear();
+            spawnArchetypes.Clear();
 
             for (int i = 0; i < stageData.spawnPhases.Count; i++)
             {
@@ -132,9 +182,33 @@ namespace NightDash.ECS.Systems
                     SpawnMultiplier = math.max(0.1f, totalSpawnPerMinute / baseSpawnPerMinute),
                     EnableBonusSpawn = 0
                 });
+
+                if (phase.entries == null)
+                {
+                    continue;
+                }
+
+                for (int j = 0; j < phase.entries.Count; j++)
+                {
+                    SpawnEntry entry = phase.entries[j];
+                    if (string.IsNullOrWhiteSpace(entry.enemyId))
+                    {
+                        continue;
+                    }
+
+                    spawnArchetypes.Add(new SpawnArchetypeElement
+                    {
+                        StartTime = phase.fromSec,
+                        EndTime = phase.toSec,
+                        EnemyId = entry.enemyId.Trim(),
+                        Weight = math.max(1, entry.weight),
+                        SpawnPerMinute = math.max(0, entry.spawnPerMin),
+                        IsBoss = (byte)(entry.enemyId.Trim() == stageData.bossId ? 1 : 0)
+                    });
+                }
             }
 
-            NightDashLog.Info($"[NightDash] Stage spawn phases applied: stage='{stageData.id}', phases={timeline.Length}.");
+            NightDashLog.Info($"[NightDash] Stage spawn phases applied: stage='{stageData.id}', phases={timeline.Length}, entries={spawnArchetypes.Length}.");
         }
     }
 }

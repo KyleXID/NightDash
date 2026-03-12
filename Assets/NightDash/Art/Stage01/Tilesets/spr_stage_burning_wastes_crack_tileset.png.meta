@@ -1,0 +1,950 @@
+fileFormatVersion: 2
+guid: f812f172d8c544b63b0546b769afca07
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -444024259561719877
+    second: spr_stage_burning_wastes_crack_tileset_0
+  - first:
+      213: -5395115522753482053
+    second: spr_stage_burning_wastes_crack_tileset_1
+  - first:
+      213: 669141880650479784
+    second: spr_stage_burning_wastes_crack_tileset_2
+  - first:
+      213: -5100554206315216806
+    second: spr_stage_burning_wastes_crack_tileset_3
+  - first:
+      213: -3200776296849992926
+    second: spr_stage_burning_wastes_crack_tileset_4
+  - first:
+      213: 4936582812170287415
+    second: spr_stage_burning_wastes_crack_tileset_5
+  - first:
+      213: 1751215741401869075
+    second: spr_stage_burning_wastes_crack_tileset_6
+  - first:
+      213: 8844164398327369564
+    second: spr_stage_burning_wastes_crack_tileset_7
+  - first:
+      213: -445445732803998488
+    second: spr_stage_burning_wastes_crack_tileset_8
+  - first:
+      213: -8487938648220844922
+    second: spr_stage_burning_wastes_crack_tileset_9
+  - first:
+      213: 9176594005938942477
+    second: spr_stage_burning_wastes_crack_tileset_10
+  - first:
+      213: 142400267307582889
+    second: spr_stage_burning_wastes_crack_tileset_11
+  - first:
+      213: 1897137059469785330
+    second: spr_stage_burning_wastes_crack_tileset_12
+  - first:
+      213: -4879424683964975558
+    second: spr_stage_burning_wastes_crack_tileset_13
+  - first:
+      213: 205559083261226799
+    second: spr_stage_burning_wastes_crack_tileset_14
+  - first:
+      213: -4705097629345754581
+    second: spr_stage_burning_wastes_crack_tileset_15
+  - first:
+      213: 3895993850514997726
+    second: spr_stage_burning_wastes_crack_tileset_16
+  - first:
+      213: 6360847484685377953
+    second: spr_stage_burning_wastes_crack_tileset_17
+  - first:
+      213: 1763542087605378730
+    second: spr_stage_burning_wastes_crack_tileset_18
+  - first:
+      213: 3518707796201788428
+    second: spr_stage_burning_wastes_crack_tileset_19
+  - first:
+      213: -557986963698499449
+    second: spr_stage_burning_wastes_crack_tileset_20
+  - first:
+      213: -7505492553606109841
+    second: spr_stage_burning_wastes_crack_tileset_21
+  - first:
+      213: -4531783363342443190
+    second: spr_stage_burning_wastes_crack_tileset_22
+  - first:
+      213: -206052816021088217
+    second: spr_stage_burning_wastes_crack_tileset_23
+  - first:
+      213: 773560568824246711
+    second: spr_stage_burning_wastes_crack_tileset_24
+  - first:
+      213: -2530921626520204333
+    second: spr_stage_burning_wastes_crack_tileset_25
+  - first:
+      213: -1246880010985060718
+    second: spr_stage_burning_wastes_crack_tileset_26
+  - first:
+      213: -3257588603807706620
+    second: spr_stage_burning_wastes_crack_tileset_27
+  - first:
+      213: -3662787855424023569
+    second: spr_stage_burning_wastes_crack_tileset_00
+  - first:
+      213: -7501209772437330782
+    second: spr_stage_burning_wastes_crack_tileset_01
+  - first:
+      213: 4402360260935173902
+    second: spr_stage_burning_wastes_crack_tileset_02
+  - first:
+      213: 8448760579503113310
+    second: spr_stage_burning_wastes_crack_tileset_03
+  - first:
+      213: 7487283719839799263
+    second: spr_stage_burning_wastes_crack_tileset_04
+  - first:
+      213: 1357833199569055053
+    second: spr_stage_burning_wastes_crack_tileset_05
+  - first:
+      213: -4173652030840998003
+    second: spr_stage_burning_wastes_crack_tileset_06
+  - first:
+      213: -5240459882403592938
+    second: spr_stage_burning_wastes_crack_tileset_07
+  - first:
+      213: -8208288347704987757
+    second: spr_stage_burning_wastes_crack_tileset_08
+  - first:
+      213: 1974537983347110996
+    second: spr_stage_burning_wastes_crack_tileset_09
+  - first:
+      213: -9172915539972632934
+    second: spr_stage_burning_wastes_crack_tileset_28
+  - first:
+      213: -4218902221081494039
+    second: spr_stage_burning_wastes_crack_tileset_29
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_00
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 849
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe316dd0ad92b2dc0800000000000000
+      internalID: -3662787855424023569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_01
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 849
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a42f20847956e790800000000000000
+      internalID: -7501209772437330782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_02
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 849
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0746562553581d30800000000000000
+      internalID: 4402360260935173902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_03
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 849
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e544b9dcbf6004570800000000000000
+      internalID: 8448760579503113310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_04
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 849
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fd7dd95bfdc28e760800000000000000
+      internalID: 7487283719839799263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_05
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 686
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d4dab84d91ef7d210800000000000000
+      internalID: 1357833199569055053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_06
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 686
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d8772a547953416c0800000000000000
+      internalID: -4173652030840998003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_07
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 686
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61506a980852647b0800000000000000
+      internalID: -5240459882403592938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_08
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 686
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39fe015bc3d461e80800000000000000
+      internalID: -8208288347704987757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_09
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 686
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 454bbe495d7f66b10800000000000000
+      internalID: 1974537983347110996
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_10
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 523
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0238f3f0afc95f70800000000000000
+      internalID: 9176594005938942477
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_11
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 523
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a50ac4e948e9f100800000000000000
+      internalID: 142400267307582889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_12
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 523
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f8fce7aa1cf35a10800000000000000
+      internalID: 1897137059469785330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_13
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 523
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a36befb2a1dc84cb0800000000000000
+      internalID: -4879424683964975558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_14
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 523
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2fe32aa5ea4ad200800000000000000
+      internalID: 205559083261226799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_15
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 360
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b22505182a224beb0800000000000000
+      internalID: -4705097629345754581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_16
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 360
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed18d03e3c9511630800000000000000
+      internalID: 3895993850514997726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_17
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 360
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1a1eb1b0615464850800000000000000
+      internalID: 6360847484685377953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_18
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 360
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aae5b2e5f2c597810800000000000000
+      internalID: 1763542087605378730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_19
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 360
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0451050916f4d030800000000000000
+      internalID: 3518707796201788428
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_20
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 197
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 780c37710d1a148f0800000000000000
+      internalID: -557986963698499449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_21
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 197
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f65e7fdc94227d790800000000000000
+      internalID: -7505492553606109841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_22
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 197
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4dd2fc9a0fdb11c0800000000000000
+      internalID: -4531783363342443190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_23
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 197
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 72818183e04f32df0800000000000000
+      internalID: -206052816021088217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_24
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 197
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7b1b4052d3d3cba00800000000000000
+      internalID: 773560568824246711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_25
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 34
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3dbc8e8a03c50ecd0800000000000000
+      internalID: -2530921626520204333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_26
+      rect:
+        serializedVersion: 2
+        x: 228
+        y: 34
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29643bb7c3132bee0800000000000000
+      internalID: -1246880010985060718
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_27
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 34
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4025ead9c68bac2d0800000000000000
+      internalID: -3257588603807706620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_28
+      rect:
+        serializedVersion: 2
+        x: 620
+        y: 34
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9e4545aae143b080800000000000000
+      internalID: -9172915539972632934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_crack_tileset_29
+      rect:
+        serializedVersion: 2
+        x: 816
+        y: 34
+        width: 174
+        height: 141
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9edb45a58c27375c0800000000000000
+      internalID: -4218902221081494039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      spr_stage_burning_wastes_crack_tileset_0: -444024259561719877
+      spr_stage_burning_wastes_crack_tileset_00: -3662787855424023569
+      spr_stage_burning_wastes_crack_tileset_01: -7501209772437330782
+      spr_stage_burning_wastes_crack_tileset_02: 4402360260935173902
+      spr_stage_burning_wastes_crack_tileset_03: 8448760579503113310
+      spr_stage_burning_wastes_crack_tileset_04: 7487283719839799263
+      spr_stage_burning_wastes_crack_tileset_05: 1357833199569055053
+      spr_stage_burning_wastes_crack_tileset_06: -4173652030840998003
+      spr_stage_burning_wastes_crack_tileset_07: -5240459882403592938
+      spr_stage_burning_wastes_crack_tileset_08: -8208288347704987757
+      spr_stage_burning_wastes_crack_tileset_09: 1974537983347110996
+      spr_stage_burning_wastes_crack_tileset_1: -5395115522753482053
+      spr_stage_burning_wastes_crack_tileset_10: 9176594005938942477
+      spr_stage_burning_wastes_crack_tileset_11: 142400267307582889
+      spr_stage_burning_wastes_crack_tileset_12: 1897137059469785330
+      spr_stage_burning_wastes_crack_tileset_13: -4879424683964975558
+      spr_stage_burning_wastes_crack_tileset_14: 205559083261226799
+      spr_stage_burning_wastes_crack_tileset_15: -4705097629345754581
+      spr_stage_burning_wastes_crack_tileset_16: 3895993850514997726
+      spr_stage_burning_wastes_crack_tileset_17: 6360847484685377953
+      spr_stage_burning_wastes_crack_tileset_18: 1763542087605378730
+      spr_stage_burning_wastes_crack_tileset_19: 3518707796201788428
+      spr_stage_burning_wastes_crack_tileset_2: 669141880650479784
+      spr_stage_burning_wastes_crack_tileset_20: -557986963698499449
+      spr_stage_burning_wastes_crack_tileset_21: -7505492553606109841
+      spr_stage_burning_wastes_crack_tileset_22: -4531783363342443190
+      spr_stage_burning_wastes_crack_tileset_23: -206052816021088217
+      spr_stage_burning_wastes_crack_tileset_24: 773560568824246711
+      spr_stage_burning_wastes_crack_tileset_25: -2530921626520204333
+      spr_stage_burning_wastes_crack_tileset_26: -1246880010985060718
+      spr_stage_burning_wastes_crack_tileset_27: -3257588603807706620
+      spr_stage_burning_wastes_crack_tileset_28: -9172915539972632934
+      spr_stage_burning_wastes_crack_tileset_29: -4218902221081494039
+      spr_stage_burning_wastes_crack_tileset_3: -5100554206315216806
+      spr_stage_burning_wastes_crack_tileset_4: -3200776296849992926
+      spr_stage_burning_wastes_crack_tileset_5: 4936582812170287415
+      spr_stage_burning_wastes_crack_tileset_6: 1751215741401869075
+      spr_stage_burning_wastes_crack_tileset_7: 8844164398327369564
+      spr_stage_burning_wastes_crack_tileset_8: -445445732803998488
+      spr_stage_burning_wastes_crack_tileset_9: -8487938648220844922
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

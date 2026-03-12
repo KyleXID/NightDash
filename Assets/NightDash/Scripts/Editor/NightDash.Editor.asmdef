@@ -2,7 +2,9 @@
   "name": "NightDash.Editor",
   "rootNamespace": "NightDash.Editor",
   "references": [
-    "NightDash"
+    "NightDash",
+    "Unity.Entities",
+    "Unity.Collections"
   ],
   "includePlatforms": [
     "Editor"

@@ -14,14 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: NightDash::NightDash.Data.WeaponData
   id: weapon_demon_orb
   displayName: "\uB9C8\uACC4 \uD30C\uC5F4\uAD6C"
-  weaponType: 0
+  weaponType: 1
   maxLevel: 8
-  baseCooldown: 1.2
-  basePowerCoeff: 1.1
-  baseRange: 2.4
-  baseProjectileSpeed: 0
+  baseCooldown: 1
+  basePowerCoeff: 1
+  baseRange: 7
+  baseProjectileSpeed: 10
+  includeInUpgradePool: 1
   levelCurves: []
   specialFlags:
-    canPierce: 0
-    canCrit: 0
+    canPierce: 1
+    canCrit: 1
     hasKnockback: 0

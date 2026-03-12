@@ -1,0 +1,1262 @@
+fileFormatVersion: 2
+guid: f73314ad5ddc541f193985fc56ac00c4
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6625692377700527203
+    second: spr_stage_burning_wastes_ground_tileset_0
+  - first:
+      213: 944345342759204946
+    second: spr_stage_burning_wastes_ground_tileset_1
+  - first:
+      213: -3429910663690737671
+    second: spr_stage_burning_wastes_ground_tileset_2
+  - first:
+      213: -5668854636811322600
+    second: spr_stage_burning_wastes_ground_tileset_3
+  - first:
+      213: -7548965225099772553
+    second: spr_stage_burning_wastes_ground_tileset_4
+  - first:
+      213: 3201828058930657569
+    second: spr_stage_burning_wastes_ground_tileset_5
+  - first:
+      213: 3507003137682617589
+    second: spr_stage_burning_wastes_ground_tileset_6
+  - first:
+      213: -3712323414106865037
+    second: spr_stage_burning_wastes_ground_tileset_7
+  - first:
+      213: 260308170970248957
+    second: spr_stage_burning_wastes_ground_tileset_8
+  - first:
+      213: 7354616296206150299
+    second: spr_stage_burning_wastes_ground_tileset_9
+  - first:
+      213: -1632801695565487878
+    second: spr_stage_burning_wastes_ground_tileset_10
+  - first:
+      213: -3884352563434827088
+    second: spr_stage_burning_wastes_ground_tileset_11
+  - first:
+      213: 6481951063983428983
+    second: spr_stage_burning_wastes_ground_tileset_12
+  - first:
+      213: 8992249136855637531
+    second: spr_stage_burning_wastes_ground_tileset_13
+  - first:
+      213: 6361381426814431047
+    second: spr_stage_burning_wastes_ground_tileset_00
+  - first:
+      213: 1482790408823981097
+    second: spr_stage_burning_wastes_ground_tileset_01
+  - first:
+      213: 1819011165423124486
+    second: spr_stage_burning_wastes_ground_tileset_02
+  - first:
+      213: -6623177967161311845
+    second: spr_stage_burning_wastes_ground_tileset_03
+  - first:
+      213: 2752492881945857207
+    second: spr_stage_burning_wastes_ground_tileset_04
+  - first:
+      213: 3249631547882372730
+    second: spr_stage_burning_wastes_ground_tileset_05
+  - first:
+      213: -544209717679088607
+    second: spr_stage_burning_wastes_ground_tileset_06
+  - first:
+      213: 827248931900062373
+    second: spr_stage_burning_wastes_ground_tileset_07
+  - first:
+      213: 477735723612835223
+    second: spr_stage_burning_wastes_ground_tileset_08
+  - first:
+      213: -6013522765789992558
+    second: spr_stage_burning_wastes_ground_tileset_09
+  - first:
+      213: -1741110802032714213
+    second: spr_stage_burning_wastes_ground_tileset_14
+  - first:
+      213: -2544505576811252402
+    second: spr_stage_burning_wastes_ground_tileset_15
+  - first:
+      213: -8579349149697923691
+    second: spr_stage_burning_wastes_ground_tileset_16
+  - first:
+      213: 507317729534980641
+    second: spr_stage_burning_wastes_ground_tileset_17
+  - first:
+      213: 1960865212020017780
+    second: spr_stage_burning_wastes_ground_tileset_18
+  - first:
+      213: -6349080971912226030
+    second: spr_stage_burning_wastes_ground_tileset_19
+  - first:
+      213: 2893243004884761395
+    second: spr_stage_burning_wastes_ground_tileset_20
+  - first:
+      213: -6463203169888270171
+    second: spr_stage_burning_wastes_ground_tileset_21
+  - first:
+      213: -2617197695922511971
+    second: spr_stage_burning_wastes_ground_tileset_22
+  - first:
+      213: -3575537061356589519
+    second: spr_stage_burning_wastes_ground_tileset_23
+  - first:
+      213: -6722111873347867101
+    second: spr_stage_burning_wastes_ground_tileset_24
+  - first:
+      213: -5509451475076500747
+    second: spr_stage_burning_wastes_ground_tileset_25
+  - first:
+      213: 8276925464389125
+    second: spr_stage_burning_wastes_ground_tileset_26
+  - first:
+      213: 3377116599082657877
+    second: spr_stage_burning_wastes_ground_tileset_27
+  - first:
+      213: 6727276662109113023
+    second: spr_stage_burning_wastes_ground_tileset_28
+  - first:
+      213: 8326702421252955106
+    second: spr_stage_burning_wastes_ground_tileset_29
+  - first:
+      213: 119404322681350240
+    second: spr_stage_burning_wastes_ground_tileset_30
+  - first:
+      213: -5872035007307041946
+    second: spr_stage_burning_wastes_ground_tileset_31
+  - first:
+      213: 8814942952812592226
+    second: spr_stage_burning_wastes_ground_tileset_32
+  - first:
+      213: 627045682038216789
+    second: spr_stage_burning_wastes_ground_tileset_33
+  - first:
+      213: 3040839337359900388
+    second: spr_stage_burning_wastes_ground_tileset_34
+  - first:
+      213: 2768847472001234371
+    second: spr_stage_burning_wastes_ground_tileset_35
+  - first:
+      213: -1355659017846227772
+    second: spr_stage_burning_wastes_ground_tileset_36
+  - first:
+      213: -3307419506344766836
+    second: spr_stage_burning_wastes_ground_tileset_37
+  - first:
+      213: 7350164965371219180
+    second: spr_stage_burning_wastes_ground_tileset_38
+  - first:
+      213: -202913508848730514
+    second: spr_stage_burning_wastes_ground_tileset_39
+  - first:
+      213: -2851940987643445946
+    second: spr_stage_burning_wastes_ground_tileset_40
+  - first:
+      213: 3691956275919779311
+    second: spr_stage_burning_wastes_ground_tileset_41
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_00
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 74faa0224ba284850800000000000000
+      internalID: 6361381426814431047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_01
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9244f4a450ee39410800000000000000
+      internalID: 1482790408823981097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_02
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 600c385740d6e3910800000000000000
+      internalID: 1819011165423124486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_03
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9df72fdabeb514a0800000000000000
+      internalID: -6623177967161311845
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_04
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bc8c2b51b1d23620800000000000000
+      internalID: 2752492881945857207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_05
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 893
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7e7e6eeca2091d20800000000000000
+      internalID: 3249631547882372730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_06
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12c1c6625249278f0800000000000000
+      internalID: -544209717679088607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_07
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5aa79b6458afa7b00800000000000000
+      internalID: 827248931900062373
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_08
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79d05760c1241a600800000000000000
+      internalID: 477735723612835223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_09
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 299ec50d7ecab8ca0800000000000000
+      internalID: -6013522765789992558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_10
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af0e923428f1759e0800000000000000
+      internalID: -1632801695565487878
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_11
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 750
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b2d61a7ce1081ac0800000000000000
+      internalID: -3884352563434827088
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_12
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 775923c562484f950800000000000000
+      internalID: 6481951063983428983
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_13
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1ed71e62f2eacc70800000000000000
+      internalID: 8992249136855637531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_14
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b1e9e3a43f456d7e0800000000000000
+      internalID: -1741110802032714213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_15
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e453a25c8a910bcd0800000000000000
+      internalID: -2544505576811252402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_16
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 595a438576700f880800000000000000
+      internalID: -8579349149697923691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_17
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 607
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 122b03189ca5a0700800000000000000
+      internalID: 507317729534980641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_18
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 47acfde6584663b10800000000000000
+      internalID: 1960865212020017780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_19
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21bdaf2be7883e7a0800000000000000
+      internalID: -6349080971912226030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_20
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 33b3a031f2dd62820800000000000000
+      internalID: 2893243004884761395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_21
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a881a3e5f61e46a0800000000000000
+      internalID: -6463203169888270171
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_22
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d9f5193ef88ddabd0800000000000000
+      internalID: -2617197695922511971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_23
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 464
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13ea8989cf3216ec0800000000000000
+      internalID: -3575537061356589519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_24
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32e2aa0ddd246b2a0800000000000000
+      internalID: -6722111873347867101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_25
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f230d0e21f7a83b0800000000000000
+      internalID: -5509451475076500747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_26
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5062322e1d76d1000800000000000000
+      internalID: 8276925464389125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_27
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 558a56577adedde20800000000000000
+      internalID: 3377116599082657877
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_28
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fba0ac64b761c5d50800000000000000
+      internalID: 6727276662109113023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_29
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 321
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ebda214cb36e8370800000000000000
+      internalID: 8326702421252955106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_30
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 068611e499538a100800000000000000
+      internalID: 119404322681350240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_31
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6633ec0b547528ea0800000000000000
+      internalID: -5872035007307041946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_32
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 26c3ab979e7f45a70800000000000000
+      internalID: 8814942952812592226
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_33
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55894dfb9b6b3b800800000000000000
+      internalID: 627045682038216789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_34
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4eefe5a244b333a20800000000000000
+      internalID: 3040839337359900388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_35
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 178
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c53fd51b1cec6620800000000000000
+      internalID: 2768847472001234371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_36
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4cc78bc4e4bbf2de0800000000000000
+      internalID: -1355659017846227772
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_37
+      rect:
+        serializedVersion: 2
+        x: 195
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c825f118b7fa912d0800000000000000
+      internalID: -3307419506344766836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_38
+      rect:
+        serializedVersion: 2
+        x: 359
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cec0979d718010660800000000000000
+      internalID: 7350164965371219180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_39
+      rect:
+        serializedVersion: 2
+        x: 523
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6e71f02d3b1f2df0800000000000000
+      internalID: -202913508848730514
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_40
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 64db22f28cedb68d0800000000000000
+      internalID: -2851940987643445946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_stage_burning_wastes_ground_tileset_41
+      rect:
+        serializedVersion: 2
+        x: 851
+        y: 35
+        width: 142
+        height: 121
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe5f8701ca67c3330800000000000000
+      internalID: 3691956275919779311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      spr_stage_burning_wastes_ground_tileset_0: -6625692377700527203
+      spr_stage_burning_wastes_ground_tileset_00: 6361381426814431047
+      spr_stage_burning_wastes_ground_tileset_01: 1482790408823981097
+      spr_stage_burning_wastes_ground_tileset_02: 1819011165423124486
+      spr_stage_burning_wastes_ground_tileset_03: -6623177967161311845
+      spr_stage_burning_wastes_ground_tileset_04: 2752492881945857207
+      spr_stage_burning_wastes_ground_tileset_05: 3249631547882372730
+      spr_stage_burning_wastes_ground_tileset_06: -544209717679088607
+      spr_stage_burning_wastes_ground_tileset_07: 827248931900062373
+      spr_stage_burning_wastes_ground_tileset_08: 477735723612835223
+      spr_stage_burning_wastes_ground_tileset_09: -6013522765789992558
+      spr_stage_burning_wastes_ground_tileset_1: 944345342759204946
+      spr_stage_burning_wastes_ground_tileset_10: -1632801695565487878
+      spr_stage_burning_wastes_ground_tileset_11: -3884352563434827088
+      spr_stage_burning_wastes_ground_tileset_12: 6481951063983428983
+      spr_stage_burning_wastes_ground_tileset_13: 8992249136855637531
+      spr_stage_burning_wastes_ground_tileset_14: -1741110802032714213
+      spr_stage_burning_wastes_ground_tileset_15: -2544505576811252402
+      spr_stage_burning_wastes_ground_tileset_16: -8579349149697923691
+      spr_stage_burning_wastes_ground_tileset_17: 507317729534980641
+      spr_stage_burning_wastes_ground_tileset_18: 1960865212020017780
+      spr_stage_burning_wastes_ground_tileset_19: -6349080971912226030
+      spr_stage_burning_wastes_ground_tileset_2: -3429910663690737671
+      spr_stage_burning_wastes_ground_tileset_20: 2893243004884761395
+      spr_stage_burning_wastes_ground_tileset_21: -6463203169888270171
+      spr_stage_burning_wastes_ground_tileset_22: -2617197695922511971
+      spr_stage_burning_wastes_ground_tileset_23: -3575537061356589519
+      spr_stage_burning_wastes_ground_tileset_24: -6722111873347867101
+      spr_stage_burning_wastes_ground_tileset_25: -5509451475076500747
+      spr_stage_burning_wastes_ground_tileset_26: 8276925464389125
+      spr_stage_burning_wastes_ground_tileset_27: 3377116599082657877
+      spr_stage_burning_wastes_ground_tileset_28: 6727276662109113023
+      spr_stage_burning_wastes_ground_tileset_29: 8326702421252955106
+      spr_stage_burning_wastes_ground_tileset_3: -5668854636811322600
+      spr_stage_burning_wastes_ground_tileset_30: 119404322681350240
+      spr_stage_burning_wastes_ground_tileset_31: -5872035007307041946
+      spr_stage_burning_wastes_ground_tileset_32: 8814942952812592226
+      spr_stage_burning_wastes_ground_tileset_33: 627045682038216789
+      spr_stage_burning_wastes_ground_tileset_34: 3040839337359900388
+      spr_stage_burning_wastes_ground_tileset_35: 2768847472001234371
+      spr_stage_burning_wastes_ground_tileset_36: -1355659017846227772
+      spr_stage_burning_wastes_ground_tileset_37: -3307419506344766836
+      spr_stage_burning_wastes_ground_tileset_38: 7350164965371219180
+      spr_stage_burning_wastes_ground_tileset_39: -202913508848730514
+      spr_stage_burning_wastes_ground_tileset_4: -7548965225099772553
+      spr_stage_burning_wastes_ground_tileset_40: -2851940987643445946
+      spr_stage_burning_wastes_ground_tileset_41: 3691956275919779311
+      spr_stage_burning_wastes_ground_tileset_5: 3201828058930657569
+      spr_stage_burning_wastes_ground_tileset_6: 3507003137682617589
+      spr_stage_burning_wastes_ground_tileset_7: -3712323414106865037
+      spr_stage_burning_wastes_ground_tileset_8: 260308170970248957
+      spr_stage_burning_wastes_ground_tileset_9: 7354616296206150299
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

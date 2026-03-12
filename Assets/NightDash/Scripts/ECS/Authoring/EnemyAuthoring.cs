@@ -30,6 +30,12 @@ namespace NightDash.ECS.Authoring
                     Damage = authoring.damage,
                     MoveSpeed = authoring.moveSpeed
                 });
+                AddComponent(entity, new EnemyArchetypeData
+                {
+                    Id = authoring.isBoss
+                        ? new Unity.Collections.FixedString64Bytes("boss_agron")
+                        : new Unity.Collections.FixedString64Bytes("ghoul_scout")
+                });
             }
         }
     }

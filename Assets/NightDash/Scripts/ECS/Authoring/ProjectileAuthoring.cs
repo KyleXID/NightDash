@@ -19,7 +19,8 @@ namespace NightDash.ECS.Authoring
                 {
                     Damage = authoring.damage,
                     Lifetime = authoring.lifetime,
-                    IsPlayerOwned = authoring.isPlayerOwned ? (byte)1 : (byte)0
+                    IsPlayerOwned = authoring.isPlayerOwned ? (byte)1 : (byte)0,
+                    Radius = 0.35f
                 });
             }
         }

@@ -73,7 +73,8 @@ namespace NightDash.ECS.Systems
                 Cooldown = 0.8f,
                 CooldownRemaining = 0f,
                 Damage = 12f,
-                Range = 7f
+                Range = 7f,
+                ProjectileSpeed = 10f
             });
         }
 
@@ -82,6 +83,7 @@ namespace NightDash.ECS.Systems
             Entity enemy = state.EntityManager.CreateEntity(
                 typeof(Prefab),
                 typeof(EnemyTag),
+                typeof(EnemyArchetypeData),
                 typeof(LocalTransform),
                 typeof(CombatStats));
 
@@ -97,6 +99,12 @@ namespace NightDash.ECS.Systems
                 MaxHealth = boss ? 300f : 30f,
                 Damage = boss ? 15f : 5f,
                 MoveSpeed = boss ? 1.8f : 2.5f
+            });
+            state.EntityManager.SetComponentData(enemy, new EnemyArchetypeData
+            {
+                Id = boss
+                    ? new Unity.Collections.FixedString64Bytes("boss_agron")
+                    : new Unity.Collections.FixedString64Bytes("ghoul_scout")
             });
 
             return enemy;

@@ -20,7 +20,8 @@ namespace NightDash.ECS.Systems
 
         public void OnUpdate(ref SystemState state)
         {
-            if (SystemAPI.GetSingleton<GameLoopState>().IsRunActive == 0)
+            GameLoopState loop = SystemAPI.GetSingleton<GameLoopState>();
+            if (loop.IsRunActive == 0 || loop.Status != RunStatus.Playing)
             {
                 return;
             }

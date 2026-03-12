@@ -23,6 +23,7 @@ namespace NightDash.Data
         public List<WeaponLevelCurve> levelCurves = new();
 
         [Header("Flags")]
+        public bool includeInUpgradePool = true;
         public WeaponSpecialFlags specialFlags;
 
         public float GetPowerCoeffOrDefault(int level)
