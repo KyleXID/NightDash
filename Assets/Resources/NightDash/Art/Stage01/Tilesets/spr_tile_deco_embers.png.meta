@@ -1,0 +1,806 @@
+fileFormatVersion: 2
+guid: 7c46fcf8140f84872869995d3ffd87bd
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7970016039796122190
+    second: spr_tile_deco_embers_0
+  - first:
+      213: 1525718481927330605
+    second: spr_tile_deco_embers_1
+  - first:
+      213: -4701955344067429862
+    second: spr_tile_deco_embers_2
+  - first:
+      213: 5164600790403858691
+    second: spr_tile_deco_embers_3
+  - first:
+      213: 7280395137572901228
+    second: spr_tile_deco_embers_4
+  - first:
+      213: 1668455518451018894
+    second: spr_tile_deco_embers_5
+  - first:
+      213: -4228094332020884702
+    second: spr_tile_deco_embers_6
+  - first:
+      213: 1324174987408587090
+    second: spr_tile_deco_embers_7
+  - first:
+      213: 3778165706163364761
+    second: spr_tile_deco_embers_8
+  - first:
+      213: 598929468703060230
+    second: spr_tile_deco_embers_9
+  - first:
+      213: -561865227323377981
+    second: spr_tile_deco_embers_10
+  - first:
+      213: -5018364304677437532
+    second: spr_tile_deco_embers_11
+  - first:
+      213: -3152572468380697562
+    second: spr_tile_deco_embers_12
+  - first:
+      213: -8326977075242063907
+    second: spr_tile_deco_embers_13
+  - first:
+      213: -7456359026757451503
+    second: spr_tile_deco_embers_14
+  - first:
+      213: -3779028817823755807
+    second: spr_tile_deco_embers_15
+  - first:
+      213: 4865495429716985775
+    second: spr_tile_deco_embers_16
+  - first:
+      213: 6256556993336065906
+    second: spr_tile_deco_embers_17
+  - first:
+      213: -3106934409065275547
+    second: spr_tile_deco_embers_18
+  - first:
+      213: -8192211278883390472
+    second: spr_tile_deco_embers_19
+  - first:
+      213: -227427848669739443
+    second: spr_tile_deco_embers_20
+  - first:
+      213: 1824785218420782209
+    second: spr_tile_deco_embers_21
+  - first:
+      213: 6004633087696808526
+    second: spr_tile_deco_embers_22
+  - first:
+      213: 5282541758437132367
+    second: spr_tile_deco_embers_23
+  - first:
+      213: 8340531414273787771
+    second: spr_tile_deco_embers_24
+  - first:
+      213: -6685317288388356463
+    second: spr_tile_deco_embers_25
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_0
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 213
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2bd59c583a0d46190800000000000000
+      internalID: -7970016039796122190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_1
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 206
+        width: 18
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2bd68e20e07c2510800000000000000
+      internalID: 1525718481927330605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_2
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 219
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a1a7c1fc68c4fbeb0800000000000000
+      internalID: -4701955344067429862
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_3
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 205
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30149be3e095ca740800000000000000
+      internalID: 5164600790403858691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_4
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 202
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c61938fedc8290560800000000000000
+      internalID: 7280395137572901228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_5
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 184
+        width: 35
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8c20d4447b872710800000000000000
+      internalID: 1668455518451018894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_6
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 188
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22b7d0f3b9ac255c0800000000000000
+      internalID: -4228094332020884702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_7
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 180
+        width: 11
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25932f0a22a606210800000000000000
+      internalID: 1324174987408587090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_8
+      rect:
+        serializedVersion: 2
+        x: 172
+        y: 176
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9932e6231bdbe6430800000000000000
+      internalID: 3778165706163364761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_9
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 150
+        width: 14
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6013f83bd23df4800800000000000000
+      internalID: 598929468703060230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_10
+      rect:
+        serializedVersion: 2
+        x: 83
+        y: 164
+        width: 12
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c6feb97d8ad338f0800000000000000
+      internalID: -561865227323377981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_11
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 133
+        width: 33
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4af733ad0403b5ab0800000000000000
+      internalID: -5018364304677437532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_12
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 151
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62cfd750b00df34d0800000000000000
+      internalID: -3152572468380697562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_13
+      rect:
+        serializedVersion: 2
+        x: 208
+        y: 147
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd72061e772a07c80800000000000000
+      internalID: -8326977075242063907
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_14
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 117
+        width: 10
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 111485c78f0b58890800000000000000
+      internalID: -7456359026757451503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_15
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 100
+        width: 41
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e196a5ff413e8bc0800000000000000
+      internalID: -3779028817823755807
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_16
+      rect:
+        serializedVersion: 2
+        x: 190
+        y: 115
+        width: 16
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa741989056b58340800000000000000
+      internalID: 4865495429716985775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_17
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 83
+        width: 30
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27f38c0df61c3d650800000000000000
+      internalID: 6256556993336065906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_18
+      rect:
+        serializedVersion: 2
+        x: 212
+        y: 99
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 56fd93fbd93f1e4d0800000000000000
+      internalID: -3106934409065275547
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_19
+      rect:
+        serializedVersion: 2
+        x: 39
+        y: 76
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8fbf43dfe3b6f4e80800000000000000
+      internalID: -8192211278883390472
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_20
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 67
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d46420c939308dcf0800000000000000
+      internalID: -227427848669739443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_21
+      rect:
+        serializedVersion: 2
+        x: 178
+        y: 57
+        width: 9
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 184ba5fec70f25910800000000000000
+      internalID: 1824785218420782209
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_22
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 64
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4aa9b6bafdb45350800000000000000
+      internalID: 6004633087696808526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_23
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 55
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4800debdbb5f4940800000000000000
+      internalID: 5282541758437132367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_24
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 47
+        width: 13
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7786c991258fb370800000000000000
+      internalID: 8340531414273787771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_embers_25
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 42
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19695d6b85bf833a0800000000000000
+      internalID: -6685317288388356463
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      spr_tile_deco_embers_0: -7970016039796122190
+      spr_tile_deco_embers_1: 1525718481927330605
+      spr_tile_deco_embers_10: -561865227323377981
+      spr_tile_deco_embers_11: -5018364304677437532
+      spr_tile_deco_embers_12: -3152572468380697562
+      spr_tile_deco_embers_13: -8326977075242063907
+      spr_tile_deco_embers_14: -7456359026757451503
+      spr_tile_deco_embers_15: -3779028817823755807
+      spr_tile_deco_embers_16: 4865495429716985775
+      spr_tile_deco_embers_17: 6256556993336065906
+      spr_tile_deco_embers_18: -3106934409065275547
+      spr_tile_deco_embers_19: -8192211278883390472
+      spr_tile_deco_embers_2: -4701955344067429862
+      spr_tile_deco_embers_20: -227427848669739443
+      spr_tile_deco_embers_21: 1824785218420782209
+      spr_tile_deco_embers_22: 6004633087696808526
+      spr_tile_deco_embers_23: 5282541758437132367
+      spr_tile_deco_embers_24: 8340531414273787771
+      spr_tile_deco_embers_25: -6685317288388356463
+      spr_tile_deco_embers_3: 5164600790403858691
+      spr_tile_deco_embers_4: 7280395137572901228
+      spr_tile_deco_embers_5: 1668455518451018894
+      spr_tile_deco_embers_6: -4228094332020884702
+      spr_tile_deco_embers_7: 1324174987408587090
+      spr_tile_deco_embers_8: 3778165706163364761
+      spr_tile_deco_embers_9: 598929468703060230
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
