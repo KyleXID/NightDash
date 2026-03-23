@@ -7,6 +7,33 @@ using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
+    public static class NightDashCombatEvents
+    {
+        /// <summary>Fired when a projectile damages an enemy. Args: position, damage amount.</summary>
+        public static event System.Action<float3, float> OnEnemyDamaged;
+
+        /// <summary>Fired when an enemy's health reaches zero. Args: position, isBoss.</summary>
+        public static event System.Action<float3, bool> OnEnemyKilled;
+
+        /// <summary>Fired when the player takes damage (contact or projectile). Args: position, damage amount.</summary>
+        public static event System.Action<float3, float> OnPlayerDamaged;
+
+        internal static void FireEnemyDamaged(float3 position, float damage)
+        {
+            OnEnemyDamaged?.Invoke(position, damage);
+        }
+
+        internal static void FireEnemyKilled(float3 position, bool isBoss)
+        {
+            OnEnemyKilled?.Invoke(position, isBoss);
+        }
+
+        internal static void FirePlayerDamaged(float3 position, float damage)
+        {
+            OnPlayerDamaged?.Invoke(position, damage);
+        }
+    }
+
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(WeaponSystem))]
     public partial struct CombatSystem : ISystem
@@ -63,6 +90,7 @@ namespace NightDash.ECS.Systems
 
             using NativeList<Entity> deadEnemies = new(Allocator.Temp);
             using NativeList<byte> deadEnemyBossFlags = new(Allocator.Temp);
+            using NativeList<float3> deadEnemyPositions = new(Allocator.Temp);
 
             foreach (var (transform, stats, archetype, entity) in SystemAPI.Query<RefRW<LocalTransform>, RefRW<CombatStats>, RefRO<EnemyArchetypeData>>().WithAll<EnemyTag>().WithEntityAccess())
             {
@@ -119,6 +147,31 @@ namespace NightDash.ECS.Systems
                 }
             }
 
+            // Enemy separation: push apart overlapping enemies
+            const float separationRadius = 0.6f;
+            const float separationForce = 3.0f;
+            float separationRadiusSq = separationRadius * separationRadius;
+
+            foreach (var (transformA, entityA) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
+            {
+                float3 pushForce = float3.zero;
+                foreach (var (transformB, entityB) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
+                {
+                    if (entityA == entityB) continue;
+                    float3 diff = transformA.ValueRO.Position - transformB.ValueRO.Position;
+                    float distSq = math.lengthsq(diff);
+                    if (distSq < separationRadiusSq && distSq > 0.0001f)
+                    {
+                        float dist = math.sqrt(distSq);
+                        pushForce += (diff / dist) * (1f - dist / separationRadius);
+                    }
+                }
+                if (math.lengthsq(pushForce) > 0.0001f)
+                {
+                    transformA.ValueRW.Position += math.normalize(pushForce) * separationForce * dt;
+                }
+            }
+
             foreach (var (projectileTransform, projectile, velocity, projectileEntity) in SystemAPI
                          .Query<RefRW<LocalTransform>, RefRW<ProjectileData>, RefRO<PhysicsVelocity2D>>()
                          .WithEntityAccess())
@@ -145,10 +198,13 @@ namespace NightDash.ECS.Systems
                     float playerDistanceSq = math.lengthsq(playerPosition - projectileTransform.ValueRO.Position);
                     if (playerDistanceSq <= projectile.ValueRO.Radius * projectile.ValueRO.Radius)
                     {
+                        float projectileDamage = projectile.ValueRO.Damage;
                         CombatStats playerStats = playerStatsRef.ValueRO;
-                        playerStats.CurrentHealth = math.max(0f, playerStats.CurrentHealth - projectile.ValueRO.Damage);
+                        playerStats.CurrentHealth = math.max(0f, playerStats.CurrentHealth - projectileDamage);
                         playerStatsRef.ValueRW = playerStats;
                         ecb.DestroyEntity(projectileEntity);
+
+                        NightDashCombatEvents.FirePlayerDamaged(playerPosition, projectileDamage);
 
                         if (playerStats.CurrentHealth <= 0f)
                         {
@@ -179,9 +235,13 @@ namespace NightDash.ECS.Systems
                     }
 
                     CombatStats updatedEnemy = enemyStats.ValueRO;
-                    updatedEnemy.CurrentHealth = math.max(0f, updatedEnemy.CurrentHealth - projectile.ValueRO.Damage);
+                    float damageDealt = projectile.ValueRO.Damage;
+                    updatedEnemy.CurrentHealth = math.max(0f, updatedEnemy.CurrentHealth - damageDealt);
                     enemyStats.ValueRW = updatedEnemy;
                     consumed = true;
+
+                    float3 enemyPos = enemyTransform.ValueRO.Position;
+                    NightDashCombatEvents.FireEnemyDamaged(enemyPos, damageDealt);
 
                     if (updatedEnemy.CurrentHealth <= 0f)
                     {
@@ -189,6 +249,7 @@ namespace NightDash.ECS.Systems
                         {
                             deadEnemies.Add(enemyEntity);
                             deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
+                            deadEnemyPositions.Add(enemyPos);
                         }
                     }
 
@@ -206,6 +267,8 @@ namespace NightDash.ECS.Systems
                 CombatStats playerStats = playerStatsRef.ValueRO;
                 playerStats.CurrentHealth = math.max(0f, playerStats.CurrentHealth - contactDamage);
                 playerStatsRef.ValueRW = playerStats;
+
+                NightDashCombatEvents.FirePlayerDamaged(playerPosition, contactDamage);
 
                 if (playerStats.CurrentHealth <= 0f)
                 {
@@ -228,8 +291,11 @@ namespace NightDash.ECS.Systems
                 }
 
                 bool isBoss = deadEnemyBossFlags[i] == 1;
+                float3 deathPosition = deadEnemyPositions[i];
                 FixedString64Bytes archetypeId = state.EntityManager.GetComponentData<EnemyArchetypeData>(enemyEntity).Id;
                 ResolveEnemyRewards(archetypeId, isBoss, out int goldReward, out int soulReward, out float xpReward);
+
+                NightDashCombatEvents.FireEnemyKilled(deathPosition, isBoss);
 
                 result.ValueRW.KillCount += 1;
                 result.ValueRW.GoldEarned += goldReward;

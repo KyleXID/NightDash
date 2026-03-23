@@ -73,14 +73,22 @@ namespace NightDash.ECS.Systems
             float baseInterval = phaseSpawnPerMinute > 0f
                 ? 60f / phaseSpawnPerMinute
                 : spawnConfig.ValueRO.SpawnInterval;
-            float effectiveInterval = math.max(0.05f, baseInterval / math.max(0.25f, stageConfig.SpawnRateMultiplier));
-            spawnConfig.ValueRW.SpawnTimer = effectiveInterval;
-            float2 offset = random.NextFloat2Direction() * random.NextFloat(6f, 12f);
-            spawnConfig.ValueRW.RandomSeed = random.NextUInt();
 
-            Entity enemy = ecb.Instantiate(spawnConfig.ValueRO.EnemyPrefab);
-            ecb.SetComponent(enemy, LocalTransform.FromPosition(new float3(playerPosition.x + offset.x, playerPosition.y + offset.y, 0f)));
-            ApplyEnemyArchetype(ref ecb, enemy, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: false, ref random, fallbackBoss: false));
+            // Escalation: spawn rate increases over time (up to 3x at 10 min)
+            float escalation = 1f + math.min(2f, loop.ElapsedTime / 300f);
+            float effectiveInterval = math.max(0.05f, baseInterval / (math.max(0.25f, stageConfig.SpawnRateMultiplier) * escalation));
+            spawnConfig.ValueRW.SpawnTimer = effectiveInterval;
+
+            // Spawn 1-3 enemies per batch (more as time passes)
+            int batchSize = 1 + (int)math.min(2f, loop.ElapsedTime / 240f);
+            for (int s = 0; s < batchSize; s++)
+            {
+                float2 offset = random.NextFloat2Direction() * random.NextFloat(4f, 10f);
+                Entity enemy = ecb.Instantiate(spawnConfig.ValueRO.EnemyPrefab);
+                ecb.SetComponent(enemy, LocalTransform.FromPosition(new float3(playerPosition.x + offset.x, playerPosition.y + offset.y, 0f)));
+                ApplyEnemyArchetype(ref ecb, enemy, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: false, ref random, fallbackBoss: false));
+            }
+            spawnConfig.ValueRW.RandomSeed = random.NextUInt();
         }
 
         private static EnemySpawnProfile ResolveSpawnProfile(
@@ -200,25 +208,25 @@ namespace NightDash.ECS.Systems
         {
             if (enemyId == "ember_bat")
             {
-                return new EnemySpawnProfile("ember_bat", 16f, 3f, 3.45f, false);
+                return new EnemySpawnProfile("ember_bat", 16f, 3f, 1.7f, false);
             }
 
             if (enemyId == "wasteland_brute")
             {
-                return new EnemySpawnProfile("wasteland_brute", 54f, 10f, 1.75f, false);
+                return new EnemySpawnProfile("wasteland_brute", 54f, 10f, 0.9f, false);
             }
 
             if (enemyId == "ash_caster")
             {
-                return new EnemySpawnProfile("ash_caster", 28f, 7f, 2.35f, false);
+                return new EnemySpawnProfile("ash_caster", 28f, 7f, 1.2f, false);
             }
 
             if (enemyId == "boss_agron")
             {
-                return new EnemySpawnProfile("boss_agron", 320f, 14f, 1.7f, true);
+                return new EnemySpawnProfile("boss_agron", 320f, 14f, 0.85f, true);
             }
 
-            return new EnemySpawnProfile("ghoul_scout", 22f, 4f, 2.75f, false);
+            return new EnemySpawnProfile("ghoul_scout", 22f, 4f, 1.4f, false);
         }
 
         private readonly struct EnemySpawnProfile

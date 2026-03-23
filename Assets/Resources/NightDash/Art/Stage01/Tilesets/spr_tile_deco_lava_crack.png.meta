@@ -1,0 +1,416 @@
+fileFormatVersion: 2
+guid: 2444998454d9942b3909f24de730a93e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7937886912085749117
+    second: spr_tile_deco_lava_crack_0
+  - first:
+      213: -7587356339371913299
+    second: spr_tile_deco_lava_crack_1
+  - first:
+      213: 4477333446594630633
+    second: spr_tile_deco_lava_crack_2
+  - first:
+      213: -6369527352090681875
+    second: spr_tile_deco_lava_crack_3
+  - first:
+      213: 3621821967904736623
+    second: spr_tile_deco_lava_crack_4
+  - first:
+      213: 3779298588312239903
+    second: spr_tile_deco_lava_crack_5
+  - first:
+      213: -8775737860440971203
+    second: spr_tile_deco_lava_crack_6
+  - first:
+      213: -6055599570882518015
+    second: spr_tile_deco_lava_crack_7
+  - first:
+      213: -7782916278768727346
+    second: spr_tile_deco_lava_crack_8
+  - first:
+      213: 3158865477522249875
+    second: spr_tile_deco_lava_crack_9
+  - first:
+      213: -2482851101833173499
+    second: spr_tile_deco_lava_crack_10
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_0
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 181
+        width: 71
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38218e109e5f6d190800000000000000
+      internalID: -7937886912085749117
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_1
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 206
+        width: 56
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dafcd6fdb9b44b690800000000000000
+      internalID: -7587356339371913299
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_2
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 198
+        width: 51
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e39f393c0fa22e30800000000000000
+      internalID: 4477333446594630633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_3
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 163
+        width: 119
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ded1087de94ea97a0800000000000000
+      internalID: -6369527352090681875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_4
+      rect:
+        serializedVersion: 2
+        x: 193
+        y: 118
+        width: 50
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f650bacf3eb434230800000000000000
+      internalID: 3621821967904736623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_5
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 118
+        width: 69
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1f7c70ea04c27430800000000000000
+      internalID: 3779298588312239903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_6
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 112
+        width: 86
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d38287a69e0563680800000000000000
+      internalID: -8775737860440971203
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_7
+      rect:
+        serializedVersion: 2
+        x: 13
+        y: 40
+        width: 54
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1042a83364036fba0800000000000000
+      internalID: -6055599570882518015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_8
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 70
+        width: 60
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eca826f41e68df390800000000000000
+      internalID: -7782916278768727346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_9
+      rect:
+        serializedVersion: 2
+        x: 173
+        y: 32
+        width: 66
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 39855f85a6b86db20800000000000000
+      internalID: 3158865477522249875
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spr_tile_deco_lava_crack_10
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 30
+        width: 60
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 506eb0dd3142b8dd0800000000000000
+      internalID: -2482851101833173499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      spr_tile_deco_lava_crack_0: -7937886912085749117
+      spr_tile_deco_lava_crack_1: -7587356339371913299
+      spr_tile_deco_lava_crack_10: -2482851101833173499
+      spr_tile_deco_lava_crack_2: 4477333446594630633
+      spr_tile_deco_lava_crack_3: -6369527352090681875
+      spr_tile_deco_lava_crack_4: 3621821967904736623
+      spr_tile_deco_lava_crack_5: 3779298588312239903
+      spr_tile_deco_lava_crack_6: -8775737860440971203
+      spr_tile_deco_lava_crack_7: -6055599570882518015
+      spr_tile_deco_lava_crack_8: -7782916278768727346
+      spr_tile_deco_lava_crack_9: 3158865477522249875
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

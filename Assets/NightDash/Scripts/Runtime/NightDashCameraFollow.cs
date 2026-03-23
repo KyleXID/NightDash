@@ -20,6 +20,11 @@ namespace NightDash.Runtime
         private EntityManager _entityManager;
         private bool _initialized;
 
+        private static float _shakeIntensity;
+        private static float _shakeDuration;
+        private static float _shakeTimer;
+        private static int _shakeSeed;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
@@ -38,12 +43,36 @@ namespace NightDash.Runtime
             cam.gameObject.AddComponent<NightDashCameraFollow>();
         }
 
+        /// <summary>
+        /// Trigger camera shake from any system.
+        /// Default for enemy hits: intensity=0.1f, duration=0.2f
+        /// Default for boss attacks: intensity=0.3f, duration=0.5f
+        /// </summary>
+        public static void Shake(float intensity = 0.1f, float duration = 0.2f)
+        {
+            if (intensity > _shakeIntensity || _shakeTimer <= 0f)
+            {
+                _shakeIntensity = intensity;
+                _shakeDuration = duration;
+                _shakeTimer = duration;
+                _shakeSeed = (int)(Time.unscaledTime * 1000f);
+            }
+        }
+
+        [SerializeField] private float targetOrthoSize = 4.5f;
+
         private void Start()
         {
             _camera = GetComponent<Camera>();
             if (_camera == null)
             {
                 _camera = Camera.main;
+            }
+
+            // Zoom in: smaller ortho size = more zoomed in
+            if (_camera != null && _camera.orthographic)
+            {
+                _camera.orthographicSize = targetOrthoSize;
             }
         }
 
@@ -56,6 +85,12 @@ namespace NightDash.Runtime
             if (_camera == null)
             {
                 return;
+            }
+
+            // Force ortho size every frame in case anything else overrides it
+            if (_camera.orthographic)
+            {
+                _camera.orthographicSize = targetOrthoSize;
             }
 
             using var players = _playerQuery.ToEntityArray(Allocator.Temp);
@@ -103,7 +138,29 @@ namespace NightDash.Runtime
             }
 
             Vector3 target = new Vector3(targetX, targetY, targetZ);
-            _camera.transform.position = Vector3.SmoothDamp(current, target, ref _velocity, smoothTime);
+            Vector3 smoothed = Vector3.SmoothDamp(current, target, ref _velocity, smoothTime);
+
+            if (_shakeTimer > 0f)
+            {
+                _shakeTimer -= Time.deltaTime;
+                float decay = Mathf.Clamp01(_shakeTimer / _shakeDuration);
+                float currentIntensity = _shakeIntensity * decay;
+
+                float time = Time.unscaledTime * 25f;
+                float offsetX = (Mathf.PerlinNoise(_shakeSeed + time, 0f) - 0.5f) * 2f * currentIntensity;
+                float offsetY = (Mathf.PerlinNoise(0f, _shakeSeed + time) - 0.5f) * 2f * currentIntensity;
+
+                smoothed.x += offsetX;
+                smoothed.y += offsetY;
+
+                if (_shakeTimer <= 0f)
+                {
+                    _shakeIntensity = 0f;
+                    _shakeDuration = 0f;
+                }
+            }
+
+            _camera.transform.position = smoothed;
         }
 
         private bool EnsureInitialized()
