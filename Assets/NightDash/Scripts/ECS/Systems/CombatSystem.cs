@@ -7,32 +7,10 @@ using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
 {
-    public static class NightDashCombatEvents
-    {
-        /// <summary>Fired when a projectile damages an enemy. Args: position, damage amount.</summary>
-        public static event System.Action<float3, float> OnEnemyDamaged;
-
-        /// <summary>Fired when an enemy's health reaches zero. Args: position, isBoss.</summary>
-        public static event System.Action<float3, bool> OnEnemyKilled;
-
-        /// <summary>Fired when the player takes damage (contact or projectile). Args: position, damage amount.</summary>
-        public static event System.Action<float3, float> OnPlayerDamaged;
-
-        internal static void FireEnemyDamaged(float3 position, float damage)
-        {
-            OnEnemyDamaged?.Invoke(position, damage);
-        }
-
-        internal static void FireEnemyKilled(float3 position, bool isBoss)
-        {
-            OnEnemyKilled?.Invoke(position, isBoss);
-        }
-
-        internal static void FirePlayerDamaged(float3 position, float damage)
-        {
-            OnPlayerDamaged?.Invoke(position, damage);
-        }
-    }
+    // NightDashCombatEvents — moved to Combat/CombatEvents.cs (S2-02).
+    // Helpers ResolveEnemyRewards / ContainsEntity / SpawnEnemyProjectile —
+    // moved to Combat/CombatHelpers.cs (S2-02). Call through CombatHelpers.*
+    // below; external consumers are unaffected (namespace preserved).
 
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [UpdateAfter(typeof(WeaponSystem))]
@@ -42,8 +20,6 @@ namespace NightDash.ECS.Systems
         private const float CasterPreferredRange = 5.25f;
         private const float CasterAttackCycle = 1.8f;
         private const float CasterAttackWindow = 0.16f;
-        private const float CasterProjectileSpeed = 7.4f;
-        private const float CasterProjectileRadius = 0.32f;
         private const float BossAttackCycle = 2.4f;
         private const float BossAttackWindow = 0.18f;
         private const float BossAttackRange = 5.5f;
@@ -119,7 +95,7 @@ namespace NightDash.ECS.Systems
                     float cycleOffset = math.frac((loop.ValueRO.ElapsedTime + entity.Index * 0.173f) / CasterAttackCycle);
                     if (cycleOffset < (CasterAttackWindow / CasterAttackCycle))
                     {
-                        SpawnEnemyProjectile(ref ecb, transform.ValueRO.Position, playerPosition, math.max(4f, stats.ValueRO.Damage));
+                        CombatHelpers.SpawnEnemyProjectile(ref ecb, transform.ValueRO.Position, playerPosition, math.max(4f, stats.ValueRO.Damage));
                     }
                 }
 
@@ -245,7 +221,7 @@ namespace NightDash.ECS.Systems
 
                     if (updatedEnemy.CurrentHealth <= 0f)
                     {
-                        if (!ContainsEntity(deadEnemies, enemyEntity))
+                        if (!CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
                         {
                             deadEnemies.Add(enemyEntity);
                             deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
@@ -293,7 +269,7 @@ namespace NightDash.ECS.Systems
                 bool isBoss = deadEnemyBossFlags[i] == 1;
                 float3 deathPosition = deadEnemyPositions[i];
                 FixedString64Bytes archetypeId = state.EntityManager.GetComponentData<EnemyArchetypeData>(enemyEntity).Id;
-                ResolveEnemyRewards(archetypeId, isBoss, out int goldReward, out int soulReward, out float xpReward);
+                CombatHelpers.ResolveEnemyRewards(archetypeId, isBoss, out int goldReward, out int soulReward, out float xpReward);
 
                 NightDashCombatEvents.FireEnemyKilled(deathPosition, isBoss);
 
@@ -320,88 +296,5 @@ namespace NightDash.ECS.Systems
             }
         }
 
-        private static void ResolveEnemyRewards(
-            FixedString64Bytes archetypeId,
-            bool isBoss,
-            out int goldReward,
-            out int soulReward,
-            out float xpReward)
-        {
-            if (isBoss || archetypeId == "boss_agron")
-            {
-                goldReward = 25;
-                soulReward = 6;
-                xpReward = 45f;
-                return;
-            }
-
-            if (archetypeId == "wasteland_brute")
-            {
-                goldReward = 2;
-                soulReward = 2;
-                xpReward = 10f;
-                return;
-            }
-
-            if (archetypeId == "ash_caster")
-            {
-                goldReward = 2;
-                soulReward = 2;
-                xpReward = 9f;
-                return;
-            }
-
-            if (archetypeId == "ember_bat")
-            {
-                goldReward = 1;
-                soulReward = 1;
-                xpReward = 5f;
-                return;
-            }
-
-            goldReward = 1;
-            soulReward = 1;
-            xpReward = 6f;
-        }
-
-        private static bool ContainsEntity(NativeList<Entity> entities, Entity target)
-        {
-            for (int i = 0; i < entities.Length; i++)
-            {
-                if (entities[i] == target)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static void SpawnEnemyProjectile(ref EntityCommandBuffer ecb, float3 origin, float3 target, float damage)
-        {
-            float3 direction3 = target - origin;
-            direction3.z = 0f;
-            if (math.lengthsq(direction3) <= 0.0001f)
-            {
-                direction3 = new float3(1f, 0f, 0f);
-            }
-
-            float2 direction = math.normalize(direction3.xy);
-            Entity projectile = ecb.CreateEntity();
-            ecb.AddComponent(projectile, LocalTransform.FromPosition(origin));
-            ecb.AddComponent(projectile, new ProjectileData
-            {
-                Damage = damage,
-                Lifetime = 1.6f,
-                IsPlayerOwned = 0,
-                Radius = CasterProjectileRadius,
-                WeaponId = default,
-                IsMelee = 0
-            });
-            ecb.AddComponent(projectile, new PhysicsVelocity2D
-            {
-                Value = direction * CasterProjectileSpeed
-            });
-        }
     }
 }
