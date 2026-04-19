@@ -1,5 +1,6 @@
 using NightDash.Data;
 using NightDash.ECS.Components;
+using NightDash.Runtime;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;

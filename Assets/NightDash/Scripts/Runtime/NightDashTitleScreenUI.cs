@@ -208,41 +208,11 @@ namespace NightDash.Runtime
 
         private void LoadButtonFrameTextures()
         {
-            buttonDefaultTexture = buttonDefaultTexture != null ? buttonDefaultTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_default");
-            buttonHoverTexture = buttonHoverTexture != null ? buttonHoverTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_hover");
-            buttonPressedTexture = buttonPressedTexture != null ? buttonPressedTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_pressed");
-            buttonDisabledTexture = buttonDisabledTexture != null ? buttonDisabledTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
-
-            buttonDefaultTexture = CropButtonFrameTexture(buttonDefaultTexture);
-            buttonHoverTexture = CropButtonFrameTexture(buttonHoverTexture);
-            buttonPressedTexture = CropButtonFrameTexture(buttonPressedTexture);
-            buttonDisabledTexture = CropButtonFrameTexture(buttonDisabledTexture);
-        }
-
-        private static Texture2D CropButtonFrameTexture(Texture2D source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            int x = Mathf.RoundToInt(source.width * 0.07f);
-            int y = Mathf.RoundToInt(source.height * 0.29f);
-            int w = Mathf.RoundToInt(source.width * 0.86f);
-            int h = Mathf.RoundToInt(source.height * 0.42f);
-
-            RenderTexture rt = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
-            RenderTexture prev = RenderTexture.active;
-            Graphics.Blit(source, rt);
-            RenderTexture.active = rt;
-
-            Texture2D cropped = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            cropped.ReadPixels(new Rect(x, y, w, h), 0, 0);
-            cropped.Apply(false, true);
-
-            RenderTexture.active = prev;
-            RenderTexture.ReleaseTemporary(rt);
-            return cropped;
+            NightDashButtonFrameStyle.LoadAndCropFrameTextures(
+                ref buttonDefaultTexture,
+                ref buttonHoverTexture,
+                ref buttonPressedTexture,
+                ref buttonDisabledTexture);
         }
 
         private static Sprite CreateSprite(Texture2D texture)

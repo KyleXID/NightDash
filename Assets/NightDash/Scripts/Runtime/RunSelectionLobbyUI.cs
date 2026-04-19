@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using NightDash.Data;
 using NightDash.ECS.Components;
-using Unity.Collections;
-using Unity.Entities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -56,8 +54,12 @@ namespace NightDash.Runtime
             _showTitle = false;
             _isVisible = false;
             RefreshOptions();
-            SetRunActiveInCurrentWorld(false);
-            LoadButtonFrameTextures();
+            RunSelectionLobbyWorldBridge.SetRunActiveInCurrentWorld(false);
+            NightDashButtonFrameStyle.LoadAndCropFrameTextures(
+                ref buttonDefaultTexture,
+                ref buttonHoverTexture,
+                ref buttonPressedTexture,
+                ref buttonDisabledTexture);
         }
 
         private void OnGUI()
@@ -78,7 +80,7 @@ namespace NightDash.Runtime
                 if (titleUi == null)
                 {
                     _isVisible = true;
-                    SetRunActiveInCurrentWorld(false);
+                    RunSelectionLobbyWorldBridge.SetRunActiveInCurrentWorld(false);
                 }
             }
 
@@ -88,6 +90,17 @@ namespace NightDash.Runtime
             }
 
             DrawRunSelectionScreen();
+        }
+
+        public void SetLobbyVisible(bool visible)
+        {
+            _showTitle = false;
+            _isVisible = visible;
+            if (visible)
+            {
+                SuppressInteractions(0.2f);
+            }
+            RunSelectionLobbyWorldBridge.SetRunActiveInCurrentWorld(!visible);
         }
 
         private void DrawRunSelectionScreen()
@@ -174,17 +187,6 @@ namespace NightDash.Runtime
             }
         }
 
-        public void SetLobbyVisible(bool visible)
-        {
-            _showTitle = false;
-            _isVisible = visible;
-            if (visible)
-            {
-                SuppressInteractions(0.2f);
-            }
-            SetRunActiveInCurrentWorld(!visible);
-        }
-
         private void RefreshOptions()
         {
             _stageIds.Clear();
@@ -194,22 +196,22 @@ namespace NightDash.Runtime
             DataCatalog catalog = registry != null ? registry.Catalog : null;
             if (catalog != null)
             {
-                AddStageIds(catalog.stages, _stageIds);
-                AddClassIds(catalog.classes, _classIds);
+                RunSelectionLobbyOptions.AddStageIds(catalog.stages, _stageIds);
+                RunSelectionLobbyOptions.AddClassIds(catalog.classes, _classIds);
             }
 
-            EnsureFallbackIds(_stageIds, "stage_01");
-            EnsureFallbackIds(_classIds, "class_warrior");
+            RunSelectionLobbyOptions.EnsureFallbackIds(_stageIds, "stage_01");
+            RunSelectionLobbyOptions.EnsureFallbackIds(_classIds, "class_warrior");
 
             RunSelectionSession.GetCurrent(out string currentStage, out string currentClass);
-            _stageIndex = FindIndexOrDefault(_stageIds, currentStage);
-            _classIndex = FindIndexOrDefault(_classIds, currentClass);
+            _stageIndex = RunSelectionLobbyOptions.FindIndexOrDefault(_stageIds, currentStage);
+            _classIndex = RunSelectionLobbyOptions.FindIndexOrDefault(_classIds, currentClass);
         }
 
         private void StartRunWithSelectedOptions()
         {
-            string selectedStage = SafeGet(_stageIds, _stageIndex, "stage_01");
-            string selectedClass = SafeGet(_classIds, _classIndex, "class_warrior");
+            string selectedStage = RunSelectionLobbyOptions.SafeGet(_stageIds, _stageIndex, "stage_01");
+            string selectedClass = RunSelectionLobbyOptions.SafeGet(_classIds, _classIndex, "class_warrior");
             StartRun(selectedStage, selectedClass);
         }
 
@@ -220,7 +222,7 @@ namespace NightDash.Runtime
             _isVisible = false;
             _isStartingRun = true;
             NightDashLog.Info($"[NightDash] Start Run requested: stage='{stageId}', class='{classId}'.");
-            bool appliedInWorld = TryApplySelectionToCurrentWorld(stageId, classId);
+            bool appliedInWorld = RunSelectionLobbyWorldBridge.TryApplySelectionToCurrentWorld(stageId, classId);
 
             if (appliedInWorld)
             {
@@ -271,86 +273,6 @@ namespace NightDash.Runtime
             GUILayout.EndHorizontal();
         }
 
-        private static void AddStageIds(List<StageData> stages, List<string> target)
-        {
-            if (stages == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < stages.Count; i++)
-            {
-                if (stages[i] == null || string.IsNullOrWhiteSpace(stages[i].id))
-                {
-                    continue;
-                }
-
-                string id = stages[i].id.Trim();
-                if (!target.Contains(id))
-                {
-                    target.Add(id);
-                }
-            }
-        }
-
-        private static void AddClassIds(List<ClassData> classes, List<string> target)
-        {
-            if (classes == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < classes.Count; i++)
-            {
-                if (classes[i] == null || string.IsNullOrWhiteSpace(classes[i].id))
-                {
-                    continue;
-                }
-
-                string id = classes[i].id.Trim();
-                if (!target.Contains(id))
-                {
-                    target.Add(id);
-                }
-            }
-        }
-
-        private static void EnsureFallbackIds(List<string> target, string fallback)
-        {
-            if (target.Count > 0)
-            {
-                return;
-            }
-
-            target.Add(fallback);
-        }
-
-        private static int FindIndexOrDefault(List<string> values, string current)
-        {
-            if (values.Count == 0)
-            {
-                return 0;
-            }
-
-            int idx = values.IndexOf(current);
-            return idx >= 0 ? idx : 0;
-        }
-
-        private static string SafeGet(List<string> values, int index, string fallback)
-        {
-            if (values.Count == 0)
-            {
-                return fallback;
-            }
-
-            if (index < 0 || index >= values.Count)
-            {
-                return values[0];
-            }
-
-            return values[index];
-        }
-
         private void HandleToggleEvent()
         {
             Event e = Event.current;
@@ -366,156 +288,6 @@ namespace NightDash.Runtime
             }
         }
 
-        private static bool TryApplySelectionToCurrentWorld(string stageId, string classId)
-        {
-            int worldCount = World.All.Count;
-            if (worldCount == 0)
-            {
-                NightDashLog.Warn("[NightDash] No ECS world exists yet.");
-                return false;
-            }
-
-            for (int i = 0; i < worldCount; i++)
-            {
-                World world = World.All[i];
-                if (world == null || !world.IsCreated)
-                {
-                    continue;
-                }
-
-                EntityManager entityManager = world.EntityManager;
-                using var query = entityManager.CreateEntityQuery(
-                    ComponentType.ReadWrite<RunSelection>(),
-                    ComponentType.ReadWrite<DataLoadState>());
-                if (query.IsEmptyIgnoreFilter)
-                {
-                    continue;
-                }
-
-                Entity singleton = query.GetSingletonEntity();
-                entityManager.SetComponentData(singleton, new RunSelection
-                {
-                    StageId = new FixedString64Bytes(stageId),
-                    ClassId = new FixedString64Bytes(classId)
-                });
-                entityManager.SetComponentData(singleton, new DataLoadState { HasLoaded = 0 });
-
-                if (entityManager.HasComponent<GameLoopState>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new GameLoopState
-                    {
-                        ElapsedTime = 0f,
-                        Level = 1,
-                        Experience = 0f,
-                        NextLevelExperience = 10f,
-                        IsRunActive = 0,
-                        Status = RunStatus.Loading,
-                        PendingLevelUps = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<StageRuntimeConfig>(singleton))
-                {
-                    StageRuntimeConfig stageRuntime = entityManager.GetComponentData<StageRuntimeConfig>(singleton);
-                    stageRuntime.IsStageCleared = 0;
-                    entityManager.SetComponentData(singleton, stageRuntime);
-                }
-
-                if (entityManager.HasComponent<BossSpawnState>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new BossSpawnState
-                    {
-                        HasSpawnedBoss = 0,
-                        BossKilled = 0,
-                        ChestPending = 0,
-                        ChestOpened = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<RunResultStats>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new RunResultStats
-                    {
-                        KillCount = 0,
-                        GoldEarned = 0,
-                        SoulsEarned = 0,
-                        CurrentWave = 0,
-                        RewardCommitted = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<BossRewardState>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new BossRewardState
-                    {
-                        HasPendingReward = 0,
-                        EvolutionResolved = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<BossRewardConfirmRequest>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new BossRewardConfirmRequest
-                    {
-                        IsPending = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<ResultSnapshot>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new ResultSnapshot
-                    {
-                        HasSnapshot = 0,
-                        IsVictory = 0,
-                        ElapsedTime = 0f,
-                        FinalLevel = 1,
-                        KillCount = 0,
-                        GoldEarned = 0,
-                        SoulsEarned = 0,
-                        RewardGranted = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<UpgradeSelectionRequest>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new UpgradeSelectionRequest
-                    {
-                        SelectedOptionIndex = -1,
-                        HasSelection = 0,
-                        RerollRequested = 0
-                    });
-                }
-
-                if (entityManager.HasComponent<RunNavigationRequest>(singleton))
-                {
-                    entityManager.SetComponentData(singleton, new RunNavigationRequest
-                    {
-                        Action = RunNavigationAction.None,
-                        IsPending = 0
-                    });
-                }
-
-                NightDashLog.Info($"[NightDash] RunSelection applied directly to ECS world '{world.Name}': stage='{stageId}', class='{classId}'.");
-                return true;
-            }
-
-            NightDashLog.Warn("[NightDash] No entity with RunSelection + DataLoadState found in any ECS world.");
-            return false;
-        }
-
-        private void LoadButtonFrameTextures()
-        {
-            buttonDefaultTexture = buttonDefaultTexture != null ? buttonDefaultTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_default");
-            buttonHoverTexture = buttonHoverTexture != null ? buttonHoverTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_hover");
-            buttonPressedTexture = buttonPressedTexture != null ? buttonPressedTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_pressed");
-            buttonDisabledTexture = buttonDisabledTexture != null ? buttonDisabledTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
-
-            buttonDefaultTexture = CropButtonFrameTexture(buttonDefaultTexture);
-            buttonHoverTexture = CropButtonFrameTexture(buttonHoverTexture);
-            buttonPressedTexture = CropButtonFrameTexture(buttonPressedTexture);
-            buttonDisabledTexture = CropButtonFrameTexture(buttonDisabledTexture);
-        }
-
         private GUIStyle GetActionButtonStyle()
         {
             if (_actionButtonStyle != null)
@@ -523,128 +295,20 @@ namespace NightDash.Runtime
                 return _actionButtonStyle;
             }
 
-            _actionButtonStyle = new GUIStyle(GUI.skin.button)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 28,
-                fontStyle = FontStyle.Bold,
-                border = new RectOffset(24, 24, 20, 20),
-                margin = new RectOffset(6, 6, 6, 6),
-                padding = new RectOffset(30, 30, 12, 14)
-            };
-
-            _actionButtonStyle.normal.background = buttonDefaultTexture;
-            _actionButtonStyle.hover.background = buttonHoverTexture != null ? buttonHoverTexture : buttonDefaultTexture;
-            _actionButtonStyle.active.background = buttonPressedTexture != null ? buttonPressedTexture : buttonDefaultTexture;
-            _actionButtonStyle.focused.background = _actionButtonStyle.hover.background;
-
-            if (buttonDisabledTexture != null)
-            {
-                _actionButtonStyle.onNormal.background = buttonDisabledTexture;
-                _actionButtonStyle.onActive.background = buttonDisabledTexture;
-            }
-
-            _actionButtonStyle.normal.textColor = new Color(0.94f, 0.89f, 0.97f, 1f);
-            _actionButtonStyle.hover.textColor = Color.white;
-            _actionButtonStyle.active.textColor = new Color(0.92f, 0.86f, 0.96f, 1f);
-            _actionButtonStyle.focused.textColor = Color.white;
+            _actionButtonStyle = NightDashButtonFrameStyle.BuildActionButtonStyle(
+                buttonDefaultTexture,
+                buttonHoverTexture,
+                buttonPressedTexture,
+                buttonDisabledTexture);
             return _actionButtonStyle;
-        }
-
-        private static Texture2D CropButtonFrameTexture(Texture2D source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            int x = Mathf.RoundToInt(source.width * 0.07f);
-            int y = Mathf.RoundToInt(source.height * 0.29f);
-            int w = Mathf.RoundToInt(source.width * 0.86f);
-            int h = Mathf.RoundToInt(source.height * 0.42f);
-
-            RenderTexture rt = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
-            RenderTexture prev = RenderTexture.active;
-            Graphics.Blit(source, rt);
-            RenderTexture.active = rt;
-
-            Texture2D cropped = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            cropped.ReadPixels(new Rect(x, y, w, h), 0, 0);
-            cropped.Apply(false, true);
-
-            RenderTexture.active = prev;
-            RenderTexture.ReleaseTemporary(rt);
-            return cropped;
-        }
-
-        private static void SetRunActiveInCurrentWorld(bool active)
-        {
-            int worldCount = World.All.Count;
-            for (int i = 0; i < worldCount; i++)
-            {
-                World world = World.All[i];
-                if (world == null || !world.IsCreated)
-                {
-                    continue;
-                }
-
-                EntityManager entityManager = world.EntityManager;
-                using var query = entityManager.CreateEntityQuery(ComponentType.ReadWrite<GameLoopState>());
-                if (query.IsEmptyIgnoreFilter)
-                {
-                    continue;
-                }
-
-                Entity singleton = query.GetSingletonEntity();
-                GameLoopState loop = entityManager.GetComponentData<GameLoopState>(singleton);
-                loop.IsRunActive = active ? (byte)1 : (byte)0;
-                if (!active)
-                {
-                    loop.ElapsedTime = 0f;
-                    loop.Level = 1;
-                    loop.Experience = 0f;
-                    if (loop.NextLevelExperience <= 0f)
-                    {
-                        loop.NextLevelExperience = 10f;
-                    }
-                }
-                entityManager.SetComponentData(singleton, loop);
-            }
         }
 
         private void SyncLobbyVisibilityFromNavigationRequest()
         {
-            World world = World.DefaultGameObjectInjectionWorld;
-            if (world == null || !world.IsCreated)
+            if (!RunSelectionLobbyWorldBridge.TryGetPendingNavigation(out RunNavigationAction action, out string stageId, out string classId))
             {
                 return;
             }
-
-            EntityManager entityManager = world.EntityManager;
-            using var query = entityManager.CreateEntityQuery(
-                ComponentType.ReadWrite<RunNavigationRequest>(),
-                ComponentType.ReadOnly<GameLoopState>(),
-                ComponentType.ReadOnly<RunSelection>());
-            if (query.IsEmptyIgnoreFilter)
-            {
-                return;
-            }
-
-            Entity singleton = query.GetSingletonEntity();
-            RunNavigationRequest navigation = entityManager.GetComponentData<RunNavigationRequest>(singleton);
-            if (navigation.IsPending == 0 || navigation.Action == RunNavigationAction.None)
-            {
-                return;
-            }
-
-            RunNavigationAction action = navigation.Action;
-            RunSelection selection = entityManager.GetComponentData<RunSelection>(singleton);
-            string stageId = selection.StageId.IsEmpty ? "stage_01" : selection.StageId.ToString();
-            string classId = selection.ClassId.IsEmpty ? "class_warrior" : selection.ClassId.ToString();
-
-            navigation.IsPending = 0;
-            navigation.Action = RunNavigationAction.None;
-            entityManager.SetComponentData(singleton, navigation);
 
             if (action == RunNavigationAction.Retry)
             {
@@ -658,7 +322,7 @@ namespace NightDash.Runtime
             _isVisible = true;
             _isStartingRun = false;
             SuppressInteractions(0.2f);
-            SetRunActiveInCurrentWorld(false);
+            RunSelectionLobbyWorldBridge.SetRunActiveInCurrentWorld(false);
         }
 
         private void SuppressInteractions(float durationSeconds)
