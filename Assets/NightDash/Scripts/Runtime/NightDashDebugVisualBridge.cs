@@ -340,11 +340,14 @@ namespace NightDash.Runtime
 
                 SetPosition(go, transforms[i].Position);
 
-                // Rotate projectile sprite to face movement direction
+                // Rotate projectile sprite to face movement direction.
+                // Guards against stale entity access: CombatSystem may destroy
+                // the entity earlier in the same frame while this LateUpdate
+                // still iterates the captured NativeArray snapshot.
                 if (_world != null && _world.IsCreated)
                 {
                     var em = _world.EntityManager;
-                    if (em.HasComponent<PhysicsVelocity2D>(entity))
+                    if (em.Exists(entity) && em.HasComponent<PhysicsVelocity2D>(entity))
                     {
                         var vel = em.GetComponentData<PhysicsVelocity2D>(entity).Value;
                         if (math.lengthsq(vel) > 0.01f)
