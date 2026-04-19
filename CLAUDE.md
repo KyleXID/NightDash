@@ -93,3 +93,23 @@
 - Git 커밋에 미검토 바이너리 에셋 일괄 추가 금지 — 경로별 개별 스테이징
 - `--no-verify` 등 훅 우회 금지
 - CLAUDE.md/메모리에 명시된 역할분담을 건너뛰고 작업 시작 금지
+
+## 7. 개발 환경 세팅
+
+### 7.1 Git pre-commit 훅 (S1-07)
+
+클론 직후 1회 실행으로 공유 훅 활성화:
+
+```bash
+git config core.hooksPath scripts/git-hooks
+```
+
+훅은 mono_crash, 임시파일, .DS_Store, 로컬 scratch 디렉터리를 커밋 시 차단합니다.
+
+### 7.2 EditMode 테스트 CLI 실행 (S1-03)
+
+```bash
+./scripts/run-editmode-tests.sh
+```
+
+Unity Hub 기본 설치 경로 자동 탐색, `Logs/editmode-results.xml`에 결과 저장.

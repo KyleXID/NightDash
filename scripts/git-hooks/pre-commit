@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# =============================================================================
+# NightDash pre-commit hook (S1-07)
+#
+# Blocks accidental commits of:
+#   - Unity Mono crash dumps (mono_crash.*, *.blob)
+#   - Temporary files (*.tmp, *.orig, *.rej)
+#   - macOS metadata (.DS_Store)
+#   - Local scratch dirs (backups/, downloads/)
+#
+# Install (per-clone, one-time):
+#   git config core.hooksPath scripts/git-hooks
+#
+# Bypass (not recommended — investigate first):
+#   git commit --no-verify ...
+# =============================================================================
+
+set -euo pipefail
+
+# Collect staged files (Added, Copied, Modified, Renamed) but not Deleted
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if [[ -z "${staged}" ]]; then
+  exit 0
+fi
+
+blocked=()
+
+while IFS= read -r file; do
+  case "${file}" in
+    mono_crash*|*.blob)
+      blocked+=("${file}  [crash dump]")
+      ;;
+    *.tmp|*.orig|*.rej)
+      blocked+=("${file}  [temp/merge leftover]")
+      ;;
+    .DS_Store|*/.DS_Store)
+      blocked+=("${file}  [macOS metadata]")
+      ;;
+    backups/*|downloads/*)
+      blocked+=("${file}  [local scratch directory]")
+      ;;
+  esac
+done <<< "${staged}"
+
+if [[ ${#blocked[@]} -gt 0 ]]; then
+  echo "[ERROR] pre-commit blocked ${#blocked[@]} file(s):" >&2
+  for entry in "${blocked[@]}"; do
+    echo "  - ${entry}" >&2
+  done
+  echo "" >&2
+  echo "These patterns are denied by NightDash policy (CLAUDE.md §6)." >&2
+  echo "Unstage with: git reset HEAD <file>" >&2
+  echo "If intentional, escape via: git commit --no-verify" >&2
+  exit 1
+fi
+
+exit 0
