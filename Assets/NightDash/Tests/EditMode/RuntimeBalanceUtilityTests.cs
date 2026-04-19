@@ -226,4 +226,87 @@ namespace NightDash.Tests.EditMode
             }
         }
     }
+
+    // ---------------------------------------------------------------------------
+    // S1-11: StatAccumulator math verification (GDD balance formula).
+    //   Final = (Base + Sum(Flat)) * (1 + Sum(PercentAdd)) * Product(1 + PercentMul)
+    // These tests validate the fix that separated PercentAdd (sum) from
+    // PercentMul (product) — previously both were collapsed into product style.
+    // ---------------------------------------------------------------------------
+    [TestFixture]
+    public class StatAccumulatorTests
+    {
+        private const float Epsilon = 0.0001f;
+
+        [Test]
+        public void Default_Finalize_Returns_Base_Untouched()
+        {
+            var acc = RuntimeBalanceUtility.StatAccumulator.Default;
+            Assert.That(acc.Finalize(100f), Is.EqualTo(100f).Within(Epsilon));
+        }
+
+        [Test]
+        public void Flat_Adds_To_Base()
+        {
+            var acc = RuntimeBalanceUtility.StatAccumulator.Default;
+            acc.Apply(StatOperation.Flat, 25f);
+            Assert.That(acc.Finalize(100f), Is.EqualTo(125f).Within(Epsilon));
+        }
+
+        // Core S1-11 regression: two PercentAdd effects must SUM before multiplying,
+        // not compound as product. Previous buggy code: 100 * 1.1 * 1.15 = 126.5
+        // GDD-correct result:  (100) * (1 + 0.10 + 0.15) = 125.0
+        [Test]
+        public void Multiple_PercentAdd_Sum_Before_Single_Multiply()
+        {
+            var acc = RuntimeBalanceUtility.StatAccumulator.Default;
+            acc.Apply(StatOperation.PercentAdd, 0.10f);
+            acc.Apply(StatOperation.PercentAdd, 0.15f);
+            Assert.That(acc.Finalize(100f), Is.EqualTo(125f).Within(Epsilon),
+                "PercentAdd effects must sum first, then apply (1 + sum) once");
+        }
+
+        // PercentMul effects compound as product (Π (1 + v))
+        [Test]
+        public void Multiple_PercentMul_Compound_As_Product()
+        {
+            var acc = RuntimeBalanceUtility.StatAccumulator.Default;
+            acc.Apply(StatOperation.PercentMul, 0.10f);
+            acc.Apply(StatOperation.PercentMul, 0.15f);
+            // 100 * 1.1 * 1.15 = 126.5
+            Assert.That(acc.Finalize(100f), Is.EqualTo(126.5f).Within(Epsilon),
+                "PercentMul effects must compound as Product(1 + value)");
+        }
+
+        // Full GDD formula: Final = (Base + Sum(Flat)) * (1 + Sum(PercentAdd)) * Product(1 + PercentMul)
+        // Base = 100, Flat = 10, PercentAdd sum = 0.2, PercentMul = 0.1
+        // Expected = (100 + 10) * (1 + 0.2) * (1 + 0.1) = 110 * 1.2 * 1.1 = 145.2
+        [Test]
+        public void Full_GDD_Formula_Mixed_Operations()
+        {
+            var acc = RuntimeBalanceUtility.StatAccumulator.Default;
+            acc.Apply(StatOperation.Flat, 10f);
+            acc.Apply(StatOperation.PercentAdd, 0.10f);
+            acc.Apply(StatOperation.PercentAdd, 0.10f);
+            acc.Apply(StatOperation.PercentMul, 0.10f);
+            Assert.That(acc.Finalize(100f), Is.EqualTo(145.2f).Within(Epsilon),
+                "Full formula: (Base + Flat) * (1 + ΣPercentAdd) * Π(1 + PercentMul)");
+        }
+
+        // PercentAdd and PercentMul of equal single magnitude yield the SAME result
+        // (both collapse to base * (1 + v)). This is the case that masked the S1-11 bug
+        // historically — it only surfaces when multiple PercentAdd effects stack.
+        [Test]
+        public void Single_PercentAdd_And_PercentMul_Produce_Identical_Result()
+        {
+            var addAcc = RuntimeBalanceUtility.StatAccumulator.Default;
+            addAcc.Apply(StatOperation.PercentAdd, 0.10f);
+
+            var mulAcc = RuntimeBalanceUtility.StatAccumulator.Default;
+            mulAcc.Apply(StatOperation.PercentMul, 0.10f);
+
+            Assert.That(addAcc.Finalize(100f), Is.EqualTo(mulAcc.Finalize(100f)).Within(Epsilon),
+                "Single-effect PercentAdd and PercentMul must match (historical parity)");
+        }
+    }
 }

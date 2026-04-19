@@ -213,20 +213,27 @@ namespace NightDash.ECS.Systems
             ClassData classData,
             DynamicBuffer<OwnedPassiveElement> ownedPassives)
         {
-            PlayerRuntimeProfile profile = new PlayerRuntimeProfile
-            {
-                MaxHealth = classData.baseHp,
-                Damage = classData.basePower,
-                MoveSpeed = classData.baseMoveSpeed,
-                CooldownMultiplier = 1f,
-                RangeMultiplier = 1f,
-                ProjectileSpeedMultiplier = 1f
-            };
+            // Baseline values; legacy per-passive multipliers compound directly onto these.
+            float baseHp            = classData.baseHp;
+            float baseDamage        = classData.basePower;
+            float baseMoveSpeed     = classData.baseMoveSpeed;
+            float baseCooldownMul   = 1f;
+            float baseRangeMul      = 1f;
+            float baseProjSpeedMul  = 1f;
+
+            // Per-stat accumulators for passive effects (GDD formula):
+            //   Final = (Base + Sum(Flat)) * (1 + Sum(PercentAdd)) * Product(1 + PercentMul)
+            StatAccumulator hpAcc       = StatAccumulator.Default;
+            StatAccumulator dmgAcc      = StatAccumulator.Default;
+            StatAccumulator spdAcc      = StatAccumulator.Default;
+            StatAccumulator cdAcc       = StatAccumulator.Default;
+            StatAccumulator rngAcc      = StatAccumulator.Default;
+            StatAccumulator projAcc     = StatAccumulator.Default;
 
             for (int i = 0; i < ownedPassives.Length; i++)
             {
                 OwnedPassiveElement owned = ownedPassives[i];
-                if (!registry.TryGetPassive(owned.Id.ToString(), out PassiveData passive) || passive == null)
+                if (registry == null || !registry.TryGetPassive(owned.Id.ToString(), out PassiveData passive) || passive == null)
                 {
                     continue;
                 }
@@ -241,34 +248,43 @@ namespace NightDash.ECS.Systems
                         case "hp":
                         case "health":
                         case "max_hp":
-                            ApplyEffect(ref profile.MaxHealth, effect.op, value);
+                            hpAcc.Apply(effect.op, value);
                             break;
                         case "power":
                         case "damage":
-                            ApplyEffect(ref profile.Damage, effect.op, value);
+                            dmgAcc.Apply(effect.op, value);
                             break;
                         case "move_speed":
                         case "speed":
-                            ApplyEffect(ref profile.MoveSpeed, effect.op, value);
+                            spdAcc.Apply(effect.op, value);
                             break;
                         case "cooldown":
-                            ApplyEffect(ref profile.CooldownMultiplier, effect.op, value);
+                            cdAcc.Apply(effect.op, value);
                             break;
                         case "range":
-                            ApplyEffect(ref profile.RangeMultiplier, effect.op, value);
+                            rngAcc.Apply(effect.op, value);
                             break;
                         case "projectile_speed":
-                            ApplyEffect(ref profile.ProjectileSpeedMultiplier, effect.op, value);
+                            projAcc.Apply(effect.op, value);
                             break;
                     }
                 }
 
-                profile.Damage *= math.max(0.1f, passive.legacyDamageMultiplier);
-                profile.MaxHealth *= math.max(0.1f, passive.legacyHealthMultiplier);
-                profile.CooldownMultiplier *= math.max(0.1f, passive.legacyCooldownMultiplier);
+                // Legacy multipliers still compound per-passive directly on the base value.
+                baseDamage       *= math.max(0.1f, passive.legacyDamageMultiplier);
+                baseHp           *= math.max(0.1f, passive.legacyHealthMultiplier);
+                baseCooldownMul  *= math.max(0.1f, passive.legacyCooldownMultiplier);
             }
 
-            return profile;
+            return new PlayerRuntimeProfile
+            {
+                MaxHealth                 = hpAcc.Finalize(baseHp),
+                Damage                    = dmgAcc.Finalize(baseDamage),
+                MoveSpeed                 = spdAcc.Finalize(baseMoveSpeed),
+                CooldownMultiplier        = cdAcc.Finalize(baseCooldownMul),
+                RangeMultiplier           = rngAcc.Finalize(baseRangeMul),
+                ProjectileSpeedMultiplier = projAcc.Finalize(baseProjSpeedMul)
+            };
         }
 
         public static WeaponRuntimeProfile ResolveWeaponRuntimeProfile(
@@ -290,19 +306,38 @@ namespace NightDash.ECS.Systems
             };
         }
 
-        private static void ApplyEffect(ref float value, StatOperation op, float amount)
+        // Per-stat accumulator implementing the GDD balance formula:
+        //   Final = (Base + Sum(Flat)) * (1 + Sum(PercentAdd)) * Product(1 + PercentMul)
+        // Replaces the previous ApplyEffect which collapsed PercentAdd and PercentMul
+        // into the same product-style formula (S1-11 fix).
+        internal struct StatAccumulator
         {
-            switch (op)
+            public float Flat;
+            public float PercentAddSum;
+            public float PercentMulProduct;
+
+            public static StatAccumulator Default =>
+                new StatAccumulator { Flat = 0f, PercentAddSum = 0f, PercentMulProduct = 1f };
+
+            public void Apply(StatOperation op, float amount)
             {
-                case StatOperation.Flat:
-                    value += amount;
-                    break;
-                case StatOperation.PercentAdd:
-                    value *= 1f + amount;
-                    break;
-                case StatOperation.PercentMul:
-                    value *= 1f + amount;
-                    break;
+                switch (op)
+                {
+                    case StatOperation.Flat:
+                        Flat += amount;
+                        break;
+                    case StatOperation.PercentAdd:
+                        PercentAddSum += amount;
+                        break;
+                    case StatOperation.PercentMul:
+                        PercentMulProduct *= 1f + amount;
+                        break;
+                }
+            }
+
+            public float Finalize(float baseValue)
+            {
+                return (baseValue + Flat) * (1f + PercentAddSum) * PercentMulProduct;
             }
         }
 
