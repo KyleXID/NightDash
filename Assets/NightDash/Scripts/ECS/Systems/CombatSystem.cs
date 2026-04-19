@@ -394,7 +394,9 @@ namespace NightDash.ECS.Systems
                 Damage = damage,
                 Lifetime = 1.6f,
                 IsPlayerOwned = 0,
-                Radius = CasterProjectileRadius
+                Radius = CasterProjectileRadius,
+                WeaponId = default,
+                IsMelee = 0
             });
             ecb.AddComponent(projectile, new PhysicsVelocity2D
             {

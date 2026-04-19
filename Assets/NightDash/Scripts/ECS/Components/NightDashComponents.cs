@@ -182,6 +182,8 @@ namespace NightDash.ECS.Components
         public float Lifetime;
         public byte IsPlayerOwned;
         public float Radius;
+        public FixedString64Bytes WeaponId;
+        public byte IsMelee;
     }
 
     public struct PhysicsVelocity2D : IComponentData

@@ -45,8 +45,20 @@ namespace NightDash.Runtime
         // Boss
         private const string PathBoss = "NightDash/Art/Stage01/Enemies/spr_boss_agron";
 
-        // Projectile
+        // Projectile (fallback)
         private const string PathProjectile = "NightDash/Art/Stage01/VFX/spr_vfx_demon_orb";
+
+        // ------------------------------------------------------------------ weapon → VFX sprite mapping
+        private static readonly Dictionary<string, (string path, float scale)> WeaponVfxMap =
+            new Dictionary<string, (string, float)>
+            {
+                { "weapon_hellflame_slash",       ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.2f) },
+                { "weapon_abyss_hellflame_slash", ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.5f) },
+                { "weapon_demon_greatsword",      ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.6f) },
+                { "weapon_demon_orb",             ("NightDash/Art/Stage01/VFX/spr_vfx_demon_orb",         0.8f) },
+                { "weapon_starfall",              ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           0.8f) },
+                { "weapon_void_starfall",         ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           1.0f) },
+            };
 
         // ------------------------------------------------------------------ archetype → (path, scale)
         private static readonly Dictionary<string, (string path, float scale)> EnemyArchetypeMap =
@@ -298,15 +310,50 @@ namespace NightDash.Runtime
                 if (!_projectileViews.TryGetValue(entity, out var go))
                 {
                     bool isPlayer = projectiles[i].IsPlayerOwned != 0;
-                    var tint  = isPlayer ? Color.white : new Color(1f, 0.3f, 0.3f, 1f); // red tint for enemy
-                    var scale = isPlayer ? ProjectilePlayerScale : ProjectileEnemyScale;
-                    var sprite = LoadSprite(PathProjectile);
+                    var tint  = isPlayer ? Color.white : new Color(1f, 0.3f, 0.3f, 1f);
+
+                    string weaponId = projectiles[i].WeaponId.ToString();
+                    bool isMelee = projectiles[i].IsMelee != 0;
+                    Sprite sprite;
+                    float scale;
+
+                    if (isPlayer && !string.IsNullOrEmpty(weaponId) && WeaponVfxMap.TryGetValue(weaponId, out var vfxInfo))
+                    {
+                        sprite = LoadSprite(vfxInfo.path);
+                        scale = vfxInfo.scale;
+
+                        // Melee tint: brighter flash
+                        if (isMelee)
+                        {
+                            tint = new Color(1f, 0.9f, 0.6f, 0.9f);
+                        }
+                    }
+                    else
+                    {
+                        sprite = LoadSprite(PathProjectile);
+                        scale = isPlayer ? ProjectilePlayerScale : ProjectileEnemyScale;
+                    }
 
                     go = CreateView("Projectile", sprite, scale, SortProjectile, tint);
                     _projectileViews[entity] = go;
                 }
 
                 SetPosition(go, transforms[i].Position);
+
+                // Rotate projectile sprite to face movement direction
+                if (_world != null && _world.IsCreated)
+                {
+                    var em = _world.EntityManager;
+                    if (em.HasComponent<PhysicsVelocity2D>(entity))
+                    {
+                        var vel = em.GetComponentData<PhysicsVelocity2D>(entity).Value;
+                        if (math.lengthsq(vel) > 0.01f)
+                        {
+                            float angle = math.degrees(math.atan2(vel.y, vel.x));
+                            go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                        }
+                    }
+                }
             }
 
             RemoveStale(_projectileViews, alive);

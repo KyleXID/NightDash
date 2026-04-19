@@ -1,4 +1,5 @@
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -102,13 +103,16 @@ namespace NightDash.ECS.Systems
                     ownedWeapon.CooldownRemaining -= dt;
                     if (ownedWeapon.CooldownRemaining <= 0f)
                     {
+                        bool isMelee = weaponData.weaponType == WeaponType.Melee;
                         SpawnProjectile(
                             ref ecb,
                             origin,
                             targetPosition,
                             profile,
                             firingIndex,
-                            ownedWeapons.Length);
+                            ownedWeapons.Length,
+                            ownedWeapon.Id,
+                            isMelee);
                         ownedWeapon.CooldownRemaining = profile.Cooldown;
                         firingIndex += 1;
                     }
@@ -124,7 +128,9 @@ namespace NightDash.ECS.Systems
             float3 target,
             WeaponRuntimeProfile weapon,
             int weaponIndex,
-            int weaponCount)
+            int weaponCount,
+            FixedString64Bytes weaponId,
+            bool isMelee)
         {
             float3 direction3 = target - origin;
             direction3.z = 0f;
@@ -138,19 +144,46 @@ namespace NightDash.ECS.Systems
             float2 perpendicular = new float2(-direction.y, direction.x);
             float offsetFactor = weaponCount > 1 ? weaponIndex - ((weaponCount - 1) * 0.5f) : 0f;
             float2 spawnOffset = perpendicular * (0.32f * offsetFactor);
-            Entity projectile = ecb.CreateEntity();
-            ecb.AddComponent(projectile, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
-            ecb.AddComponent(projectile, new ProjectileData
+
+            if (isMelee)
             {
-                Damage = weapon.Damage,
-                Lifetime = math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed)),
-                IsPlayerOwned = 1,
-                Radius = 0.35f
-            });
-            ecb.AddComponent(projectile, new PhysicsVelocity2D
+                // Melee: spawn near player toward target, short lifetime, large radius, no travel
+                float meleeOffset = math.min(weapon.Range * 0.4f, 1.2f);
+                float3 meleePosition = origin + new float3(direction.x * meleeOffset, direction.y * meleeOffset, 0f);
+                Entity projectile = ecb.CreateEntity();
+                ecb.AddComponent(projectile, LocalTransform.FromPosition(meleePosition));
+                ecb.AddComponent(projectile, new ProjectileData
+                {
+                    Damage = weapon.Damage,
+                    Lifetime = 0.25f,
+                    IsPlayerOwned = 1,
+                    Radius = math.max(0.6f, weapon.Range * 0.35f),
+                    WeaponId = weaponId,
+                    IsMelee = 1
+                });
+                ecb.AddComponent(projectile, new PhysicsVelocity2D
+                {
+                    Value = direction * 1.5f
+                });
+            }
+            else
             {
-                Value = direction * math.max(2f, weapon.ProjectileSpeed)
-            });
+                Entity projectile = ecb.CreateEntity();
+                ecb.AddComponent(projectile, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
+                ecb.AddComponent(projectile, new ProjectileData
+                {
+                    Damage = weapon.Damage,
+                    Lifetime = math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed)),
+                    IsPlayerOwned = 1,
+                    Radius = 0.35f,
+                    WeaponId = weaponId,
+                    IsMelee = 0
+                });
+                ecb.AddComponent(projectile, new PhysicsVelocity2D
+                {
+                    Value = direction * math.max(2f, weapon.ProjectileSpeed)
+                });
+            }
         }
     }
 }
