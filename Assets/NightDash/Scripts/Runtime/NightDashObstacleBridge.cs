@@ -66,13 +66,17 @@ namespace NightDash.Runtime
             if (_world == null || !_world.IsCreated) return false;
 
             var em = _world.EntityManager;
+            // LocalTransform requires ReadWrite because PushPlayer/PushEnemies
+            // mutate it via em.SetComponentData(...). Declaring ReadOnly here
+            // while writing is an ECS safety violation (Burst-compiled job
+            // systems can tear or crash under the resulting race condition).
             _playerQuery = em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerTag>(),
-                ComponentType.ReadOnly<LocalTransform>(),
+                ComponentType.ReadWrite<LocalTransform>(),
                 ComponentType.Exclude<Prefab>());
             _enemyQuery = em.CreateEntityQuery(
                 ComponentType.ReadOnly<EnemyTag>(),
-                ComponentType.ReadOnly<LocalTransform>(),
+                ComponentType.ReadWrite<LocalTransform>(),
                 ComponentType.Exclude<Prefab>());
 
             _initialized = true;
