@@ -246,7 +246,14 @@ namespace NightDash.Editor
             if (errors.Count == 0)
             {
                 Debug.Log("[NightDash] Data validation passed.");
-                EditorUtility.DisplayDialog("NightDash Validation", "Data validation passed.", "OK");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(0);
+                }
+                else
+                {
+                    EditorUtility.DisplayDialog("NightDash Validation", "Data validation passed.", "OK");
+                }
                 return;
             }
 
@@ -255,10 +262,18 @@ namespace NightDash.Editor
                 Debug.LogError($"[NightDash][DataValidation] {error}");
             }
 
-            EditorUtility.DisplayDialog(
-                "NightDash Validation",
-                $"Validation failed with {errors.Count} issues. Check Console for details.",
-                "OK");
+            if (Application.isBatchMode)
+            {
+                Debug.LogError($"[NightDash] Data validation failed with {errors.Count} issues.");
+                EditorApplication.Exit(1);
+            }
+            else
+            {
+                EditorUtility.DisplayDialog(
+                    "NightDash Validation",
+                    $"Validation failed with {errors.Count} issues. Check Console for details.",
+                    "OK");
+            }
         }
 
         private static List<T> LoadAll<T>() where T : ScriptableObject
