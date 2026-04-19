@@ -10,26 +10,31 @@ namespace NightDash.Runtime
 {
     public sealed class NightDashObstacleBridge : MonoBehaviour
     {
-        private const float PushStrength = 15f;
-        private const float CollisionHeightRatio = 0.3f; // collision at bottom 30% of sprite
+        private const float PushStrength = 20f;
+        private const float CollisionHeightRatio = 0.3f;
+        private const float RescanInterval = 2f;
 
         private struct ObstacleData
         {
-            public Vector2 collisionCenter; // bottom part of the sprite
-            public float collisionRadius;   // based on sprite scale
-            public SpriteRenderer renderer; // for Y-sort update
-            public float bottomY;           // bottom edge Y for sorting
+            public Vector2 collisionCenter;
+            public float collisionRadius;
+            public SpriteRenderer renderer;
+            public float bottomY;
         }
 
         private readonly List<ObstacleData> _obstacles = new();
         private World _world;
         private EntityQuery _playerQuery;
         private EntityQuery _enemyQuery;
-        private bool _scanned;
+        private float _lastScanTime = -999f;
+        private bool _initialized;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
+            var existing = FindFirstObjectByType<NightDashObstacleBridge>(FindObjectsInactive.Include);
+            if (existing != null) return;
+
             var go = new GameObject("[NightDash] ObstacleBridge");
             go.AddComponent<NightDashObstacleBridge>();
             DontDestroyOnLoad(go);
@@ -37,35 +42,42 @@ namespace NightDash.Runtime
 
         private void LateUpdate()
         {
-            if (_world == null || !_world.IsCreated)
-            {
-                _world = World.DefaultGameObjectInjectionWorld;
-                if (_world == null || !_world.IsCreated) return;
+            if (!EnsureInitialized()) return;
 
-                var em = _world.EntityManager;
-                _playerQuery = em.CreateEntityQuery(
-                    ComponentType.ReadOnly<PlayerTag>(),
-                    ComponentType.ReadWrite<LocalTransform>(),
-                    ComponentType.Exclude<Prefab>());
-                _enemyQuery = em.CreateEntityQuery(
-                    ComponentType.ReadOnly<EnemyTag>(),
-                    ComponentType.ReadWrite<LocalTransform>(),
-                    ComponentType.Exclude<Prefab>());
-            }
-
-            if (!_scanned)
+            // Rescan periodically in case scene changed
+            if (Time.time - _lastScanTime > RescanInterval)
             {
                 ScanObstacles();
-                _scanned = true;
+                _lastScanTime = Time.time;
             }
 
             if (_obstacles.Count == 0) return;
 
-            // Update sorting order for all env props every frame (Y-sort)
             UpdatePropSorting();
+            PushPlayer();
+            PushEnemies();
+        }
 
-            PushEntitiesFromObstacles(_playerQuery);
-            PushEntitiesFromObstacles(_enemyQuery);
+        private bool EnsureInitialized()
+        {
+            if (_initialized) return true;
+
+            _world = World.DefaultGameObjectInjectionWorld;
+            if (_world == null || !_world.IsCreated) return false;
+
+            var em = _world.EntityManager;
+            _playerQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<PlayerTag>(),
+                ComponentType.ReadOnly<LocalTransform>(),
+                ComponentType.Exclude<Prefab>());
+            _enemyQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<EnemyTag>(),
+                ComponentType.ReadOnly<LocalTransform>(),
+                ComponentType.Exclude<Prefab>());
+
+            _initialized = true;
+            NightDashLog.Info("[ObstacleBridge] Initialized.");
+            return true;
         }
 
         private void ScanObstacles()
@@ -83,77 +95,110 @@ namespace NightDash.Runtime
                 if (!child.name.StartsWith("Prop_")) continue;
 
                 var sr = child.GetComponent<SpriteRenderer>();
-                float scaleY = child.localScale.y;
-                float scaleX = child.localScale.x;
+                if (sr == null || sr.sprite == null) continue;
 
-                // Collision center is at bottom portion of the sprite
-                float spriteHalfH = scaleY * 0.5f;
-                float collisionCenterY = child.position.y - spriteHalfH + (scaleY * CollisionHeightRatio * 0.5f);
-                float collisionRadius = scaleX * 0.35f; // 35% of width as collision radius
+                // Use actual rendered bounds instead of raw localScale
+                var bounds = sr.bounds;
+                float renderW = bounds.size.x;
+                float renderH = bounds.size.y;
+
+                float spriteHalfH = renderH * 0.5f;
+                float collisionCenterY = child.position.y - spriteHalfH + (renderH * CollisionHeightRatio * 0.5f);
+                float collisionRadius = renderW * 0.35f;
 
                 _obstacles.Add(new ObstacleData
                 {
                     collisionCenter = new Vector2(child.position.x, collisionCenterY),
                     collisionRadius = collisionRadius,
                     renderer = sr,
-                    bottomY = child.position.y - spriteHalfH
+                    bottomY = bounds.min.y
                 });
             }
 
-            NightDashLog.Info($"[ObstacleBridge] Scanned {_obstacles.Count} obstacles with bottom-based collision.");
+            if (_obstacles.Count > 0)
+                NightDashLog.Info($"[ObstacleBridge] Scanned {_obstacles.Count} obstacles.");
         }
 
         private void UpdatePropSorting()
         {
-            // Y-sort all env props based on their bottom edge, matching entity Y-sort
             for (int i = 0; i < _obstacles.Count; i++)
             {
                 var obs = _obstacles[i];
                 if (obs.renderer != null)
-                {
                     obs.renderer.sortingOrder = 200 + (int)(-obs.bottomY * 10f);
+            }
+        }
+
+        private void PushPlayer()
+        {
+            if (_playerQuery.IsEmptyIgnoreFilter) return;
+
+            var em = _world.EntityManager;
+            using var entities = _playerQuery.ToEntityArray(Allocator.Temp);
+            if (entities.Length == 0) return;
+
+            var entity = entities[0];
+            var t = em.GetComponentData<LocalTransform>(entity);
+            var pos = new float2(t.Position.x, t.Position.y);
+
+            float2 push = ComputePush(pos);
+            if (math.lengthsq(push) > 0.0001f)
+            {
+                t.Position += new float3(push.x, push.y, 0f);
+                em.SetComponentData(entity, t);
+            }
+        }
+
+        private void PushEnemies()
+        {
+            if (_enemyQuery.IsEmptyIgnoreFilter) return;
+
+            var em = _world.EntityManager;
+            using var entities = _enemyQuery.ToEntityArray(Allocator.Temp);
+
+            for (int i = 0; i < entities.Length; i++)
+            {
+                var t = em.GetComponentData<LocalTransform>(entities[i]);
+                var pos = new float2(t.Position.x, t.Position.y);
+
+                float2 push = ComputePush(pos);
+                if (math.lengthsq(push) > 0.0001f)
+                {
+                    t.Position += new float3(push.x, push.y, 0f);
+                    em.SetComponentData(entities[i], t);
                 }
             }
         }
 
-        private void PushEntitiesFromObstacles(EntityQuery query)
+        private float2 ComputePush(float2 entityPos)
         {
-            if (query.IsEmptyIgnoreFilter) return;
-
-            var em = _world.EntityManager;
-            using var entities = query.ToEntityArray(Allocator.Temp);
-            using var transforms = query.ToComponentDataArray<LocalTransform>(Allocator.Temp);
-
             float dt = Time.deltaTime;
+            float2 totalPush = float2.zero;
 
-            for (int i = 0; i < entities.Length; i++)
+            for (int o = 0; o < _obstacles.Count; o++)
             {
-                var pos = new float2(transforms[i].Position.x, transforms[i].Position.y);
-                float2 totalPush = float2.zero;
+                var obs = _obstacles[o];
+                float2 center = new float2(obs.collisionCenter.x, obs.collisionCenter.y);
+                float2 diff = entityPos - center;
+                float distSq = math.lengthsq(diff);
+                float radius = obs.collisionRadius;
+                float radiusSq = radius * radius;
 
-                for (int o = 0; o < _obstacles.Count; o++)
+                if (distSq < radiusSq && distSq > 0.0001f)
                 {
-                    var obs = _obstacles[o];
-                    float2 center = new float2(obs.collisionCenter.x, obs.collisionCenter.y);
-                    float2 diff = pos - center;
-                    float distSq = math.lengthsq(diff);
-                    float radiusSq = obs.collisionRadius * obs.collisionRadius;
-
-                    if (distSq < radiusSq && distSq > 0.0001f)
-                    {
-                        float dist = math.sqrt(distSq);
-                        float overlap = obs.collisionRadius - dist;
-                        totalPush += (diff / dist) * overlap * PushStrength * dt;
-                    }
+                    float dist = math.sqrt(distSq);
+                    float overlap = radius - dist;
+                    // Hard push - immediately move out of collision
+                    totalPush += (diff / dist) * math.max(overlap, 0.05f) * PushStrength * dt;
                 }
-
-                if (math.lengthsq(totalPush) > 0.0001f)
+                else if (distSq < 0.0001f)
                 {
-                    var t = transforms[i];
-                    t.Position += new float3(totalPush.x, totalPush.y, 0f);
-                    em.SetComponentData(entities[i], t);
+                    // Exactly on center - push in random direction
+                    totalPush += new float2(0.1f, 0.1f) * PushStrength * dt;
                 }
             }
+
+            return totalPush;
         }
     }
 }
