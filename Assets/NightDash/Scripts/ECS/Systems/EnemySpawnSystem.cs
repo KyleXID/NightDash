@@ -208,25 +208,25 @@ namespace NightDash.ECS.Systems
         {
             if (enemyId == "ember_bat")
             {
-                return new EnemySpawnProfile("ember_bat", 16f, 3f, 1.7f, false);
+                return new EnemySpawnProfile("ember_bat", 16f, 3f, 2.9f, false);
             }
 
             if (enemyId == "wasteland_brute")
             {
-                return new EnemySpawnProfile("wasteland_brute", 54f, 10f, 0.9f, false);
+                return new EnemySpawnProfile("wasteland_brute", 54f, 10f, 1.8f, false);
             }
 
             if (enemyId == "ash_caster")
             {
-                return new EnemySpawnProfile("ash_caster", 28f, 7f, 1.2f, false);
+                return new EnemySpawnProfile("ash_caster", 28f, 7f, 2.2f, false);
             }
 
             if (enemyId == "boss_agron")
             {
-                return new EnemySpawnProfile("boss_agron", 320f, 14f, 0.85f, true);
+                return new EnemySpawnProfile("boss_agron", 320f, 14f, 1.7f, true);
             }
 
-            return new EnemySpawnProfile("ghoul_scout", 22f, 4f, 1.4f, false);
+            return new EnemySpawnProfile("ghoul_scout", 22f, 4f, 2.5f, false);
         }
 
         private readonly struct EnemySpawnProfile

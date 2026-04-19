@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uC810\uC131\uC220\uC0AC"
   tags: []
   baseHp: 95
-  baseMoveSpeed: 5.1
+  baseMoveSpeed: 3.8
   basePower: 12
   startWeaponId: weapon_starfall
   uniquePassiveId: passive_astrologer_reroll_free

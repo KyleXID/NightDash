@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uB9C8\uBC95\uC0AC"
   tags: []
   baseHp: 85
-  baseMoveSpeed: 5
+  baseMoveSpeed: 3.7
   basePower: 13
   startWeaponId: weapon_demon_orb
   uniquePassiveId: passive_mage_free_upgrade

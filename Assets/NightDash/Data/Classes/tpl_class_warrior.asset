@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: "\uC804\uC0AC"
   tags: []
   baseHp: 125
-  baseMoveSpeed: 4.8
+  baseMoveSpeed: 3.5
   basePower: 11
   startWeaponId: weapon_demon_greatsword
   uniquePassiveId: passive_warrior_guard_stack
