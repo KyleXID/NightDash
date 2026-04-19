@@ -41,8 +41,17 @@ Thumbs.db
 
 # Unity crash dumps / local scratch files
 mono_crash*
+*.blob
 tmp_stage01_lava_patch_edit_snapshot.md
 node_modules/
 package.json
 package-lock.json
 .claude/settings.local.json
+
+# Local workspace scratch directories (non-repo-managed)
+backups/
+downloads/
+
+# Unity test output
+Logs/editmode-results.xml
+Logs/playmode-results.xml
