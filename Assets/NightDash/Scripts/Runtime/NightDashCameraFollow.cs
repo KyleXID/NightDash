@@ -59,7 +59,7 @@ namespace NightDash.Runtime
             }
         }
 
-        [SerializeField] private float targetOrthoSize = 4.5f;
+        [SerializeField] private float targetOrthoSize = 3.8f;
 
         private void Start()
         {
