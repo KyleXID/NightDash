@@ -12,23 +12,33 @@ using NightDash.Data;
 namespace NightDash.Tests.EditMode
 {
     // ---------------------------------------------------------------------------
-    // GDD balance baseline constants (S1-04 warrior / single-weapon fixture).
-    // Update these values only when the GDD baseline table is officially revised.
+    // GDD balance baselines — source: Docs/GDD/specs/08_combat_math_and_balance.md §1.
+    // These constants define the PLAYER baseline (level 1, no passives) per GDD.
+    // Individual ClassData assets may deviate; drift > ±20% is flagged by S3-08 tests.
+    //
+    // Last reconciled with asset surveys: 2026-04-19 (S1-12).
+    //   Survey results:
+    //     - Classes: warrior HP=125 (+25%), mage Power=13 (+30%),
+    //       all classes MoveSpeed 3.5~3.8 (-24% ~ -30% vs GDD 5.0) → see S3-08 backlog.
+    //     - Weapons: multi-modal (3 melee / 3 projectile);
+    //       projectile weapons speed 9~12 match ProjectileWeaponSpeed=10f.
     // ---------------------------------------------------------------------------
     internal static class BalanceBaselines
     {
         public const float Tolerance = 0.20f; // GDD rule: ±20% of baseline
 
-        // Warrior baseline fixture
-        public const float WarriorBaseHp        = 100f;
-        public const float WarriorBaseDamage    = 10f;
-        public const float WarriorBaseMoveSpeed = 4f;
+        // Player baseline (GDD §1)
+        public const float PlayerBaseHp        = 100f;
+        public const float PlayerBaseDamage    = 10f;  // GDD "Power"
+        public const float PlayerBaseMoveSpeed = 5f;
 
-        // Single-weapon level-1 fixture
-        public const float WeaponBaseCooldown        = 1f;
-        public const float WeaponBaseRange           = 5f;
-        public const float WeaponBasePowerCoeff      = 1f;
-        public const float WeaponBaseProjectileSpeed = 10f;
+        // Weapon baselines — derived from Assets/NightDash/Data/Weapons/*.asset (S1-12 survey).
+        // Multi-modal: melee weapons use ProjectileSpeed = 0; projectile weapons use 10.
+        public const float WeaponBaseCooldown        = 1f;  // asset median (range 0.8–1.35)
+        public const float WeaponBaseRange           = 5f;  // midpoint; melee ≈ 3, projectile ≈ 8.5
+        public const float WeaponBasePowerCoeff      = 1f;  // weapon_demon_orb reference
+        public const float MeleeProjectileSpeed      = 0f;  // all 3 melee weapons
+        public const float ProjectileWeaponSpeed     = 10f; // demon_orb baseline, matches GDD expectation
     }
 
     // ---------------------------------------------------------------------------
@@ -48,13 +58,13 @@ namespace NightDash.Tests.EditMode
             _weaponData.baseCooldown        = BalanceBaselines.WeaponBaseCooldown;
             _weaponData.baseRange           = BalanceBaselines.WeaponBaseRange;
             _weaponData.basePowerCoeff      = BalanceBaselines.WeaponBasePowerCoeff;
-            _weaponData.baseProjectileSpeed = BalanceBaselines.WeaponBaseProjectileSpeed;
+            _weaponData.baseProjectileSpeed = BalanceBaselines.ProjectileWeaponSpeed;
             _weaponData.levelCurves         = null; // explicit null → fallback path
 
             _classData = ScriptableObject.CreateInstance<ClassData>();
-            _classData.baseHp        = (int)BalanceBaselines.WarriorBaseHp;
-            _classData.basePower     = BalanceBaselines.WarriorBaseDamage;
-            _classData.baseMoveSpeed = BalanceBaselines.WarriorBaseMoveSpeed;
+            _classData.baseHp        = (int)BalanceBaselines.PlayerBaseHp;
+            _classData.basePower     = BalanceBaselines.PlayerBaseDamage;
+            _classData.baseMoveSpeed = BalanceBaselines.PlayerBaseMoveSpeed;
         }
 
         [OneTimeTearDown]
@@ -105,7 +115,7 @@ namespace NightDash.Tests.EditMode
         {
             PlayerRuntimeProfile player = new PlayerRuntimeProfile
             {
-                Damage                   = BalanceBaselines.WarriorBaseDamage,
+                Damage                   = BalanceBaselines.PlayerBaseDamage,
                 CooldownMultiplier       = 1f,
                 RangeMultiplier          = 1f,
                 ProjectileSpeedMultiplier = 1f
@@ -174,15 +184,15 @@ namespace NightDash.Tests.EditMode
                 PlayerRuntimeProfile profile =
                     RuntimeBalanceUtility.ResolvePlayerRuntimeProfile(null, _classData, passiveBuffer);
 
-                float hpTol    = BalanceBaselines.WarriorBaseHp        * BalanceBaselines.Tolerance;
-                float dmgTol   = BalanceBaselines.WarriorBaseDamage    * BalanceBaselines.Tolerance;
-                float speedTol = BalanceBaselines.WarriorBaseMoveSpeed * BalanceBaselines.Tolerance;
+                float hpTol    = BalanceBaselines.PlayerBaseHp        * BalanceBaselines.Tolerance;
+                float dmgTol   = BalanceBaselines.PlayerBaseDamage    * BalanceBaselines.Tolerance;
+                float speedTol = BalanceBaselines.PlayerBaseMoveSpeed * BalanceBaselines.Tolerance;
 
-                Assert.That(profile.MaxHealth,  Is.EqualTo(BalanceBaselines.WarriorBaseHp).Within(hpTol),
+                Assert.That(profile.MaxHealth,  Is.EqualTo(BalanceBaselines.PlayerBaseHp).Within(hpTol),
                     "MaxHealth must be within ±20% of GDD baseline");
-                Assert.That(profile.Damage,     Is.EqualTo(BalanceBaselines.WarriorBaseDamage).Within(dmgTol),
+                Assert.That(profile.Damage,     Is.EqualTo(BalanceBaselines.PlayerBaseDamage).Within(dmgTol),
                     "Damage must be within ±20% of GDD baseline");
-                Assert.That(profile.MoveSpeed,  Is.EqualTo(BalanceBaselines.WarriorBaseMoveSpeed).Within(speedTol),
+                Assert.That(profile.MoveSpeed,  Is.EqualTo(BalanceBaselines.PlayerBaseMoveSpeed).Within(speedTol),
                     "MoveSpeed must be within ±20% of GDD baseline");
             }
             finally
