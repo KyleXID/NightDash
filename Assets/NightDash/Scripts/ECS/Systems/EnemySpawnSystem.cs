@@ -204,7 +204,7 @@ namespace NightDash.ECS.Systems
             });
         }
 
-        private static EnemySpawnProfile ResolveProfile(FixedString64Bytes enemyId)
+        internal static EnemySpawnProfile ResolveProfile(FixedString64Bytes enemyId)
         {
             if (enemyId == "ember_bat")
             {
@@ -229,7 +229,7 @@ namespace NightDash.ECS.Systems
             return new EnemySpawnProfile("ghoul_scout", 22f, 4f, 2.5f, false);
         }
 
-        private readonly struct EnemySpawnProfile
+        internal readonly struct EnemySpawnProfile
         {
             public EnemySpawnProfile(string id, float maxHealth, float damage, float moveSpeed, bool isBoss)
             {
