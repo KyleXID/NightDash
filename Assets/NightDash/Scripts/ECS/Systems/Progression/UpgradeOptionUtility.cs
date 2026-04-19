@@ -1,154 +1,31 @@
 using NightDash.Data;
 using NightDash.ECS.Components;
-using NightDash.Runtime;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-namespace NightDash.ECS.Systems
+// NOTE: InternalsVisibleTo is declared once in Assets/NightDash/Scripts/AssemblyInfo.cs
+// (S1-03). Do not duplicate it here — C# rejects the same assembly-name attribute twice.
+
+namespace NightDash.ECS.Systems.Progression
 {
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [UpdateAfter(typeof(GameLoopSystem))]
-    public partial struct ProgressionSystem : ISystem
+    /// <summary>
+    /// Pure-static helpers extracted from the monolithic ProgressionSystem.
+    /// Kept as managed (List&lt;T&gt;) for parity with the original implementation.
+    /// Burst / NativeList migration is tracked as Open Question 3 in S1-05 RFC.
+    /// </summary>
+    internal static class UpgradeOptionUtility
     {
-        public void OnCreate(ref SystemState state)
-        {
-            state.RequireForUpdate<GameLoopState>();
-            state.RequireForUpdate<PlayerProgressionState>();
-            state.RequireForUpdate<UpgradeSelectionRequest>();
-            state.RequireForUpdate<OwnedWeaponElement>();
-            state.RequireForUpdate<OwnedPassiveElement>();
-            state.RequireForUpdate<UpgradeOptionElement>();
-        }
+        // -------------------------------------------------------------------------
+        // Public entry points called by the split ISystem types
+        // -------------------------------------------------------------------------
 
-        public void OnUpdate(ref SystemState state)
-        {
-            var registry = DataRegistry.Instance;
-            if (registry?.Catalog == null)
-            {
-                return;
-            }
-
-            RefRW<GameLoopState> loop = SystemAPI.GetSingletonRW<GameLoopState>();
-            RefRW<PlayerProgressionState> progression = SystemAPI.GetSingletonRW<PlayerProgressionState>();
-            RefRW<UpgradeSelectionRequest> request = SystemAPI.GetSingletonRW<UpgradeSelectionRequest>();
-            DynamicBuffer<UpgradeOptionElement> options = SystemAPI.GetSingletonBuffer<UpgradeOptionElement>();
-            DynamicBuffer<OwnedWeaponElement> ownedWeapons = SystemAPI.GetSingletonBuffer<OwnedWeaponElement>();
-            DynamicBuffer<OwnedPassiveElement> ownedPassives = SystemAPI.GetSingletonBuffer<OwnedPassiveElement>();
-            DynamicBuffer<AvailableWeaponElement> availableWeapons = SystemAPI.GetSingletonBuffer<AvailableWeaponElement>();
-            DynamicBuffer<AvailablePassiveElement> availablePassives = SystemAPI.GetSingletonBuffer<AvailablePassiveElement>();
-
-            string classId = SystemAPI.GetSingleton<RunSelection>().ClassId.ToString();
-
-            if (loop.ValueRO.PendingLevelUps > 0 && loop.ValueRO.Status == RunStatus.Playing)
-            {
-                loop.ValueRW.Status = RunStatus.LevelUpSelection;
-            }
-
-            if (loop.ValueRO.Status != RunStatus.LevelUpSelection)
-            {
-                return;
-            }
-
-            if (request.ValueRO.RerollRequested == 1)
-            {
-                request.ValueRW.RerollRequested = 0;
-                request.ValueRW.HasSelection = 0;
-                request.ValueRW.SelectedOptionIndex = -1;
-
-                if (progression.ValueRO.RerollsRemaining > 0)
-                {
-                    progression.ValueRW.RerollsRemaining -= 1;
-                    GenerateOptions(
-                        registry,
-                        ref options,
-                        ownedWeapons,
-                        ownedPassives,
-                        availableWeapons,
-                        availablePassives,
-                        progression.ValueRO,
-                        loop.ValueRO,
-                        preferFreshOptions: true);
-                }
-            }
-
-            if (options.Length == 0)
-            {
-                GenerateOptions(
-                    registry,
-                    ref options,
-                    ownedWeapons,
-                    ownedPassives,
-                    availableWeapons,
-                    availablePassives,
-                    progression.ValueRO,
-                    loop.ValueRO,
-                    preferFreshOptions: false);
-            }
-
-            if (options.Length == 0)
-            {
-                loop.ValueRW.PendingLevelUps = math.max(0, loop.ValueRO.PendingLevelUps - 1);
-                if (loop.ValueRO.PendingLevelUps > 1)
-                {
-                    GenerateOptions(
-                        registry,
-                        ref options,
-                        ownedWeapons,
-                        ownedPassives,
-                        availableWeapons,
-                        availablePassives,
-                        progression.ValueRO,
-                        loop.ValueRO,
-                        preferFreshOptions: false);
-                }
-                else
-                {
-                    loop.ValueRW.Status = RunStatus.Playing;
-                }
-
-                return;
-            }
-
-            if (request.ValueRO.HasSelection == 0)
-            {
-                return;
-            }
-
-            int optionIndex = request.ValueRO.SelectedOptionIndex;
-            request.ValueRW.HasSelection = 0;
-            request.ValueRW.SelectedOptionIndex = -1;
-            if (optionIndex < 0 || optionIndex >= options.Length)
-            {
-                return;
-            }
-
-            ApplySelection(registry, options[optionIndex], progression.ValueRO, ref ownedWeapons, ref ownedPassives);
-            RuntimeBalanceUtility.RefreshPlayerRuntime(ref state, registry, classId);
-
-            options.Clear();
-            loop.ValueRW.PendingLevelUps = math.max(0, loop.ValueRO.PendingLevelUps - 1);
-            if (loop.ValueRO.PendingLevelUps > 1)
-            {
-                GenerateOptions(
-                    registry,
-                    ref options,
-                    ownedWeapons,
-                    ownedPassives,
-                    availableWeapons,
-                    availablePassives,
-                    progression.ValueRO,
-                    loop.ValueRO,
-                    preferFreshOptions: false);
-            }
-            else
-            {
-                loop.ValueRW.Status = RunStatus.Playing;
-            }
-        }
-
-        private static void GenerateOptions(
+        /// <summary>
+        /// Builds up to 3 upgrade options into <paramref name="options"/>.
+        /// Corresponds to original GenerateOptions (lines 151-272).
+        /// </summary>
+        internal static void BuildOptions(
             DataRegistry registry,
             ref DynamicBuffer<UpgradeOptionElement> options,
             DynamicBuffer<OwnedWeaponElement> ownedWeapons,
@@ -169,6 +46,7 @@ namespace NightDash.ECS.Systems
 
             var candidatePool = new List<UpgradeOptionElement>(16);
 
+            // Owned weapons that can still level up
             for (int i = 0; i < ownedWeapons.Length; i++)
             {
                 OwnedWeaponElement owned = ownedWeapons[i];
@@ -187,6 +65,7 @@ namespace NightDash.ECS.Systems
                 });
             }
 
+            // New weapon unlocks (within slot limit)
             if (ownedWeapons.Length < progression.WeaponSlotLimit)
             {
                 for (int i = 0; i < availableWeapons.Length; i++)
@@ -212,6 +91,7 @@ namespace NightDash.ECS.Systems
                 }
             }
 
+            // Owned passives that can still level up
             for (int i = 0; i < ownedPassives.Length; i++)
             {
                 OwnedPassiveElement owned = ownedPassives[i];
@@ -230,6 +110,7 @@ namespace NightDash.ECS.Systems
                 });
             }
 
+            // New passive unlocks (within slot limit)
             if (ownedPassives.Length < progression.PassiveSlotLimit)
             {
                 for (int i = 0; i < availablePassives.Length; i++)
@@ -271,7 +152,11 @@ namespace NightDash.ECS.Systems
             EnsureOptionKindPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Passive);
         }
 
-        private static void ApplySelection(
+        /// <summary>
+        /// Applies the chosen upgrade option to the player's owned weapon/passive buffers.
+        /// Corresponds to original ApplySelection (lines 274-345).
+        /// </summary>
+        internal static void ApplySelection(
             DataRegistry registry,
             UpgradeOptionElement option,
             PlayerProgressionState progression,
@@ -344,7 +229,11 @@ namespace NightDash.ECS.Systems
             });
         }
 
-        private static bool ContainsWeapon(DynamicBuffer<OwnedWeaponElement> ownedWeapons, FixedString64Bytes id)
+        // -------------------------------------------------------------------------
+        // Internal helpers
+        // -------------------------------------------------------------------------
+
+        internal static bool ContainsWeapon(DynamicBuffer<OwnedWeaponElement> ownedWeapons, FixedString64Bytes id)
         {
             for (int i = 0; i < ownedWeapons.Length; i++)
             {
@@ -357,7 +246,7 @@ namespace NightDash.ECS.Systems
             return false;
         }
 
-        private static bool ContainsPassive(DynamicBuffer<OwnedPassiveElement> ownedPassives, FixedString64Bytes id)
+        internal static bool ContainsPassive(DynamicBuffer<OwnedPassiveElement> ownedPassives, FixedString64Bytes id)
         {
             for (int i = 0; i < ownedPassives.Length; i++)
             {
@@ -370,7 +259,7 @@ namespace NightDash.ECS.Systems
             return false;
         }
 
-        private static bool ContainsOption(DynamicBuffer<UpgradeOptionElement> options, FixedString64Bytes id)
+        internal static bool ContainsOption(DynamicBuffer<UpgradeOptionElement> options, FixedString64Bytes id)
         {
             for (int i = 0; i < options.Length; i++)
             {
@@ -383,7 +272,33 @@ namespace NightDash.ECS.Systems
             return false;
         }
 
-        private static void AddCandidate(List<UpgradeOptionElement> candidates, UpgradeOptionElement candidate)
+        internal static bool ContainsOption(DynamicBuffer<UpgradeOptionElement> options, UpgradeOptionElement candidate)
+        {
+            for (int i = 0; i < options.Length; i++)
+            {
+                if (options[i].Kind == candidate.Kind && options[i].Id.Equals(candidate.Id))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool ContainsOption(List<UpgradeOptionElement> options, UpgradeOptionElement candidate)
+        {
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].Kind == candidate.Kind && options[i].Id.Equals(candidate.Id))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        internal static void AddCandidate(List<UpgradeOptionElement> candidates, UpgradeOptionElement candidate)
         {
             for (int i = 0; i < candidates.Count; i++)
             {
@@ -396,7 +311,7 @@ namespace NightDash.ECS.Systems
             candidates.Add(candidate);
         }
 
-        private static void AddPreferredOptions(
+        internal static void AddPreferredOptions(
             ref DynamicBuffer<UpgradeOptionElement> options,
             List<UpgradeOptionElement> candidates,
             List<UpgradeOptionElement> previousOptions,
@@ -424,7 +339,7 @@ namespace NightDash.ECS.Systems
             }
         }
 
-        private static void EnsureOptionKindPresence(
+        internal static void EnsureOptionKindPresence(
             ref DynamicBuffer<UpgradeOptionElement> options,
             List<UpgradeOptionElement> candidates,
             List<UpgradeOptionElement> previousOptions,
@@ -469,7 +384,7 @@ namespace NightDash.ECS.Systems
             }
         }
 
-        private static void EnsureFreshUnlockPresence(
+        internal static void EnsureFreshUnlockPresence(
             ref DynamicBuffer<UpgradeOptionElement> options,
             List<UpgradeOptionElement> candidates,
             List<UpgradeOptionElement> previousOptions,
@@ -522,20 +437,7 @@ namespace NightDash.ECS.Systems
             }
         }
 
-        private static bool ContainsOption(DynamicBuffer<UpgradeOptionElement> options, UpgradeOptionElement candidate)
-        {
-            for (int i = 0; i < options.Length; i++)
-            {
-                if (options[i].Kind == candidate.Kind && options[i].Id.Equals(candidate.Id))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private static int FindCandidateIndex(
+        internal static int FindCandidateIndex(
             List<UpgradeOptionElement> candidates,
             List<UpgradeOptionElement> previousOptions,
             int offset,
@@ -574,7 +476,7 @@ namespace NightDash.ECS.Systems
             return -1;
         }
 
-        private static bool HasFreshUnlock(DynamicBuffer<UpgradeOptionElement> options, UpgradeKind kind)
+        internal static bool HasFreshUnlock(DynamicBuffer<UpgradeOptionElement> options, UpgradeKind kind)
         {
             for (int i = 0; i < options.Length; i++)
             {
@@ -587,7 +489,7 @@ namespace NightDash.ECS.Systems
             return false;
         }
 
-        private static bool HasOptionKind(DynamicBuffer<UpgradeOptionElement> options, UpgradeKind kind)
+        internal static bool HasOptionKind(DynamicBuffer<UpgradeOptionElement> options, UpgradeKind kind)
         {
             for (int i = 0; i < options.Length; i++)
             {
@@ -600,7 +502,7 @@ namespace NightDash.ECS.Systems
             return false;
         }
 
-        private static bool TryReplaceOption(
+        internal static bool TryReplaceOption(
             ref DynamicBuffer<UpgradeOptionElement> options,
             UpgradeOptionElement replacement,
             bool preferReplaceFreshUnlock)
@@ -621,19 +523,6 @@ namespace NightDash.ECS.Systems
 
                 options[i] = replacement;
                 return true;
-            }
-
-            return false;
-        }
-
-        private static bool ContainsOption(List<UpgradeOptionElement> options, UpgradeOptionElement candidate)
-        {
-            for (int i = 0; i < options.Count; i++)
-            {
-                if (options[i].Kind == candidate.Kind && options[i].Id.Equals(candidate.Id))
-                {
-                    return true;
-                }
             }
 
             return false;
