@@ -45,5 +45,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d5f0557e3336246f3a69b4690d91bb9a, type: 2}
   difficultyModifiers:
   - {fileID: 11400000, guid: ee59bdf4a6d3a4deda0f27f86cbd2bc0, type: 2}
+  - {fileID: 11400000, guid: fe833b743c164a3691ed6fa1eaee14f6, type: 2}
+  - {fileID: 11400000, guid: ae7f73a797694ec383d2addc91746f0b, type: 2}
+  - {fileID: 11400000, guid: 4b2bf8837b3c4528bb0ecd711451d7cd, type: 2}
+  - {fileID: 11400000, guid: 2d3154c9ecad4914a3ebb2f12e6529ab, type: 2}
   metaTrees:
   - {fileID: 11400000, guid: b6bc7aa410eaf40428c8efba0409a2e5, type: 2}

@@ -80,7 +80,7 @@ namespace NightDash.Editor
                 });
 
             CreateAssetIfMissing<DifficultyModifierData>(
-                $"{Root}/Difficulty/tpl_modifier_enemy_hp_up.asset",
+                $"{Root}/Difficulty/modifier_enemy_hp_up.asset",
                 asset =>
                 {
                     asset.id = "mod_enemy_hp_up";
