@@ -1,5 +1,4 @@
 using Unity.Entities;
-using UnityEngine;
 using NightDash.ECS.Components;
 
 namespace NightDash.ECS.Systems
@@ -7,8 +6,6 @@ namespace NightDash.ECS.Systems
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct SaveSystem : ISystem
     {
-        private const string ConquestPointKey = "NightDash_ConquestPoints";
-
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MetaProgress>();
@@ -24,7 +21,7 @@ namespace NightDash.ECS.Systems
 
             if (saveState.ValueRO.LastSavedConquestPoints < 0)
             {
-                int loadedPoints = PlayerPrefs.GetInt(ConquestPointKey, meta.ValueRO.ConquestPoints);
+                SaveDataHelper.TryLoad(out int loadedPoints);
                 meta.ValueRW.ConquestPoints = loadedPoints;
                 saveState.ValueRW.LastSavedConquestPoints = loadedPoints;
                 return;
@@ -40,8 +37,7 @@ namespace NightDash.ECS.Systems
                 return;
             }
 
-            PlayerPrefs.SetInt(ConquestPointKey, meta.ValueRO.ConquestPoints);
-            PlayerPrefs.Save();
+            SaveDataHelper.Save(meta.ValueRO.ConquestPoints);
             saveState.ValueRW.LastSavedConquestPoints = meta.ValueRO.ConquestPoints;
         }
     }
