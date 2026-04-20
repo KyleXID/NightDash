@@ -38,6 +38,10 @@ namespace NightDash.Runtime
         /// <summary>Entity → (previousHealth, lastWorldPosition)</summary>
         private readonly Dictionary<Entity, (float health, float3 pos)> _tracked = new();
 
+        // S4-05: per-frame allocation 제거를 위해 HashSet/List를 필드로 캐싱해 Clear 재사용.
+        private readonly HashSet<Entity> _aliveBuffer = new();
+        private readonly List<Entity> _deadBuffer = new();
+
         private Sprite _hitSprite;
         private Sprite _deathSprite;
 
@@ -67,7 +71,7 @@ namespace NightDash.Runtime
             using var transforms = _enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             using var stats      = _enemyQuery.ToComponentDataArray<CombatStats>(Allocator.Temp);
 
-            var alive = new HashSet<Entity>();
+            _aliveBuffer.Clear();
 
             for (int i = 0; i < entities.Length; i++)
             {
@@ -75,7 +79,7 @@ namespace NightDash.Runtime
                 var pos    = transforms[i].Position;
                 var hp     = stats[i].CurrentHealth;
 
-                alive.Add(entity);
+                _aliveBuffer.Add(entity);
 
                 if (_tracked.TryGetValue(entity, out var prev))
                 {
@@ -96,14 +100,14 @@ namespace NightDash.Runtime
             }
 
             // Detect deaths: entities that were tracked but no longer alive
-            var dead = new List<Entity>();
+            _deadBuffer.Clear();
             foreach (var kvp in _tracked)
             {
-                if (!alive.Contains(kvp.Key))
-                    dead.Add(kvp.Key);
+                if (!_aliveBuffer.Contains(kvp.Key))
+                    _deadBuffer.Add(kvp.Key);
             }
 
-            foreach (var entity in dead)
+            foreach (var entity in _deadBuffer)
             {
                 var info = _tracked[entity];
                 SpawnDeathEffect(info.pos);
