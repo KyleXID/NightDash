@@ -76,9 +76,21 @@ namespace NightDash.Runtime
             _initialized = true;
         }
 
+        // S4-07: FixedString64Bytes 안전 마진. 64바이트 캡을 넘는 입력이 Burst로 전달되면
+        // ArgumentException 또는 silent truncation 발생 → 손상된 PlayerPrefs에 의한 크래시 방지.
+        private const int MaxIdLengthBytes = 60;
+
         private static string Normalize(string value, string fallback)
         {
-            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return fallback;
+            }
+
+            string trimmed = value.Trim();
+            return System.Text.Encoding.UTF8.GetByteCount(trimmed) <= MaxIdLengthBytes
+                ? trimmed
+                : fallback;
         }
     }
 }

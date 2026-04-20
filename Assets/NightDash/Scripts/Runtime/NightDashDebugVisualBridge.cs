@@ -90,6 +90,7 @@ namespace NightDash.Runtime
         // ====================================================================
         // Bootstrap
         // ====================================================================
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
@@ -98,6 +99,7 @@ namespace NightDash.Runtime
             DontDestroyOnLoad(go);
             NightDashLog.Info("[VisualBridge] Auto-created.");
         }
+#endif
 
         // ====================================================================
         // Lifecycle
