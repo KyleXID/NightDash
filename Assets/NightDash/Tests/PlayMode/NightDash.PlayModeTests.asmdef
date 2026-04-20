@@ -4,7 +4,9 @@
   "references": [
     "NightDash",
     "Unity.Entities",
-    "Unity.Collections"
+    "Unity.Collections",
+    "Unity.Mathematics",
+    "Unity.Transforms"
   ],
   "includePlatforms": [
     "Editor"
