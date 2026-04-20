@@ -1,122 +1,121 @@
 # NightDash
 
-다크 판타지 분위기의 Survivor-like Roguelite를 **Unity DOTS(ECS + Burst)** 기반으로 구현하는 프로젝트입니다.  
-현재는 핵심 게임 루프와 전투/스폰/메타 진행의 MVP 시스템을 ECS로 구성한 상태입니다.
+다크 판타지 분위기의 Survivor-like Roguelite를 **Unity DOTS(ECS + Burst)** 기반으로 구현하는 프로젝트입니다.
+
+2026-04-20 기준 **Stage 1 MVP 콘텐츠·안정성·CI 파이프라인**이 정착된 상태이며, Steam 릴리스 후보로 진입하기 위한 플레이테스트 단계에 있습니다.
 
 ## 프로젝트 개요
 
 - 장르: 다크 판타지 Survivor-like Roguelite
 - 플랫폼 목표: PC (Steam)
-- 기술 스택: Unity, Entities(DOTS), Burst, Mathematics, Collections
+- 기술 스택: Unity 6000.3.8f1, Entities(DOTS), Burst, Mathematics, Collections
 - 설계 방향: 1인 개발 기준의 시스템 중심, 데이터 지향 아키텍처
 
 핵심 루프:
-1. 지역 선택
-2. 클래스 선택
-3. 난이도 체크리스트 선택
-4. 전투 진행
-5. 레벨업 및 성장 선택
-6. 보스/진화
-7. 정복 포인트 획득
-8. 메타 트리 강화
+1. 스테이지 / 클래스 선택 (난이도 모디파이어 토글)
+2. 15분 전투 + 성장 / 진화 / 보스
+3. 정복 포인트 적립 → 메타트리 강화
 
-## 현재 구현 범위 (ECS MVP)
+## 현재 구현 범위
 
-- `GameLoopSystem`: 경과 시간, 레벨업(경험치 임계치 증가) 처리
-- `DifficultySystem`: 체크리스트 버퍼 기반 위험도(`RiskScore`) 계산
-- `StageTimelineSystem`: 시간대별 스폰 계수/보너스 반영
-- `EnemySpawnSystem`: 플레이어 주변 적 스폰(ECB + 랜덤)
-- `WeaponSystem`: 자동 투사체 발사
-- `CombatSystem`: 적 추적 이동, 투사체 수명/충돌/피해 처리
-- `EvolutionSystem`: 보스 처치 + 위험도 조건 시 심연 진화 플래그
-- `StageProgressSystem`: 보스 스폰 시점/클리어 시점 기반 런 종료
-- `MetaProgressionSystem`: 런 종료 시 정복 포인트 보상 지급
-- `SaveSystem`: 메타 진행도 `PlayerPrefs` 저장
+### ECS 시스템 (Assets/NightDash/Scripts/ECS/Systems)
 
-## ECS 아키텍처 요약
+- `GameLoopSystem` — 경과 시간, 레벨업 임계치 처리
+- `DifficultySystem` — 체크리스트 버퍼 기반 위험도(`RiskScore`) 계산
+- `StageTimelineSystem` — 시간대별 스폰 계수 반영
+- `EnemySpawnSystem` — 플레이어 주변 적 스폰 (랜덤 + ECB)
+- `WeaponSystem` — 자동 투사체 발사
+- `CombatSystem` (300줄, S2-02 분할) — 피해·투사체·충돌 처리 + 헬퍼/이벤트 분리
+  - `Combat/CombatHelpers.cs`, `Combat/CombatEvents.cs`
+- `Progression/` 3 시스템 + 1 유틸 (S2-01 분할)
+  - `LevelUpSelectionGateSystem`, `UpgradeOptionGeneratorSystem`, `UpgradeApplySystem`
+  - `UpgradeOptionUtility` (pure-static helpers)
+- `EvolutionSystem`, `StageProgressSystem`, `MetaProgressionSystem`
+- `SaveSystem` + `SaveDataHelper` (S3-07, 체크섬·version·range fallback)
 
-### 주요 컴포넌트
+### 데이터 레이어 (Assets/NightDash/Data)
 
-- 게임 상태
-  - `GameLoopState`, `StageRuntimeConfig`, `EvolutionState`, `MetaProgress`
-- 전투/개체
-  - `CombatStats`, `PlayerTag`, `EnemyTag`, `BossTag`
-- 스폰/무기
-  - `EnemySpawnConfig`, `WeaponRuntimeData`, `ProjectileData`, `PhysicsVelocity2D`
-- 버퍼 데이터
-  - `StageTimelineElement`, `DifficultyModifierElement`
+- **Classes 7종** (S3-02): warrior, mage, astrologer, paladin, priest, archer, gunslinger
+- **Stages**: stage_01 실사 (S3-01) + stage_02~06 스켈레톤 + 보너스 3종
+- **Weapons 10종**: demon_greatsword, demon_orb, starfall, hellflame_slash + 진화 2종 + 클래스 전용 4종
+- **Passives 10종**: stat 3종 + 클래스 고유 7종
+- **Evolutions 2종** (S3-04): void_starfall, hellflame_slash
+- **Meta Trees 3종** (S3-04): warrior, mage, astrologer (각 7 nodes)
+- **Difficulty Modifiers 5종** (S3-03): enemy_hp_up, enemy_speed_up, enemy_surge, no_heal, on_kill_explosion
 
-### Authoring/Baking
+### 브리지 (Assets/NightDash/Scripts/Runtime)
 
-- `NightDashBootstrapAuthoring`
-  - 게임 루프 초기값, 스폰 설정, 타임라인, 난이도 버퍼, RNG 시드 구성
-- `PlayerAuthoring`
-  - 플레이어 전투 스탯 및 무기 런타임 데이터 구성
-- `EnemyAuthoring`
-  - 적/보스 태그 및 스탯 구성
-- `ProjectileAuthoring`
-  - 투사체 기본 컴포넌트 구성
+ECS ↔ UI/렌더/외부 시스템 어댑터. 경계는 `Docs/Architecture/bridges.md` 참고.
 
-## 폴더 구조
+- `RunSelectionLobbyUI` (S2-03 분할, 333줄) + `RunSelectionLobbyWorldBridge` + `RunSelectionLobbyOptions` + `NightDashButtonFrameStyle`
+- `NightDashAudioBridge` (S3-05) + `AudioLibrary` SO
+- `NightDashTutorialBridge` (S3-06, GDD T0~T5 6 트리거)
+- `LocalizationService` (S4-03, ko/en) + `LocalizationTable` SO
+- `NightDashVFXBridge` / `NightDashDamageNumberUI` (S4-05 GC 최적화 완료)
+- `NightDashDebugVisualBridge` (S4-07 Editor/Dev 빌드 전용 가드)
 
-```text
-Assets/
-  NightDash/
-    Docs/
-      SETUP.md
-    Scripts/
-      Data/
-      ECS/
-        Authoring/
-        Components/
-        Systems/
-NightDash_GDD.md
-README.md
-```
+### 검증·테스트 (Assets/NightDash/Tests/EditMode)
 
-## 실행/세팅 방법
+115 테스트 / 113 pass / 0 fail / 2 skipped(PlayMode batchmode 한계, Editor Test Runner에서 실행).
 
-자세한 설정: `Assets/NightDash/Docs/SETUP.md`
+- `RuntimeBalanceUtilityTests` (S1-04) — 플레이어/무기 밸런스 ±20% 회귀
+- `CombatHelpersTests` (S2-04) — 전투 헬퍼 단위 테스트
+- `UpgradeOptionUtilityTests` (S2-05) — 옵션 생성 로직
+- `SaveDataHelperTests` (S3-07) — 체크섬·범위·버전 fallback
+- `Stage1ContentRegressionTests` (S3-08) — 7 class × 5 modifier 수치 잠금
+- `TutorialConfigTests`, `AudioLibraryTests`, `LocalizationServiceTests`, `RunSelectionSessionNormalizeTests`
 
-기본 순서:
-1. 빈 GameObject 생성 후 `NightDashBootstrapAuthoring` 추가
-2. 플레이어 프리팹에 `PlayerAuthoring` 추가
-3. 적 프리팹에 `EnemyAuthoring` 추가
-4. `NightDashBootstrapAuthoring`에 프리팹/타임라인/난이도 데이터 연결
-5. 플레이 모드에서 스폰, 자동 공격, 레벨업 루프 확인
+## CI / 릴리스
 
-## 데이터 설계 (ScriptableObject)
-
-`Assets/NightDash/Scripts/Data`에 다음 데이터 정의가 포함되어 있습니다.
-
-- `ClassData`
-- `WeaponData`
-- `PassiveData`
-- `EvolutionData`
-- `DifficultyModifierData`
-- `MetaTreeData`
-- `StageData`
-
-현재 ECS 런타임 MVP와 병행해, 콘텐츠 중심 확장을 위한 데이터 레이어를 준비한 상태입니다.
-
-## 로드맵 (예정)
-
-- 플레이어 이동 입력/회피/피격 시스템 고도화
-- 보스 전투 패턴과 정교한 충돌 처리
-- 무기/패시브 선택 UI 및 인게임 성장 트리
-- 클래스별 고유 트리와 메타 강화 연동
-- Save/Load 슬롯화 및 밸런싱 파이프라인
+- GitHub Actions 3 워크플로 (`.github/workflows/`, S4-01)
+  - `editmode-tests.yml` — EditMode 전체 (~15분)
+  - `data-validation.yml` — DataValidator batchmode (~8분)
+  - `smoke-build.yml` — Win64/macOS Standalone (수동 + 주간 월요일)
+  - 현재 `workflow_dispatch`만 활성 — `UNITY_LICENSE` 시크릿 설정 후 PR 게이트 활성화
+- 데이터 검증: `scripts/run-data-validation.sh` (S2-06)
+- EditMode 로컬: `scripts/run-editmode-tests.sh` (S1-03)
+- Git pre-commit 훅: `scripts/git-hooks/pre-commit` (S1-07, mono_crash·임시파일 차단)
 
 ## 문서
 
-- 게임 디자인 문서: `NightDash_GDD.md`
-- 초기 환경/씬 세팅: `Assets/NightDash/Docs/SETUP.md`
+| 경로 | 내용 |
+|---|---|
+| `NightDash_GDD.md`, `Docs/GDD/` | 게임 디자인 문서 (6 지역·7 클래스·15 모디파이어 사양) |
+| `Docs/Architecture/bridges.md` | MonoBehaviour ↔ ECS 브리지 경계 (S2-07) |
+| `Docs/Architecture/progression-split-rfc.md` | ProgressionSystem 분할 RFC (S1-05) |
+| `Docs/Balance/s4_04_integration_audit.md` | 통합 밸런스 1차 감사 (S4-04) |
+| `Docs/Profiling/s4_05_memory_gc_guide.md` | Memory·GC 프로파일 절차 (S4-05) |
+| `Docs/Release/steam-build-guide.md` | Steam 빌드·업로드 체크리스트 (S4-08) |
+| `Docs/Codemap/system-index.md` | ECS 시스템·브리지·데이터 맵 (S4-06) |
+| `Assets/NightDash/Audio/README.md` | 오디오 파이프라인 (S3-05) |
+| `Assets/NightDash/Docs/SETUP.md` | 초기 환경/씬 세팅 |
+
+## 프로젝트 규약
+
+작업 규약은 `CLAUDE.md` 참고.
+- ECC 플러그인 agent(architect·planner·code-reviewer·tdd-guide 등) 우선 사용
+- 한국어 응답 / 영어 커밋 메시지 허용
+- 파일 크기: 시스템 400줄, UI 500줄, 초과 시 분할 검토
+- 신규 시스템은 EditMode 단위 테스트 필수
+- mono_crash·임시 파일 커밋 금지 (pre-commit 훅이 강제)
+
+## 로드맵
+
+**완료** (Sprint 1-4, 2026-04-19~20):
+- ✅ Stage 1 MVP 플레이어블 루프 (S1)
+- ✅ 대형 시스템 분할 + 단위 테스트 스윗 (S2)
+- ✅ Stage 1 실사 콘텐츠 + 테스트 회귀 게이트 (S3)
+- ✅ CI 파이프라인 + 보안/메모리 패스 + 릴리스 문서 (S4)
+
+**다음 단계** (S5+):
+- 플레이테스트 5 연속 런 → S4-04 재검토 포인트 4건 조정
+- Unity 라이선스 시크릿 등록 → CI 자동 트리거 활성화
+- Stage 2~6 실사 콘텐츠
+- 모디파이어 카테고리 커버리지 확장 (Survival 4 / Mechanic 4)
+- 메타트리 노드 확장 (현재 7 → GDD 15~18 목표)
+- Localization strings_master.csv 임포트 툴링
 
 ## 라이선스
 
-- 코드 라이선스: [MIT](./LICENSE)
-- 에셋/콘텐츠 라이선스: [All Rights Reserved](./LICENSE-ASSETS)
-
-정리:
-- `Assets/NightDash/Scripts` 및 코드 파일은 MIT 라이선스를 따릅니다.
-- 게임 에셋/콘텐츠(그래픽, 오디오, 스토리, 브랜드, 게임 콘텐츠 데이터 등)는 `LICENSE-ASSETS` 기준으로 보호됩니다.
+- 코드: [MIT](./LICENSE)
+- 에셋/콘텐츠: [All Rights Reserved](./LICENSE-ASSETS)
