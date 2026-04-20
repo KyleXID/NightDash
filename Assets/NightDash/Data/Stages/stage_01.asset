@@ -10,16 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5cab7c7b407c24961be68e5cef57e592, type: 3}
-  m_Name: tpl_stage_01
+  m_Name: stage_01
   m_EditorClassIdentifier: NightDash::NightDash.Data.StageData
   id: stage_01
   displayName: "\uBD88\uD0C0\uB294 \uD669\uC57C"
   durationSec: 900
-  bossSpawnSec: 780
+  bossSpawnSec: 900
   useBounds: 1
   boundsCenter: {x: 0, y: 0}
   boundsSize: {x: 72, y: 42}
-  environmentHazards: []
+  environmentHazards:
+  - hazard_heat_zone
+  - hazard_crack_explosion
   spawnPhases:
   - fromSec: 0
     toSec: 180
@@ -31,7 +33,7 @@ MonoBehaviour:
       weight: 5
       spawnPerMin: 20
   - fromSec: 180
-    toSec: 420
+    toSec: 360
     entries:
     - enemyId: ghoul_scout
       weight: 10
@@ -42,8 +44,8 @@ MonoBehaviour:
     - enemyId: wasteland_brute
       weight: 8
       spawnPerMin: 24
-  - fromSec: 420
-    toSec: 780
+  - fromSec: 360
+    toSec: 600
     entries:
     - enemyId: ghoul_scout
       weight: 6
@@ -57,13 +59,34 @@ MonoBehaviour:
     - enemyId: ash_caster
       weight: 8
       spawnPerMin: 24
-  - fromSec: 780
+  - fromSec: 600
+    toSec: 870
+    entries:
+    - enemyId: ghoul_scout
+      weight: 5
+      spawnPerMin: 24
+    - enemyId: ember_bat
+      weight: 6
+      spawnPerMin: 24
+    - enemyId: wasteland_brute
+      weight: 10
+      spawnPerMin: 30
+    - enemyId: ash_caster
+      weight: 10
+      spawnPerMin: 28
+  - fromSec: 870
     toSec: 900
     entries:
     - enemyId: boss_agron
       weight: 1
       spawnPerMin: 1
-  eliteEvents: []
+  eliteEvents:
+  - atSec: 360
+    enemyId: elite_crack_executor
+    count: 1
+  - atSec: 720
+    enemyId: elite_crack_executor
+    count: 2
   bossId: boss_agron
   rewardTableId: reward_stage_01
   baseRewardPoints: 100

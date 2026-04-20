@@ -67,7 +67,7 @@ namespace NightDash.Editor
                 });
 
             CreateAssetIfMissing<StageData>(
-                $"{Root}/Stages/tpl_stage_01.asset",
+                $"{Root}/Stages/stage_01.asset",
                 asset =>
                 {
                     asset.id = "stage_01";
