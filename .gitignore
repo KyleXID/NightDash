@@ -5,6 +5,10 @@
 [Bb]uild/
 [Bb]uilds/
 [Ll]ogs/
+
+# Docs/Release/ is release *documentation*, not build artifacts. Re-include.
+!Docs/Release/
+!Docs/Release/**
 [Mm]emoryCaptures/
 [Tt]emp/
 [Oo]bj/
