@@ -91,19 +91,18 @@ namespace NightDash.Tests.EditMode
         }
 
         // -----------------------------------------------------------------------
-        // Test 2: ResolveWeaponRuntimeProfile damage stays within ±20% of fixture
-        //         for every level 1–5 when levelCurves is null (fallback path).
+        // Test 2: ResolveWeaponRuntimeProfile damage stays within ±20% of the
+        //         GDD powerCoeff curve at levels 1–5.
         //
-        // Expected damage per level (fixture): playerDamage * powerCoeff
+        // GDD design intent (fixture): level N → powerCoeff 1.0 + (N-1)*0.1
         //   level 1 → 10 * 1.0 = 10.0
-        //   level 2 → 10 * 1.1 = 11.0  (GDD design intent; fallback returns same coeff)
+        //   level 2 → 10 * 1.1 = 11.0
         //   level 3 → 10 * 1.2 = 12.0
         //   level 4 → 10 * 1.3 = 13.0
         //   level 5 → 10 * 1.4 = 14.0
         //
-        // Because levelCurves == null, all levels return basePowerCoeff = 1.0.
-        // The actual damage will be playerDamage * 1.0 = 10.0 for every level.
-        // We verify each result is within ±20% of the fixture expectation.
+        // Test locally overrides _weaponData.levelCurves with the fixture curve,
+        // then restores null in finally to preserve Test 1's fallback path state.
         // -----------------------------------------------------------------------
         [TestCase(1, 10f * 1.0f)]
         [TestCase(2, 10f * 1.1f)]
@@ -121,12 +120,27 @@ namespace NightDash.Tests.EditMode
                 ProjectileSpeedMultiplier = 1f
             };
 
-            WeaponRuntimeProfile result = RuntimeBalanceUtility.ResolveWeaponRuntimeProfile(
-                _weaponData, level, player);
+            _weaponData.levelCurves = new System.Collections.Generic.List<WeaponLevelCurve>
+            {
+                new WeaponLevelCurve { level = 1, powerCoeff = 1.0f, cooldown = _weaponData.baseCooldown, range = _weaponData.baseRange },
+                new WeaponLevelCurve { level = 2, powerCoeff = 1.1f, cooldown = _weaponData.baseCooldown, range = _weaponData.baseRange },
+                new WeaponLevelCurve { level = 3, powerCoeff = 1.2f, cooldown = _weaponData.baseCooldown, range = _weaponData.baseRange },
+                new WeaponLevelCurve { level = 4, powerCoeff = 1.3f, cooldown = _weaponData.baseCooldown, range = _weaponData.baseRange },
+                new WeaponLevelCurve { level = 5, powerCoeff = 1.4f, cooldown = _weaponData.baseCooldown, range = _weaponData.baseRange },
+            };
+            try
+            {
+                WeaponRuntimeProfile result = RuntimeBalanceUtility.ResolveWeaponRuntimeProfile(
+                    _weaponData, level, player);
 
-            float tolerance = expectedDamage * BalanceBaselines.Tolerance;
-            Assert.That(result.Damage, Is.EqualTo(expectedDamage).Within(tolerance),
-                $"Level {level}: damage {result.Damage} is outside ±20% of fixture {expectedDamage}");
+                float tolerance = expectedDamage * BalanceBaselines.Tolerance;
+                Assert.That(result.Damage, Is.EqualTo(expectedDamage).Within(tolerance),
+                    $"Level {level}: damage {result.Damage} is outside ±20% of fixture {expectedDamage}");
+            }
+            finally
+            {
+                _weaponData.levelCurves = null;
+            }
         }
 
         // Boundary case: powerCoeff clamp at 0.1f should not produce negative or zero damage.

@@ -1,11 +1,13 @@
 name: EditMode Tests
 
+# UNITY_LICENSE 시크릿 설정 전에는 자동 실행을 비활성화한다.
+# 설정 완료 후 아래 pull_request / push 트리거를 주석 해제.
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
   workflow_dispatch:
+  # pull_request:
+  #   branches: [main]
+  # push:
+  #   branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

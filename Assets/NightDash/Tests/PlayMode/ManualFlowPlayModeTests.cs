@@ -20,6 +20,11 @@ namespace NightDash.Tests.PlayMode
         [UnityTest]
         public IEnumerator Stage1_VerticalSlice_ManualFlowChecks()
         {
+            if (Application.isBatchMode)
+            {
+                Assert.Ignore("PlayMode scene-load는 batchmode에서 'Enter play mode before...' 제약으로 불가 — Unity Editor Test Runner 경로에서 실행 필요.");
+            }
+
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(
                 SampleScenePath,
                 new LoadSceneParameters(LoadSceneMode.Single));
