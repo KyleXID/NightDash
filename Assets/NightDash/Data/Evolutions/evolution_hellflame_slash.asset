@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cf087338bc6cf4fbd879ccccef430cce, type: 3}
-  m_Name: tpl_evolution_hellflame_slash
+  m_Name: evolution_hellflame_slash
   m_EditorClassIdentifier: NightDash::NightDash.Data.EvolutionData
   id: evolution_hellflame_slash
   resultWeaponId: weapon_abyss_hellflame_slash

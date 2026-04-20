@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 090b0a51f88c5478f8057d117b9019e2, type: 3}
+  m_Name: meta_mage
+  m_EditorClassIdentifier: NightDash::NightDash.Data.MetaTreeData
+  classId: class_mage
+  nodes:
+  - nodeId: mage_root
+    name: "\uAC01\uC131\uC758 \uC2DC\uC791"
+    cost: 0
+    prereqNodeIds: []
+    effects:
+    - stat: damage
+      op: 0
+      value: 2
+  - nodeId: mage_burst_1
+    name: "\uD30C\uBA78\uC801 \uACF5\uB7B5"
+    cost: 100
+    prereqNodeIds:
+    - mage_root
+    effects:
+    - stat: damage
+      op: 1
+      value: 0.08
+  - nodeId: mage_burst_2
+    name: "\uCC28\uC6D0 \uD3ED\uB4F1"
+    cost: 220
+    prereqNodeIds:
+    - mage_burst_1
+    effects:
+    - stat: damage
+      op: 1
+      value: 0.15
+  - nodeId: mage_range_1
+    name: "\uB09C\uB3D9\uC758 \uB098\uB798"
+    cost: 100
+    prereqNodeIds:
+    - mage_root
+    effects:
+    - stat: range
+      op: 1
+      value: 0.1
+  - nodeId: mage_range_2
+    name: "\uBB34\uD55C \uD22C\uC0AC"
+    cost: 200
+    prereqNodeIds:
+    - mage_range_1
+    effects:
+    - stat: projectileSpeed
+      op: 1
+      value: 0.2
+  - nodeId: mage_cool_1
+    name: "\uC885\uC124\uC790\uC758 \uD638\uD750\uD761"
+    cost: 120
+    prereqNodeIds:
+    - mage_root
+    effects:
+    - stat: cooldown
+      op: 1
+      value: -0.06
+  - nodeId: mage_cool_2
+    name: "\uC2DC\uACF5\uC758 \uBE14\uB8E8\uBE44\uD2B8"
+    cost: 240
+    prereqNodeIds:
+    - mage_cool_1
+    effects:
+    - stat: cooldown
+      op: 1
+      value: -0.12

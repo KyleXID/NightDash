@@ -54,7 +54,7 @@ namespace NightDash.Editor
                 });
 
             CreateAssetIfMissing<EvolutionData>(
-                $"{Root}/Evolutions/tpl_evolution_hellflame_slash.asset",
+                $"{Root}/Evolutions/evolution_hellflame_slash.asset",
                 asset =>
                 {
                     asset.id = "evolution_hellflame_slash";
@@ -97,7 +97,7 @@ namespace NightDash.Editor
                 });
 
             CreateAssetIfMissing<MetaTreeData>(
-                $"{Root}/Meta/tpl_meta_warrior.asset",
+                $"{Root}/Meta/meta_warrior.asset",
                 asset =>
                 {
                     asset.classId = "class_warrior";

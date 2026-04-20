@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 090b0a51f88c5478f8057d117b9019e2, type: 3}
+  m_Name: meta_warrior
+  m_EditorClassIdentifier: NightDash::NightDash.Data.MetaTreeData
+  classId: class_warrior
+  nodes:
+  - nodeId: warrior_root
+    name: "\uACAC\uACE0\uD55C \uBABB"
+    cost: 0
+    prereqNodeIds: []
+    effects:
+    - stat: health
+      op: 0
+      value: 10
+  - nodeId: warrior_atk_1
+    name: "\uAC15\uACE8\uD55C \uD314"
+    cost: 100
+    prereqNodeIds:
+    - warrior_root
+    effects:
+    - stat: damage
+      op: 1
+      value: 0.05
+  - nodeId: warrior_atk_2
+    name: "\uACF5\uC131 \uC9C0\uD718\uAD00"
+    cost: 200
+    prereqNodeIds:
+    - warrior_atk_1
+    effects:
+    - stat: damage
+      op: 1
+      value: 0.1
+  - nodeId: warrior_def_1
+    name: "\uC784\uC804\uC758 \uC790\uC138"
+    cost: 100
+    prereqNodeIds:
+    - warrior_root
+    effects:
+    - stat: health
+      op: 1
+      value: 0.08
+  - nodeId: warrior_def_2
+    name: "\uD5C8\uC2EC\uD0C4\uD68C"
+    cost: 200
+    prereqNodeIds:
+    - warrior_def_1
+    effects:
+    - stat: health
+      op: 1
+      value: 0.15
+  - nodeId: warrior_util_1
+    name: "\uAC10\uC9C0\uBCC0"
+    cost: 100
+    prereqNodeIds:
+    - warrior_root
+    effects:
+    - stat: moveSpeed
+      op: 1
+      value: 0.05
+  - nodeId: warrior_util_2
+    name: "\uBD88\uAF43 \uB9C8\uC74C"
+    cost: 200
+    prereqNodeIds:
+    - warrior_util_1
+    effects:
+    - stat: cooldown
+      op: 1
+      value: -0.08
