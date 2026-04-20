@@ -16,6 +16,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 21ff25d39a115468f886d6916d5e5f3c, type: 2}
   - {fileID: 11400000, guid: af3b605538658454694a0ea5d3320615, type: 2}
   - {fileID: 11400000, guid: cc643ce4c7c5646548a35240258b29ae, type: 2}
+  - {fileID: 11400000, guid: 2935e776195e4f5b8a79f6d5ebf242c3, type: 2}
+  - {fileID: 11400000, guid: a66256c56f394ee4b7ae370aff17661e, type: 2}
+  - {fileID: 11400000, guid: cc31dd4b8f714198bf8103d20ced6afe, type: 2}
+  - {fileID: 11400000, guid: bcd8747aa84942d89d2cf1461f3d9127, type: 2}
   weapons:
   - {fileID: 11400000, guid: 01aead015663a4d69849407b62e45a02, type: 2}
   - {fileID: 11400000, guid: 0408da4d03eef451183d2ef8b5d35f63, type: 2}
@@ -23,6 +27,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ad4ecea8cbdc04347a8290e1dc11d497, type: 2}
   - {fileID: 11400000, guid: 885fca348982c4c8daad9c5bc6787a77, type: 2}
   - {fileID: 11400000, guid: 9734df57b2aa4d52a61da9445f0ad6da, type: 2}
+  - {fileID: 11400000, guid: ccec957f403140b798988541f78d1a6c, type: 2}
+  - {fileID: 11400000, guid: e89b9eb2981041c2b651852a81b0a42a, type: 2}
+  - {fileID: 11400000, guid: 44ec9279cea94013be2f6e10cdc0c560, type: 2}
+  - {fileID: 11400000, guid: a2eeaa88b4a64dc8969736a3942d7f96, type: 2}
   passives:
   - {fileID: 11400000, guid: 88d5bbf73653e49b1b609424dc2f5828, type: 2}
   - {fileID: 11400000, guid: 9c0c3de1839334e1aa23c29134685c64, type: 2}
@@ -30,6 +38,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 5dce80e653ec54b34a2a04ab074e0c7a, type: 2}
   - {fileID: 11400000, guid: cf2cd03a4c7d49a1bf6f7aad3911925a, type: 2}
   - {fileID: 11400000, guid: f1373f6868044d30b2bec7780bb87b2b, type: 2}
+  - {fileID: 11400000, guid: 0586e256204a495a9d0c86f5da77e1cc, type: 2}
+  - {fileID: 11400000, guid: 4bf2a26f9dbc4aaebb0d3cc00416c572, type: 2}
+  - {fileID: 11400000, guid: 9b0d7e07cae54c12a5f62f5a1d1c810f, type: 2}
+  - {fileID: 11400000, guid: 29f2caaa0fbe46178193b81ae851e34d, type: 2}
   evolutions:
   - {fileID: 11400000, guid: ad650368a4f4d43638c393114d8b2762, type: 2}
   - {fileID: 11400000, guid: 0c755c6ac48a4880a3600437ad166c27, type: 2}

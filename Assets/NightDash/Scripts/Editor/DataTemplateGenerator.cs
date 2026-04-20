@@ -15,7 +15,7 @@ namespace NightDash.Editor
             EnsureFolders();
 
             CreateAssetIfMissing<ClassData>(
-                $"{Root}/Classes/tpl_class_warrior.asset",
+                $"{Root}/Classes/class_warrior.asset",
                 asset =>
                 {
                     asset.id = "class_warrior";

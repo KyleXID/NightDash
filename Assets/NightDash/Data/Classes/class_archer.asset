@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b32d21a2744b43b7b4ad675d1b890d3, type: 3}
+  m_Name: class_archer
+  m_EditorClassIdentifier: NightDash::NightDash.Data.ClassData
+  id: class_archer
+  displayName: "\uAD81\uC218"
+  tags: []
+  baseHp: 95
+  baseMoveSpeed: 4.5
+  basePower: 12
+  startWeaponId: weapon_rapid_shot
+  uniquePassiveId: passive_archer_move_attack
+  ultimateSkillId: ult_rain_shot
+  startingWeapon: {fileID: 0}
+  startingPassive: {fileID: 0}

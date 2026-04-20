@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1b32d21a2744b43b7b4ad675d1b890d3, type: 3}
-  m_Name: tpl_class_warrior
+  m_Name: class_paladin
   m_EditorClassIdentifier: NightDash::NightDash.Data.ClassData
-  id: class_warrior
-  displayName: "\uC804\uC0AC"
+  id: class_paladin
+  displayName: "\uC131\uC804\uC0AC"
   tags: []
-  baseHp: 125
-  baseMoveSpeed: 3.5
+  baseHp: 115
+  baseMoveSpeed: 3.8
   basePower: 11
-  startWeaponId: weapon_demon_greatsword
-  uniquePassiveId: passive_warrior_guard_stack
-  ultimateSkillId: ult_berserker_unleash
+  startWeaponId: weapon_holy_wave
+  uniquePassiveId: passive_paladin_hit_burst
+  ultimateSkillId: ult_judgment
   startingWeapon: {fileID: 0}
   startingPassive: {fileID: 0}
