@@ -21,12 +21,9 @@ namespace NightDash.Editor
 
         private static readonly string[] DecoTilePaths =
         {
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_lava_crack_01.png",
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_lava_crack_02.png",
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_lava_crack_03.png",
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_lava_crack_04.png",
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_embers_01.png",
-            "Assets/NightDash/Art/Stage01/Tilesets/spr_tile_deco_ash_01.png",
+            // All deco tilesets removed for visual coherence with base tile.
+            // (lava_crack/embers/ash had clashing red/orange palettes)
+            // LavaDamageBridge will simply find 0 zones — mechanic auto-disabled.
         };
 
         // (path, baseScale) - scale relative to player (~0.9 unit).
@@ -45,7 +42,7 @@ namespace NightDash.Editor
             ("Assets/NightDash/Art/Stage01/Props/spr_prop_ruin_03.png", 5.5f),   // 돌 아치 잔해
         };
 
-        private const string ParallaxPath = "Assets/NightDash/Art/Stage01/Tilesets/spr_stage_burning_wastes_parallax_bg.png";
+        // Parallax background removed for visual coherence.
         private static readonly Vector2 StageFillSize = new(88f, 54f);
         private static readonly Vector2 PlayableBounds = new(72f, 42f); // actual play area
         private static readonly Color BaseGroundColor = new(0.12f, 0.10f, 0.09f, 1f);
@@ -76,7 +73,6 @@ namespace NightDash.Editor
             foreach (var p in GroundPaths) SliceSingleTexture(p);
             foreach (var p in DecoTilePaths) SliceSingleTexture(p);
             foreach (var (path, _) in EnvPropEntries) SliceSingleTexture(path);
-            SliceSingleTexture(ParallaxPath);
         }
 
         private static void SliceSingleTexture(string assetPath)
@@ -365,7 +361,6 @@ namespace NightDash.Editor
             var overlayRoot = new GameObject("Overlay");
             overlayRoot.transform.SetParent(root.transform, false);
 
-            CreateSprite(backgroundRoot.transform, "Parallax", LoadPrimarySprite(ParallaxPath), new Vector3(0f, 0f, 8f), new Vector2(92f, 56f), -100, 0.92f);
             CreateSolidColorSprite(backgroundRoot.transform, "BaseGround", BaseGroundColor, new Vector3(0f, 0f, 2f), StageFillSize, -10);
 
             // Base tile grid

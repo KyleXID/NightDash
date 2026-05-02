@@ -3,6 +3,7 @@ using NightDash.ECS.Components;
 using UnityEngine;
 using Unity.Entities;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace NightDash.Runtime
@@ -284,7 +285,7 @@ namespace NightDash.Runtime
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
             SetPreferredHeight(actions, 62f);
 
-            _retryButton = CreateActionButton(actions, "Retry", () => SubmitNavigation(RunNavigationAction.Retry));
+            _retryButton = CreateActionButton(actions, "Retry", RequestRetry);
             _metaButton = CreateActionButton(actions, "Meta", () => SubmitNavigation(RunNavigationAction.ReturnToLobby));
             _menuButton = CreateActionButton(actions, "Menu", () => SubmitNavigation(RunNavigationAction.ReturnToLobby));
         }
@@ -843,6 +844,65 @@ namespace NightDash.Runtime
                 {
                     es.gameObject.AddComponent<StandaloneInputModule>();
                 }
+            }
+        }
+
+        // Retry flow:
+        // 1. Queue the Retry navigation request (preserves stage/class via RunSelection).
+        // 2. Destroy all gameplay entities (player, enemies, boss). Unity's DOTS World
+        //    is preserved across SceneManager.LoadScene, so without this step the dead
+        //    player entity (HP=0, frozen position) is reused on the next run.
+        // 3. Reload the active scene. RunSelectionLobbyUI picks up the pending Retry
+        //    on the fresh scene; if anything blocks auto-start the user can press Start
+        //    manually with a clean ECS state.
+        private static void RequestRetry()
+        {
+            SubmitNavigation(RunNavigationAction.Retry);
+            DestroyGameplayEntities();
+
+            Scene activeScene = SceneManager.GetActiveScene();
+            int buildIndex = activeScene.buildIndex;
+            if (buildIndex < 0 && !string.IsNullOrWhiteSpace(activeScene.path))
+            {
+                buildIndex = SceneUtility.GetBuildIndexByScenePath(activeScene.path);
+            }
+
+            if (buildIndex >= 0)
+            {
+                SceneManager.LoadScene(buildIndex);
+            }
+            else
+            {
+                SceneManager.LoadScene(activeScene.name);
+            }
+        }
+
+        private static void DestroyGameplayEntities()
+        {
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated) return;
+
+            EntityManager em = world.EntityManager;
+            DestroyByTag<PlayerTag>(em);
+            DestroyByTag<EnemyTag>(em);
+            DestroyByTag<BossTag>(em);
+
+            // BossSpawnState.HasSpawnedBoss permanently blocks regular enemy spawning
+            // (EnemySpawnSystem.cs:60). Reset it on retry so the next run gets enemies.
+            using var bossStateQuery = em.CreateEntityQuery(ComponentType.ReadWrite<BossSpawnState>());
+            if (!bossStateQuery.IsEmptyIgnoreFilter)
+            {
+                Entity singleton = bossStateQuery.GetSingletonEntity();
+                em.SetComponentData(singleton, new BossSpawnState { HasSpawnedBoss = 0 });
+            }
+        }
+
+        private static void DestroyByTag<T>(EntityManager em) where T : unmanaged, IComponentData
+        {
+            using var query = em.CreateEntityQuery(ComponentType.ReadOnly<T>());
+            if (!query.IsEmptyIgnoreFilter)
+            {
+                em.DestroyEntity(query);
             }
         }
 

@@ -11,18 +11,43 @@ namespace NightDash.Runtime
     public sealed class NightDashObstacleBridge : MonoBehaviour
     {
         private const float PushStrength = 20f;
-        private const float CollisionHeightRatio = 0.3f;
         private const float RescanInterval = 2f;
 
-        private struct ObstacleData
+        // Single foot-AABB per prop:
+        // sample alpha in the bottom FootRatio of the sprite, take the horizontal span of
+        // visible pixels (alpha >= AlphaThreshold), and build one rectangle from that.
+        // - Avoids tunneling between sub-cells (no gaps)
+        // - Provides perspective: only the prop's foot blocks; tops sort behind via
+        //   the existing y-based sortingOrder logic so characters appear to walk past.
+        private const float FootRatio = 0.25f;
+        private const float AlphaThreshold = 0.4f;
+
+        private struct ObstacleCell
         {
-            public Vector2 collisionCenter;
-            public float collisionRadius;
+            public Vector2 center;
+            public Vector2 halfSize;
+        }
+
+        private struct ObstacleProp
+        {
             public SpriteRenderer renderer;
             public float bottomY;
         }
 
-        private readonly List<ObstacleData> _obstacles = new();
+        // FootBounds = normalized rect (0..1) of the prop's foot collider in sprite-local space.
+        private struct FootBounds
+        {
+            public bool hasContent;
+            public float minXNorm;
+            public float maxXNorm;
+            public float minYNorm;
+            public float maxYNorm;
+        }
+
+        private readonly List<ObstacleCell> _cells = new();
+        private readonly List<ObstacleProp> _props = new();
+        private static readonly Dictionary<Sprite, FootBounds> _footBoundsCache = new();
+
         private World _world;
         private EntityQuery _playerQuery;
         private EntityQuery _enemyQuery;
@@ -44,14 +69,13 @@ namespace NightDash.Runtime
         {
             if (!EnsureInitialized()) return;
 
-            // Rescan periodically in case scene changed
             if (Time.time - _lastScanTime > RescanInterval)
             {
                 ScanObstacles();
                 _lastScanTime = Time.time;
             }
 
-            if (_obstacles.Count == 0) return;
+            if (_cells.Count == 0) return;
 
             UpdatePropSorting();
             PushPlayer();
@@ -66,10 +90,6 @@ namespace NightDash.Runtime
             if (_world == null || !_world.IsCreated) return false;
 
             var em = _world.EntityManager;
-            // LocalTransform requires ReadWrite because PushPlayer/PushEnemies
-            // mutate it via em.SetComponentData(...). Declaring ReadOnly here
-            // while writing is an ECS safety violation (Burst-compiled job
-            // systems can tear or crash under the resulting race condition).
             _playerQuery = em.CreateEntityQuery(
                 ComponentType.ReadOnly<PlayerTag>(),
                 ComponentType.ReadWrite<LocalTransform>(),
@@ -86,7 +106,9 @@ namespace NightDash.Runtime
 
         private void ScanObstacles()
         {
-            _obstacles.Clear();
+            _cells.Clear();
+            _props.Clear();
+
             var root = GameObject.Find("Stage01Environment");
             if (root == null) return;
 
@@ -101,35 +123,114 @@ namespace NightDash.Runtime
                 var sr = child.GetComponent<SpriteRenderer>();
                 if (sr == null || sr.sprite == null) continue;
 
-                // Use actual rendered bounds instead of raw localScale
                 var bounds = sr.bounds;
-                float renderW = bounds.size.x;
-                float renderH = bounds.size.y;
+                var foot = GetOrComputeFootBounds(sr.sprite);
+                if (!foot.hasContent) continue;
 
-                float spriteHalfH = renderH * 0.5f;
-                float collisionCenterY = child.position.y - spriteHalfH + (renderH * CollisionHeightRatio * 0.5f);
-                float collisionRadius = renderW * 0.35f;
+                // Map normalized foot rect (sprite-local) into world-space AABB.
+                Vector2 worldMin = new Vector2(
+                    bounds.min.x + foot.minXNorm * bounds.size.x,
+                    bounds.min.y + foot.minYNorm * bounds.size.y);
+                Vector2 worldMax = new Vector2(
+                    bounds.min.x + foot.maxXNorm * bounds.size.x,
+                    bounds.min.y + foot.maxYNorm * bounds.size.y);
 
-                _obstacles.Add(new ObstacleData
-                {
-                    collisionCenter = new Vector2(child.position.x, collisionCenterY),
-                    collisionRadius = collisionRadius,
-                    renderer = sr,
-                    bottomY = bounds.min.y
-                });
+                Vector2 center = (worldMin + worldMax) * 0.5f;
+                Vector2 halfSize = (worldMax - worldMin) * 0.5f;
+
+                _cells.Add(new ObstacleCell { center = center, halfSize = halfSize });
+                _props.Add(new ObstacleProp { renderer = sr, bottomY = bounds.min.y });
             }
 
-            if (_obstacles.Count > 0)
-                NightDashLog.Info($"[ObstacleBridge] Scanned {_obstacles.Count} obstacles.");
+            if (_cells.Count > 0)
+                NightDashLog.Info($"[ObstacleBridge] Scanned {_props.Count} props ({_cells.Count} foot AABBs).");
+        }
+
+        // Computes the foot AABB (in normalized 0..1 sprite coords) by scanning the
+        // bottom FootRatio of the sprite and finding the horizontal span of opaque pixels.
+        private static FootBounds GetOrComputeFootBounds(Sprite sprite)
+        {
+            if (_footBoundsCache.TryGetValue(sprite, out var cached)) return cached;
+
+            FootBounds result = default;
+            var tex = sprite.texture;
+
+            // Fallback: if texture isn't readable, use full width and the bottom FootRatio band.
+            if (tex == null || !tex.isReadable)
+            {
+                result.hasContent = true;
+                result.minXNorm = 0f;
+                result.maxXNorm = 1f;
+                result.minYNorm = 0f;
+                result.maxYNorm = FootRatio;
+                _footBoundsCache[sprite] = result;
+                return result;
+            }
+
+            int rectX = (int)sprite.rect.x;
+            int rectY = (int)sprite.rect.y;
+            int rectW = (int)sprite.rect.width;
+            int rectH = (int)sprite.rect.height;
+            int footRows = math.max(1, (int)(rectH * FootRatio));
+
+            Color[] pixels;
+            try
+            {
+                pixels = tex.GetPixels(rectX, rectY, rectW, footRows);
+            }
+            catch
+            {
+                result.hasContent = true;
+                result.minXNorm = 0f;
+                result.maxXNorm = 1f;
+                result.minYNorm = 0f;
+                result.maxYNorm = FootRatio;
+                _footBoundsCache[sprite] = result;
+                return result;
+            }
+
+            int minPx = int.MaxValue;
+            int maxPx = -1;
+            int minPy = int.MaxValue;
+            int maxPy = -1;
+
+            for (int py = 0; py < footRows; py++)
+            {
+                int rowOffset = py * rectW;
+                for (int px = 0; px < rectW; px++)
+                {
+                    if (pixels[rowOffset + px].a < AlphaThreshold) continue;
+                    if (px < minPx) minPx = px;
+                    if (px > maxPx) maxPx = px;
+                    if (py < minPy) minPy = py;
+                    if (py > maxPy) maxPy = py;
+                }
+            }
+
+            if (maxPx < 0)
+            {
+                result.hasContent = false;
+                _footBoundsCache[sprite] = result;
+                return result;
+            }
+
+            // Use inclusive pixel span -> normalized rect within the full sprite height.
+            result.hasContent = true;
+            result.minXNorm = minPx / (float)rectW;
+            result.maxXNorm = (maxPx + 1) / (float)rectW;
+            result.minYNorm = minPy / (float)rectH;
+            result.maxYNorm = (maxPy + 1) / (float)rectH;
+            _footBoundsCache[sprite] = result;
+            return result;
         }
 
         private void UpdatePropSorting()
         {
-            for (int i = 0; i < _obstacles.Count; i++)
+            for (int i = 0; i < _props.Count; i++)
             {
-                var obs = _obstacles[i];
-                if (obs.renderer != null)
-                    obs.renderer.sortingOrder = 200 + (int)(-obs.bottomY * 10f);
+                var p = _props[i];
+                if (p.renderer != null)
+                    p.renderer.sortingOrder = 200 + (int)(-p.bottomY * 10f);
             }
         }
 
@@ -179,30 +280,45 @@ namespace NightDash.Runtime
             float dt = Time.deltaTime;
             float2 totalPush = float2.zero;
 
-            for (int o = 0; o < _obstacles.Count; o++)
+            for (int o = 0; o < _cells.Count; o++)
             {
-                var obs = _obstacles[o];
-                float2 center = new float2(obs.collisionCenter.x, obs.collisionCenter.y);
+                var cell = _cells[o];
+                float2 center = new float2(cell.center.x, cell.center.y);
+                float2 halfSize = new float2(cell.halfSize.x, cell.halfSize.y);
                 float2 diff = entityPos - center;
-                float distSq = math.lengthsq(diff);
-                float radius = obs.collisionRadius;
-                float radiusSq = radius * radius;
+                float2 absDiff = math.abs(diff);
 
-                if (distSq < radiusSq && distSq > 0.0001f)
+                if (absDiff.x >= halfSize.x || absDiff.y >= halfSize.y) continue;
+
+                float2 penetration = halfSize - absDiff;
+                if (penetration.x < penetration.y)
                 {
-                    float dist = math.sqrt(distSq);
-                    float overlap = radius - dist;
-                    // Hard push - immediately move out of collision
-                    totalPush += (diff / dist) * math.max(overlap, 0.05f) * PushStrength * dt;
+                    float sign = diff.x >= 0f ? 1f : -1f;
+                    totalPush += new float2(sign * math.max(penetration.x, 0.05f), 0f) * PushStrength * dt;
                 }
-                else if (distSq < 0.0001f)
+                else
                 {
-                    // Exactly on center - push in random direction
-                    totalPush += new float2(0.1f, 0.1f) * PushStrength * dt;
+                    float sign = diff.y >= 0f ? 1f : -1f;
+                    totalPush += new float2(0f, sign * math.max(penetration.y, 0.05f)) * PushStrength * dt;
                 }
             }
 
             return totalPush;
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            if (_cells == null) return;
+            Gizmos.color = new Color(1f, 0.2f, 0.2f, 0.7f);
+            for (int i = 0; i < _cells.Count; i++)
+            {
+                var c = _cells[i];
+                var center = new Vector3(c.center.x, c.center.y, 0f);
+                var size = new Vector3(c.halfSize.x * 2f, c.halfSize.y * 2f, 0f);
+                Gizmos.DrawWireCube(center, size);
+            }
+        }
+#endif
     }
 }
