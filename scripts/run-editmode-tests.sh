@@ -29,12 +29,13 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # Locate Unity editor executable (macOS Unity Hub convention)
 # ---------------------------------------------------------------------------
 if [[ -z "${UNITY_PATH:-}" ]]; then
-  # Search for any installed Unity version under Unity Hub's default location
+  # Search Unity Hub default location. Real executable lives at
+  # <base>/<version>/Unity.app/Contents/MacOS/Unity (4 levels deep).
   UNITY_SEARCH_BASE="/Applications/Unity/Hub/Editor"
   if [[ -d "${UNITY_SEARCH_BASE}" ]]; then
     # Pick the most recent version (sort -V, take last)
-    UNITY_PATH="$(find "${UNITY_SEARCH_BASE}" -maxdepth 2 -name "Unity" -type f \
-      | sort -V | tail -n 1)"
+    UNITY_PATH="$(ls -1 "${UNITY_SEARCH_BASE}"/*/Unity.app/Contents/MacOS/Unity 2>/dev/null \
+      | sort -V | tail -n 1 || true)"
   fi
 fi
 
