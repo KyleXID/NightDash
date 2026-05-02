@@ -123,15 +123,24 @@ namespace NightDash.ECS.Systems
                 }
             }
 
-            // Enemy separation: push apart overlapping enemies
+            // Enemy separation: push apart overlapping enemies, weighted by mass.
+            // Heavy archetypes (brute, boss) shove lighter ones aside so the
+            // player can be reached even when the screen is congested. Mass
+            // ratio is applied to pushForce magnitude (no normalize) — heavy
+            // adjacent neighbours push self lightly, light neighbours push self hard.
             const float separationRadius = 0.6f;
             const float separationForce = 3.0f;
             float separationRadiusSq = separationRadius * separationRadius;
 
-            foreach (var (transformA, entityA) in SystemAPI.Query<RefRW<LocalTransform>>().WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
+            foreach (var (transformA, archetypeA, entityA) in SystemAPI
+                         .Query<RefRW<LocalTransform>, RefRO<EnemyArchetypeData>>()
+                         .WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
             {
+                float massA = GetEnemyMass(archetypeA.ValueRO.Id);
                 float3 pushForce = float3.zero;
-                foreach (var (transformB, entityB) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
+                foreach (var (transformB, archetypeB, entityB) in SystemAPI
+                             .Query<RefRO<LocalTransform>, RefRO<EnemyArchetypeData>>()
+                             .WithAll<EnemyTag>().WithAbsent<Prefab>().WithEntityAccess())
                 {
                     if (entityA == entityB) continue;
                     float3 diff = transformA.ValueRO.Position - transformB.ValueRO.Position;
@@ -139,12 +148,15 @@ namespace NightDash.ECS.Systems
                     if (distSq < separationRadiusSq && distSq > 0.0001f)
                     {
                         float dist = math.sqrt(distSq);
-                        pushForce += (diff / dist) * (1f - dist / separationRadius);
+                        float massB = GetEnemyMass(archetypeB.ValueRO.Id);
+                        // mass ratio: heavier B → A is pushed harder; heavier A → A is pushed less.
+                        float massRatio = massB / massA;
+                        pushForce += (diff / dist) * (1f - dist / separationRadius) * massRatio;
                     }
                 }
                 if (math.lengthsq(pushForce) > 0.0001f)
                 {
-                    transformA.ValueRW.Position += math.normalize(pushForce) * separationForce * dt;
+                    transformA.ValueRW.Position += pushForce * separationForce * dt;
                 }
             }
 
@@ -296,5 +308,16 @@ namespace NightDash.ECS.Systems
             }
         }
 
+        // Per-archetype mass for enemy separation. Higher mass = pushes others
+        // aside more, gets pushed less. Tuned so brute and boss can shove
+        // smaller mobs out of the way to reach the player.
+        private static float GetEnemyMass(FixedString64Bytes id)
+        {
+            if (id == "boss_agron") return 10f;
+            if (id == "wasteland_brute") return 4f;
+            if (id == "elt_wastes_executor") return 3f;
+            if (id == "ember_bat") return 0.5f;
+            return 1f; // ghoul_scout, ash_caster, default
+        }
     }
 }
