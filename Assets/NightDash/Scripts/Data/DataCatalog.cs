@@ -16,5 +16,8 @@ namespace NightDash.Data
         public List<StageData> stages = new();
         public List<DifficultyModifierData> difficultyModifiers = new();
         public List<MetaTreeData> metaTrees = new();
+
+        [Header("Visual")]
+        public List<SpriteAnimationSetSO> animationSets = new();
     }
 }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3dfd260cfccf4ab495dc500b9b3f0d8, type: 3}
+  m_Name: anim_ember_bat
+  m_EditorClassIdentifier: NightDash::NightDash.Data.SpriteAnimationSetSO
+  id: ember_bat
+  renderScale: 0.55
+  sourceFacesLeft: 0
+  clips:
+  - name: Walk
+    frames:
+    - {fileID: 21300000, guid: 9a9e28fc5904346b78db66e37caf7b4e, type: 3}
+    - {fileID: 21300000, guid: eac98674b8eb943c1b22d1c43d7311a6, type: 3}
+    - {fileID: 21300000, guid: 7f07b7c14480649b790071510ded6251, type: 3}
+    - {fileID: 21300000, guid: e12f0080ca05d450fa23748f7a4777af, type: 3}
+    - {fileID: 21300000, guid: d72357f4694134e5283fb2ecc97a9b25, type: 3}
+    fps: 14
+    loop: 1

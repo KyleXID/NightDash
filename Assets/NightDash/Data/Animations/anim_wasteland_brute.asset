@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3dfd260cfccf4ab495dc500b9b3f0d8, type: 3}
+  m_Name: anim_wasteland_brute
+  m_EditorClassIdentifier: NightDash::NightDash.Data.SpriteAnimationSetSO
+  id: wasteland_brute
+  renderScale: 0.6
+  sourceFacesLeft: 0
+  clips:
+  - name: Walk
+    frames:
+    - {fileID: 21300000, guid: 046091183d64247649156b036cddf89e, type: 3}
+    - {fileID: 21300000, guid: 1196f8bba67f34524b4e430f4d6908aa, type: 3}
+    - {fileID: 21300000, guid: 34f2b4af087b841bea0ddd9da48f4d4b, type: 3}
+    - {fileID: 21300000, guid: 2e22e86fd91564d9d8b81c2be51e81a8, type: 3}
+    - {fileID: 21300000, guid: 0544a239a81c14837972901b7ea5e92e, type: 3}
+    fps: 10
+    loop: 1

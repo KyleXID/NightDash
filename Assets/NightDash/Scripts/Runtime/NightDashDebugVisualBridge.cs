@@ -3,9 +3,14 @@
 // Runtime visual bridge that syncs ECS entities to Unity GameObjects with
 // SpriteRenderers. Handles player, enemies (per-archetype), bosses, and
 // projectiles.
+//
+// Note: class/file/GUID intentionally preserved during the sprite-animation
+// pipeline upgrade so SampleScene's serialized component reference stays
+// intact. Rename pass deferred to a pre-release cleanup PR.
 // ============================================================================
 
 using System.Collections.Generic;
+using NightDash.Data;
 using NightDash.ECS.Components;
 using Unity.Collections;
 using Unity.Entities;
@@ -18,37 +23,35 @@ namespace NightDash.Runtime
     public sealed class NightDashDebugVisualBridge : MonoBehaviour
     {
         // ------------------------------------------------------------------ constants
-        private const float PlayerScale   = 1.2f;
-        private const float BossScale     = 2.5f;
+        private const float DefaultPlayerScale = 1.8f;
+        private const float DefaultBossScale   = 3.6f;
         private const float ProjectilePlayerScale = 0.8f;
         private const float ProjectileEnemyScale  = 0.6f;
 
-        private const int SortPlayer     = 100;
-        private const int SortEnemy      =  50;
-        private const int SortBoss       =  80;
-        private const int SortProjectile =  70;
+        // Base sorting orders are well above Stage01 environment sprites
+        // (tilesets ~1, cracks ~5, props ~100..150) so Y-sort offsets cannot
+        // push characters behind translucent decoration.
+        private const int SortPlayer     = 1000;
+        private const int SortEnemy      =  500;
+        private const int SortBoss       =  800;
+        private const int SortProjectile =  700;
 
-        // ------------------------------------------------------------------ sprite paths (Resources)
-        // Player classes
-        private const string PathPlayerDefault   = "NightDash/Art/Stage01/Characters/spr_char_warrior";
-        private const string PathPlayerBlade     = "NightDash/Art/Stage01/Characters/spr_char_warrior";
-        private const string PathPlayerShadow    = "NightDash/Art/Stage01/Characters/spr_char_mage";
-        private const string PathPlayerDemon     = "NightDash/Art/Stage01/Characters/spr_char_astrologer";
+        // Animation clip names — must match SO clip definitions.
+        private const string ClipWalk = "Walk";
+        private const string ClipIdle = "Idle";
 
-        // Enemies (per archetype)
-        private const string PathEnemyGhoulScout     = "NightDash/Art/Stage01/Enemies/spr_enemy_ghoul_scout";
-        private const string PathEnemyEmberBat       = "NightDash/Art/Stage01/Enemies/spr_enemy_ember_bat";
-        private const string PathEnemyAshCaster      = "NightDash/Art/Stage01/Enemies/spr_enemy_ash_caster";
-        private const string PathEnemyWastelandBrute = "NightDash/Art/Stage01/Enemies/spr_enemy_wasteland_brute";
-        private const string PathEnemyFallback       = "NightDash/Art/Stage01/Enemies/spr_enemy_ghoul_scout";
+        // Movement → Walk vs Idle threshold. Squared to avoid sqrt.
+        private const float MoveDeadzoneSq = 0.0001f;
 
-        // Boss
-        private const string PathBoss = "NightDash/Art/Stage01/Enemies/spr_boss_agron";
+        // ------------------------------------------------------------------ id mappings
+        // Player class id (RunSelection.ClassId) is used directly as animation set id.
+        // Default player sprite when no class selected (e.g. tutorial).
+        private const string DefaultPlayerAnimId = "class_warrior";
+        private const string BossAnimId = "boss_agron";
 
-        // Projectile (fallback)
+        // ------------------------------------------------------------------ projectile VFX paths (Resources)
+        // Kept as Resources for now — VFX SO migration is a follow-up task.
         private const string PathProjectile = "NightDash/Art/Stage01/VFX/spr_vfx_demon_orb";
-
-        // ------------------------------------------------------------------ weapon → VFX sprite mapping
         private static readonly Dictionary<string, (string path, float scale)> WeaponVfxMap =
             new Dictionary<string, (string, float)>
             {
@@ -60,23 +63,22 @@ namespace NightDash.Runtime
                 { "weapon_void_starfall",         ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           1.0f) },
             };
 
-        // ------------------------------------------------------------------ archetype → (path, scale)
-        private static readonly Dictionary<string, (string path, float scale)> EnemyArchetypeMap =
-            new Dictionary<string, (string, float)>
-            {
-                { "ghoul_scout",     (PathEnemyGhoulScout,     1.2f) },
-                { "ember_bat",       (PathEnemyEmberBat,       1.0f) },
-                { "ash_caster",      (PathEnemyAshCaster,      1.2f) },
-                { "wasteland_brute", (PathEnemyWastelandBrute, 1.8f) },
-            };
-
         // ------------------------------------------------------------------ view dictionaries
-        private readonly Dictionary<Entity, GameObject> _playerViews     = new();
-        private readonly Dictionary<Entity, GameObject> _enemyViews      = new();
-        private readonly Dictionary<Entity, GameObject> _bossViews       = new();
+        private readonly Dictionary<Entity, ViewState> _playerViews     = new();
+        private readonly Dictionary<Entity, ViewState> _enemyViews      = new();
+        private readonly Dictionary<Entity, ViewState> _bossViews       = new();
         private readonly Dictionary<Entity, GameObject> _projectileViews = new();
 
-        // ------------------------------------------------------------------ cached sprites
+        private readonly Dictionary<Entity, float3> _lastPositions = new();
+
+        // Reusable scratch sets — avoid per-frame heap allocation in LateUpdate.
+        private readonly HashSet<Entity> _alivePlayer     = new();
+        private readonly HashSet<Entity> _aliveEnemy      = new();
+        private readonly HashSet<Entity> _aliveBoss       = new();
+        private readonly HashSet<Entity> _aliveProjectile = new();
+        private readonly List<Entity>    _staleScratch    = new();
+
+        // ------------------------------------------------------------------ Resources fallback cache (projectiles only)
         private readonly Dictionary<string, Sprite> _spriteCache = new();
 
         // ------------------------------------------------------------------ ECS queries
@@ -84,8 +86,24 @@ namespace NightDash.Runtime
         private EntityQuery _enemyQuery;
         private EntityQuery _bossQuery;
         private EntityQuery _projectileQuery;
+        private EntityQuery _runSelectionQuery;
 
         private World _world;
+
+        // Per-entity animation runtime state.
+        private struct ViewState
+        {
+            public GameObject Go;
+            public SpriteRenderer Renderer;
+            public SpriteAnimationSetSO AnimSet;
+            public AnimationClipDef CurrentClip;
+            public string CurrentClipName;
+            public float ClipTime;
+            public float RenderScale;
+            public bool SourceFacesLeft;
+            public int BaseSortOrder;
+            public string AnimSetId; // tracks which class/archetype this view was built for
+        }
 
         // ====================================================================
         // Bootstrap
@@ -94,10 +112,13 @@ namespace NightDash.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
+            // Skip if a SampleScene-bound instance already exists.
+            if (FindAnyObjectByType<NightDashDebugVisualBridge>() != null) return;
+
             var go = new GameObject("[NightDash] DebugVisualBridge");
             go.AddComponent<NightDashDebugVisualBridge>();
             DontDestroyOnLoad(go);
-            NightDashLog.Info("[VisualBridge] Auto-created.");
+            NightDashLog.Info("[VisualBridge] Auto-created (fallback).");
         }
 #endif
 
@@ -108,18 +129,20 @@ namespace NightDash.Runtime
         {
             if (!TryGetWorld()) return;
 
-            SyncPlayers();
-            SyncEnemies();
-            SyncBosses();
+            float dt = Time.deltaTime;
+            SyncPlayers(dt);
+            SyncEnemies(dt);
+            SyncBosses(dt);
             SyncProjectiles();
+            CleanupAnimationState();
         }
 
         private void OnDestroy()
         {
-            DestroyAll(_playerViews);
-            DestroyAll(_enemyViews);
-            DestroyAll(_bossViews);
-            DestroyAll(_projectileViews);
+            DestroyAllViews(_playerViews);
+            DestroyAllViews(_enemyViews);
+            DestroyAllViews(_bossViews);
+            DestroyAllProjectiles(_projectileViews);
         }
 
         // ====================================================================
@@ -155,6 +178,9 @@ namespace NightDash.Runtime
                 ComponentType.ReadOnly<LocalTransform>(),
                 ComponentType.Exclude<Prefab>());
 
+            _runSelectionQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<RunSelection>());
+
             NightDashLog.Info("[VisualBridge] Queries initialised.");
             return true;
         }
@@ -162,139 +188,134 @@ namespace NightDash.Runtime
         // ====================================================================
         // Sync: Players
         // ====================================================================
-        private void SyncPlayers()
+        private void SyncPlayers(float dt)
         {
             using var entities   = _playerQuery.ToEntityArray(Allocator.Temp);
             using var transforms = _playerQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
 
-            var alive = new HashSet<Entity>();
+            _alivePlayer.Clear();
+            string currentClassId = ReadCurrentClassId();
 
             for (int i = 0; i < entities.Length; i++)
             {
                 var entity = entities[i];
-                alive.Add(entity);
+                _alivePlayer.Add(entity);
 
-                if (!_playerViews.TryGetValue(entity, out var go))
+                bool exists = _playerViews.TryGetValue(entity, out var view);
+
+                // Re-create view when class id has changed (lobby class swap),
+                // since sprites and clips are baked into the ViewState.
+                if (exists && view.AnimSetId != currentClassId)
                 {
-                    var sprite = ResolvePlayerSprite();
-                    go = CreateView("Player", sprite, PlayerScale, SortPlayer, Color.white);
-                    _playerViews[entity] = go;
-                    NightDashLog.Info($"[VisualBridge] Player view created for {entity}");
+                    if (view.Go != null) Destroy(view.Go);
+                    exists = false;
+                    NightDashLog.Info($"[VisualBridge] Player class changed '{view.AnimSetId}' -> '{currentClassId}', rebuilding view.");
                 }
 
-                SetPosition(go, transforms[i].Position);
+                if (!exists)
+                {
+                    var animSet = LookupAnimSet(currentClassId);
+                    view = CreateAnimatedView("Player", animSet, DefaultPlayerScale, SortPlayer);
+                    view.AnimSetId = currentClassId;
+                    _playerViews[entity] = view;
+                    NightDashLog.Info($"[VisualBridge] Player view created for {entity} (classId='{currentClassId}', animSet={(animSet != null ? animSet.name : "null")})");
+                }
+
+                StepAnimation(ref view, entity, transforms[i].Position, dt);
+                _playerViews[entity] = view;
+                SetPosition(view.Go, transforms[i].Position, view.BaseSortOrder);
             }
 
-            RemoveStale(_playerViews, alive);
+            RemoveStaleViews(_playerViews, _alivePlayer);
         }
 
-        private Sprite ResolvePlayerSprite()
+        private string ReadCurrentClassId()
         {
-            // Try to read RunSelection from ECS to pick class sprite
-            string classId = null;
-            if (_world != null && _world.IsCreated)
+            // TryGetWorld() must have run before this — query is initialised.
+            if (_runSelectionQuery.CalculateEntityCount() > 0)
             {
-                var em = _world.EntityManager;
-                using var query = em.CreateEntityQuery(ComponentType.ReadOnly<RunSelection>());
-                if (query.CalculateEntityCount() > 0)
-                {
-                    var sel = query.GetSingleton<RunSelection>();
-                    classId = sel.ClassId.ToString();
-                }
+                var sel = _runSelectionQuery.GetSingleton<RunSelection>();
+                var raw = sel.ClassId.ToString();
+                if (!string.IsNullOrEmpty(raw)) return raw;
             }
+            return DefaultPlayerAnimId;
+        }
 
-            string path = classId switch
-            {
-                "class_warrior"    => PathPlayerBlade,
-                "class_mage"       => PathPlayerShadow,
-                "class_astrologer" => PathPlayerDemon,
-                _                  => PathPlayerDefault,
-            };
-
-            return LoadSprite(path);
+        private SpriteAnimationSetSO ResolvePlayerAnimSet()
+        {
+            return LookupAnimSet(ReadCurrentClassId());
         }
 
         // ====================================================================
-        // Sync: Enemies (per-archetype sprites)
+        // Sync: Enemies
         // ====================================================================
-        private void SyncEnemies()
+        private void SyncEnemies(float dt)
         {
             using var entities   = _enemyQuery.ToEntityArray(Allocator.Temp);
             using var transforms = _enemyQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             var em = _world.EntityManager;
 
-            var alive = new HashSet<Entity>();
+            _aliveEnemy.Clear();
 
             for (int i = 0; i < entities.Length; i++)
             {
                 var entity = entities[i];
-                alive.Add(entity);
+                _aliveEnemy.Add(entity);
 
-                if (!_enemyViews.TryGetValue(entity, out var go))
+                if (!_enemyViews.TryGetValue(entity, out var view))
                 {
                     string archetypeId = "ghoul_scout"; // fallback
                     if (em.HasComponent<EnemyArchetypeData>(entity))
                     {
                         archetypeId = em.GetComponentData<EnemyArchetypeData>(entity).Id.ToString();
                     }
-                    ResolveEnemyVisual(archetypeId, out var sprite, out var scale);
 
-                    go = CreateView($"Enemy_{archetypeId}", sprite, scale, SortEnemy, Color.white);
-                    _enemyViews[entity] = go;
+                    var animSet = LookupAnimSet(archetypeId);
+                    view = CreateAnimatedView($"Enemy_{archetypeId}", animSet, 1f, SortEnemy);
+                    _enemyViews[entity] = view;
                 }
 
-                SetPosition(go, transforms[i].Position);
+                StepAnimation(ref view, entity, transforms[i].Position, dt);
+                _enemyViews[entity] = view;
+                SetPosition(view.Go, transforms[i].Position, view.BaseSortOrder);
             }
 
-            RemoveStale(_enemyViews, alive);
-        }
-
-        private void ResolveEnemyVisual(string archetypeId, out Sprite sprite, out float scale)
-        {
-            if (EnemyArchetypeMap.TryGetValue(archetypeId, out var info))
-            {
-                sprite = LoadSprite(info.path);
-                scale  = info.scale;
-            }
-            else
-            {
-                sprite = LoadSprite(PathEnemyFallback);
-                scale  = 0.38f;
-                NightDashLog.Info($"[VisualBridge] Unknown archetype '{archetypeId}', using fallback sprite.");
-            }
+            RemoveStaleViews(_enemyViews, _aliveEnemy);
         }
 
         // ====================================================================
         // Sync: Bosses
         // ====================================================================
-        private void SyncBosses()
+        private void SyncBosses(float dt)
         {
             using var entities   = _bossQuery.ToEntityArray(Allocator.Temp);
             using var transforms = _bossQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
 
-            var alive = new HashSet<Entity>();
+            _aliveBoss.Clear();
 
             for (int i = 0; i < entities.Length; i++)
             {
                 var entity = entities[i];
-                alive.Add(entity);
+                _aliveBoss.Add(entity);
 
-                if (!_bossViews.TryGetValue(entity, out var go))
+                if (!_bossViews.TryGetValue(entity, out var view))
                 {
-                    var sprite = LoadSprite(PathBoss);
-                    go = CreateView("Boss", sprite, BossScale, SortBoss, Color.white);
-                    _bossViews[entity] = go;
+                    var animSet = LookupAnimSet(BossAnimId);
+                    view = CreateAnimatedView("Boss", animSet, DefaultBossScale, SortBoss);
+                    _bossViews[entity] = view;
                     NightDashLog.Info($"[VisualBridge] Boss view created for {entity}");
                 }
 
-                SetPosition(go, transforms[i].Position);
+                StepAnimation(ref view, entity, transforms[i].Position, dt);
+                _bossViews[entity] = view;
+                SetPosition(view.Go, transforms[i].Position, view.BaseSortOrder);
             }
 
-            RemoveStale(_bossViews, alive);
+            RemoveStaleViews(_bossViews, _aliveBoss);
         }
 
         // ====================================================================
-        // Sync: Projectiles
+        // Sync: Projectiles (legacy Resources path — VFX SO migration is a follow-up)
         // ====================================================================
         private void SyncProjectiles()
         {
@@ -302,12 +323,12 @@ namespace NightDash.Runtime
             using var transforms   = _projectileQuery.ToComponentDataArray<LocalTransform>(Allocator.Temp);
             using var projectiles  = _projectileQuery.ToComponentDataArray<ProjectileData>(Allocator.Temp);
 
-            var alive = new HashSet<Entity>();
+            _aliveProjectile.Clear();
 
             for (int i = 0; i < entities.Length; i++)
             {
                 var entity = entities[i];
-                alive.Add(entity);
+                _aliveProjectile.Add(entity);
 
                 if (!_projectileViews.TryGetValue(entity, out var go))
                 {
@@ -321,31 +342,24 @@ namespace NightDash.Runtime
 
                     if (isPlayer && !string.IsNullOrEmpty(weaponId) && WeaponVfxMap.TryGetValue(weaponId, out var vfxInfo))
                     {
-                        sprite = LoadSprite(vfxInfo.path);
+                        sprite = LoadSpriteFromResources(vfxInfo.path);
                         scale = vfxInfo.scale;
-
-                        // Melee tint: brighter flash
-                        if (isMelee)
-                        {
-                            tint = new Color(1f, 0.9f, 0.6f, 0.9f);
-                        }
+                        if (isMelee) tint = new Color(1f, 0.9f, 0.6f, 0.9f);
                     }
                     else
                     {
-                        sprite = LoadSprite(PathProjectile);
+                        sprite = LoadSpriteFromResources(PathProjectile);
                         scale = isPlayer ? ProjectilePlayerScale : ProjectileEnemyScale;
                     }
 
-                    go = CreateView("Projectile", sprite, scale, SortProjectile, tint);
+                    go = CreateStaticView("Projectile", sprite, scale, SortProjectile, tint);
                     _projectileViews[entity] = go;
                 }
 
-                SetPosition(go, transforms[i].Position);
+                SetPosition(go, transforms[i].Position, SortProjectile);
 
-                // Rotate projectile sprite to face movement direction.
-                // Guards against stale entity access: CombatSystem may destroy
-                // the entity earlier in the same frame while this LateUpdate
-                // still iterates the captured NativeArray snapshot.
+                // Projectile rotation toward velocity. Guarded against entities
+                // destroyed earlier this frame by CombatSystem.
                 if (_world != null && _world.IsCreated)
                 {
                     var em = _world.EntityManager;
@@ -361,13 +375,153 @@ namespace NightDash.Runtime
                 }
             }
 
-            RemoveStale(_projectileViews, alive);
+            RemoveStaleProjectiles(_projectileViews, _aliveProjectile);
+        }
+
+        // ====================================================================
+        // Animation core
+        // ====================================================================
+        // Picks Walk/Idle clip based on velocity, advances clip time, swaps
+        // sprite, updates flipX. Fallback: holds first frame of any clip.
+        private void StepAnimation(ref ViewState view, Entity entity, float3 pos, float dt)
+        {
+            if (view.Go == null) return;
+
+            // Velocity from previous-frame position diff (no PhysicsVelocity2D dep).
+            float3 velocity = float3.zero;
+            if (_lastPositions.TryGetValue(entity, out var last))
+            {
+                velocity = pos - last;
+            }
+            _lastPositions[entity] = pos;
+
+            float speedSq = velocity.x * velocity.x + velocity.y * velocity.y;
+            bool moving = speedSq > MoveDeadzoneSq;
+
+            // Flip horizontally based on movement direction (preserves last facing on idle).
+            if (view.Renderer != null && math.abs(velocity.x) > 0.001f)
+            {
+                view.Renderer.flipX = view.SourceFacesLeft ? velocity.x > 0f : velocity.x < 0f;
+            }
+
+            // Pick clip; reset clip time when switching.
+            string desired = moving ? ClipWalk : ClipIdle;
+            if (view.AnimSet != null && view.CurrentClipName != desired)
+            {
+                var picked = view.AnimSet.GetClipOrFallback(desired, ClipWalk);
+                if (picked != null)
+                {
+                    view.CurrentClip = picked;
+                    view.CurrentClipName = picked.name;
+                    view.ClipTime = 0f;
+                }
+            }
+
+            if (view.CurrentClip == null || view.CurrentClip.FrameCount == 0)
+            {
+                return; // SO missing or empty — leave whatever sprite was set on creation
+            }
+
+            view.ClipTime += dt;
+
+            // Fold loop time into one cycle to avoid float precision drift on long sessions.
+            if (view.CurrentClip.loop && view.CurrentClip.fps > 0f)
+            {
+                float duration = view.CurrentClip.FrameCount / view.CurrentClip.fps;
+                if (duration > 0f && view.ClipTime >= duration)
+                {
+                    view.ClipTime %= duration;
+                }
+            }
+
+            var sprite = view.CurrentClip.GetFrameAt(view.ClipTime);
+            if (sprite != null && view.Renderer != null)
+            {
+                view.Renderer.sprite = sprite;
+            }
+        }
+
+        // ====================================================================
+        // View creation / destruction
+        // ====================================================================
+        private static ViewState CreateAnimatedView(string label, SpriteAnimationSetSO animSet, float defaultScale, int sortOrder)
+        {
+            var go = new GameObject($"[View] {label}");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = sortOrder;
+            sr.color = Color.white;
+
+            float scale = defaultScale;
+            bool sourceFacesLeft = true;
+            AnimationClipDef firstClip = null;
+
+            if (animSet != null)
+            {
+                if (animSet.renderScale > 0f) scale = animSet.renderScale;
+                sourceFacesLeft = animSet.sourceFacesLeft;
+                firstClip = animSet.GetClipOrFallback(ClipIdle, ClipWalk);
+                if (firstClip != null && firstClip.FrameCount > 0)
+                {
+                    sr.sprite = firstClip.frames[0];
+                }
+            }
+
+            if (sr.sprite == null)
+            {
+                sr.sprite = CreatePlaceholderSprite();
+            }
+
+            go.transform.localScale = Vector3.one * scale;
+
+            return new ViewState
+            {
+                Go = go,
+                Renderer = sr,
+                AnimSet = animSet,
+                CurrentClip = firstClip,
+                CurrentClipName = firstClip != null ? firstClip.name : null,
+                ClipTime = 0f,
+                RenderScale = scale,
+                SourceFacesLeft = sourceFacesLeft,
+                BaseSortOrder = sortOrder,
+            };
+        }
+
+        private static GameObject CreateStaticView(string label, Sprite sprite, float scale, int sortOrder, Color tint)
+        {
+            var go = new GameObject($"[View] {label}");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortOrder;
+            sr.color = tint;
+            go.transform.localScale = Vector3.one * scale;
+            return go;
+        }
+
+        private SpriteAnimationSetSO LookupAnimSet(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+
+            var registry = DataRegistry.Instance;
+            if (registry == null)
+            {
+                NightDashLog.Warn("[VisualBridge] DataRegistry not ready; sprite will use placeholder.");
+                return null;
+            }
+
+            if (!registry.TryGetAnimationSet(id, out var set))
+            {
+                NightDashLog.Info($"[VisualBridge] No animation set for id '{id}'.");
+                return null;
+            }
+
+            return set;
         }
 
         // ====================================================================
         // Helpers
         // ====================================================================
-        private Sprite LoadSprite(string resourcePath)
+        private Sprite LoadSpriteFromResources(string resourcePath)
         {
             if (_spriteCache.TryGetValue(resourcePath, out var cached))
                 return cached;
@@ -383,67 +537,100 @@ namespace NightDash.Runtime
             return sprite;
         }
 
+        private static Sprite _placeholderSprite;
         private static Sprite CreatePlaceholderSprite()
         {
+            if (_placeholderSprite != null) return _placeholderSprite;
             var tex = new Texture2D(16, 16);
             var pixels = new Color[16 * 16];
             for (int j = 0; j < pixels.Length; j++) pixels[j] = Color.magenta;
             tex.SetPixels(pixels);
             tex.Apply();
-            return Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
+            _placeholderSprite = Sprite.Create(tex, new Rect(0, 0, 16, 16), new Vector2(0.5f, 0.5f), 16);
+            return _placeholderSprite;
         }
 
-        private static GameObject CreateView(string label, Sprite sprite, float scale, int sortOrder, Color tint)
-        {
-            var go = new GameObject($"[View] {label}");
-            var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite       = sprite;
-            sr.sortingOrder  = sortOrder;
-            sr.color         = tint;
-            go.transform.localScale = Vector3.one * scale;
-            return go;
-        }
-
-        private static void SetPosition(GameObject go, float3 pos)
+        private static void SetPosition(GameObject go, float3 pos, int baseSortOrder)
         {
             if (go == null) return;
             go.transform.position = new Vector3(pos.x, pos.y, 0f);
 
-            // Y-sort based on bottom edge of sprite
-            // Lower bottom = higher sorting order = rendered in front
+            // Y-sort: bottom-edge offset added to type-base order (preserves
+            // Player > Boss > Enemy > Projectile layering across screens).
+            // Multiplier kept small + clamped so the offset never pushes the
+            // character into Stage01 environment sortingOrder range (1..150).
             var sr = go.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
                 float halfHeight = go.transform.localScale.y * 0.5f;
                 float bottomY = pos.y - halfHeight;
-                sr.sortingOrder = 200 + (int)(-bottomY * 10f);
+                int yOffset = Mathf.Clamp((int)(-bottomY * 2f), -200, 200);
+                sr.sortingOrder = baseSortOrder + yOffset;
             }
         }
 
-        private static void RemoveStale(Dictionary<Entity, GameObject> views, HashSet<Entity> alive)
+        private void CleanupAnimationState()
         {
-            // Collect stale keys first to avoid modifying during iteration
-            var stale = new List<Entity>();
-            foreach (var kvp in views)
+            if (_lastPositions.Count == 0) return;
+
+            _staleScratch.Clear();
+            foreach (var kvp in _lastPositions)
             {
-                if (!alive.Contains(kvp.Key))
-                    stale.Add(kvp.Key);
+                if (_playerViews.ContainsKey(kvp.Key)) continue;
+                if (_enemyViews.ContainsKey(kvp.Key)) continue;
+                if (_bossViews.ContainsKey(kvp.Key)) continue;
+                _staleScratch.Add(kvp.Key);
             }
 
-            foreach (var key in stale)
+            for (int i = 0; i < _staleScratch.Count; i++) _lastPositions.Remove(_staleScratch[i]);
+        }
+
+        private void RemoveStaleViews(Dictionary<Entity, ViewState> views, HashSet<Entity> alive)
+        {
+            _staleScratch.Clear();
+            foreach (var kvp in views)
             {
-                if (views.TryGetValue(key, out var go))
-                    Destroy(go);
+                if (!alive.Contains(kvp.Key)) _staleScratch.Add(kvp.Key);
+            }
+
+            for (int i = 0; i < _staleScratch.Count; i++)
+            {
+                var key = _staleScratch[i];
+                if (views.TryGetValue(key, out var view) && view.Go != null) Destroy(view.Go);
                 views.Remove(key);
             }
         }
 
-        private static void DestroyAll(Dictionary<Entity, GameObject> views)
+        private void RemoveStaleProjectiles(Dictionary<Entity, GameObject> views, HashSet<Entity> alive)
+        {
+            _staleScratch.Clear();
+            foreach (var kvp in views)
+            {
+                if (!alive.Contains(kvp.Key)) _staleScratch.Add(kvp.Key);
+            }
+
+            for (int i = 0; i < _staleScratch.Count; i++)
+            {
+                var key = _staleScratch[i];
+                if (views.TryGetValue(key, out var go) && go != null) Destroy(go);
+                views.Remove(key);
+            }
+        }
+
+        private static void DestroyAllViews(Dictionary<Entity, ViewState> views)
         {
             foreach (var kvp in views)
             {
-                if (kvp.Value != null)
-                    Destroy(kvp.Value);
+                if (kvp.Value.Go != null) Destroy(kvp.Value.Go);
+            }
+            views.Clear();
+        }
+
+        private static void DestroyAllProjectiles(Dictionary<Entity, GameObject> views)
+        {
+            foreach (var kvp in views)
+            {
+                if (kvp.Value != null) Destroy(kvp.Value);
             }
             views.Clear();
         }

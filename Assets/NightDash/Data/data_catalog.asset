@@ -65,3 +65,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b6bc7aa410eaf40428c8efba0409a2e5, type: 2}
   - {fileID: 11400000, guid: 7d2ba0094afc4f41afec7635134affe9, type: 2}
   - {fileID: 11400000, guid: 2f86bc6bf7b241f69f5dea2446de814a, type: 2}
+  animationSets:
+  - {fileID: 11400000, guid: 04ccd8fb4ecd24e5c9b3dc46453482f4, type: 2}
+  - {fileID: 11400000, guid: f70a8c6be2d7c4e7fb4fc273d12b0437, type: 2}
+  - {fileID: 11400000, guid: bdb66b6500699415a9b7b80303126934, type: 2}
+  - {fileID: 11400000, guid: 39295b5f3f3124d49ba82b78f98288cc, type: 2}
+  - {fileID: 11400000, guid: 8760b1b3fbfbf4c25b43ecf31322de6f, type: 2}
+  - {fileID: 11400000, guid: a0b3ae3e439ec484e9b56adbbbab034c, type: 2}
+  - {fileID: 11400000, guid: 3eb66adfad5484065898175f1b7222af, type: 2}
+  - {fileID: 11400000, guid: 36e716af6c2d843ff883fabf1744cfd2, type: 2}
+  - {fileID: 11400000, guid: a33eb57b078574d3e9bfd0f1f2d8d5be, type: 2}
+  - {fileID: 11400000, guid: 81384eb28c7a04d009e9d5549c77c578, type: 2}
+  - {fileID: 11400000, guid: 2e26885338ae04e709626f5e70bef7f9, type: 2}
+  - {fileID: 11400000, guid: ebb035aa28849426893e0c883fb0f9e7, type: 2}
+  - {fileID: 11400000, guid: 064df463dee124c7abbd1dca8ae1e791, type: 2}

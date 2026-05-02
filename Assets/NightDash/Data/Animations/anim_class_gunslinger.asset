@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3dfd260cfccf4ab495dc500b9b3f0d8, type: 3}
+  m_Name: anim_class_gunslinger
+  m_EditorClassIdentifier: NightDash::NightDash.Data.SpriteAnimationSetSO
+  id: class_gunslinger
+  renderScale: 0.5
+  sourceFacesLeft: 0
+  clips:
+  - name: Idle
+    frames:
+    - {fileID: 21300000, guid: 93a391c2214dd4a0e9d9d74fd870e51b, type: 3}
+    - {fileID: 21300000, guid: 294626a72b525412bb2cac030547591a, type: 3}
+    - {fileID: 21300000, guid: 07139083065a346098c13758e895de85, type: 3}
+    - {fileID: 21300000, guid: 3d91f096ab50d4bd89609691b3d8cb4e, type: 3}
+    - {fileID: 21300000, guid: 958dbac3b7fab4543a1b49f9a47cda3c, type: 3}
+    fps: 6
+    loop: 1
+  - name: Walk
+    frames:
+    - {fileID: 21300000, guid: 56f70678165ae45b3a3474eeb4ed01d6, type: 3}
+    - {fileID: 21300000, guid: 24143bcf9ffe344cd9ff07fdad9774a0, type: 3}
+    - {fileID: 21300000, guid: 36c4c15726df3459085e87b45e45f7b8, type: 3}
+    - {fileID: 21300000, guid: 111066c0aef674e68b91ea999b81ea96, type: 3}
+    - {fileID: 21300000, guid: 7c22f132310a94b03a74b9a97ba09bda, type: 3}
+    - {fileID: 21300000, guid: 148c4908106a64163b1bcc35e8b755d5, type: 3}
+    - {fileID: 21300000, guid: 07cf4a9eeea0a4be1b70eade1550f74f, type: 3}
+    - {fileID: 21300000, guid: ed0c50d5001734996967e8c0e90f5373, type: 3}
+    - {fileID: 21300000, guid: 24ec31505c8d045d3b68ca6961931d95, type: 3}
+    fps: 12
+    loop: 1

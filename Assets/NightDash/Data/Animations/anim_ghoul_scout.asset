@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3dfd260cfccf4ab495dc500b9b3f0d8, type: 3}
+  m_Name: anim_ghoul_scout
+  m_EditorClassIdentifier: NightDash::NightDash.Data.SpriteAnimationSetSO
+  id: ghoul_scout
+  renderScale: 0.55
+  sourceFacesLeft: 0
+  clips:
+  - name: Walk
+    frames:
+    - {fileID: 21300000, guid: 00ad1c2b6d0004df7acf75c47f52ade6, type: 3}
+    - {fileID: 21300000, guid: 82142fde2230a437ba8e1c989340a38a, type: 3}
+    - {fileID: 21300000, guid: 7912510ddb8c74eae89f967c667757c0, type: 3}
+    - {fileID: 21300000, guid: 86dbce96268a24d22a06dde4d5aacc92, type: 3}
+    - {fileID: 21300000, guid: 49fd05125be124e87a5b0606398af9d7, type: 3}
+    - {fileID: 21300000, guid: 042047a3382f2423f8ca65bc1525e2e3, type: 3}
+    - {fileID: 21300000, guid: f169a292641c44790978270ab2c5683e, type: 3}
+    - {fileID: 21300000, guid: 269d8e128dbbc4ae2bd567a19b5d7ead, type: 3}
+    fps: 10
+    loop: 1

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3dfd260cfccf4ab495dc500b9b3f0d8, type: 3}
+  m_Name: anim_class_astrologer
+  m_EditorClassIdentifier: NightDash::NightDash.Data.SpriteAnimationSetSO
+  id: class_astrologer
+  renderScale: 0.5
+  sourceFacesLeft: 0
+  clips:
+  - name: Idle
+    frames:
+    - {fileID: 21300000, guid: e5439a25d2299499da0ee4c03e0d586e, type: 3}
+    - {fileID: 21300000, guid: fc7e7c0449a564213aa78cf003aa21b5, type: 3}
+    - {fileID: 21300000, guid: ebc6f02743624413d8da62839e13c570, type: 3}
+    - {fileID: 21300000, guid: 7f4c240ed7d0644648ce1410fa207b9c, type: 3}
+    - {fileID: 21300000, guid: 759ec58ddd7374de3bbd47d74241fcb2, type: 3}
+    fps: 6
+    loop: 1
+  - name: Walk
+    frames:
+    - {fileID: 21300000, guid: e90b8dc8946254b1997d9c84ffb1ff78, type: 3}
+    - {fileID: 21300000, guid: 76a5070f622e04f06b33b81bd6ba7243, type: 3}
+    - {fileID: 21300000, guid: f3d2e70b43a3e44ae856cbe01bd8a13e, type: 3}
+    - {fileID: 21300000, guid: 3f318b249bf1c40a1b0022c102d8a3b0, type: 3}
+    - {fileID: 21300000, guid: 9537778fb51c848f7a06507952538e5e, type: 3}
+    - {fileID: 21300000, guid: d0c89856f154647e689bcb58a2420b6f, type: 3}
+    - {fileID: 21300000, guid: 3440f4b51281f435a89d5c96da7be504, type: 3}
+    - {fileID: 21300000, guid: fa3d28c38583e4bf7aca9e25eae1a122, type: 3}
+    - {fileID: 21300000, guid: cca4d5fca69384d059d527849917c267, type: 3}
+    fps: 12
+    loop: 1

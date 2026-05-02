@@ -28,6 +28,15 @@ namespace NightDash.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
+            // Skip preview/editor scenes — they don't have ECS player entities
+            // and don't need camera-follow behavior. Avoids forcing ortho size
+            // and player-query NRE.
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (sceneName == "AutoSetupPreview" || sceneName.EndsWith("Preview"))
+            {
+                return;
+            }
+
             var existing = FindFirstObjectByType<NightDashCameraFollow>(FindObjectsInactive.Include);
             if (existing != null)
             {
@@ -61,6 +70,11 @@ namespace NightDash.Runtime
 
         [SerializeField] private float targetOrthoSize = 3.8f;
 
+        // True if a PixelPerfectCamera component owns the ortho size.
+        // Detected once at Start; we then stop forcing orthographicSize so the
+        // pixel-perfect math is not overridden each frame.
+        private bool _pixelPerfectOwnsOrtho;
+
         private void Start()
         {
             _camera = GetComponent<Camera>();
@@ -69,11 +83,25 @@ namespace NightDash.Runtime
                 _camera = Camera.main;
             }
 
+            _pixelPerfectOwnsOrtho = HasPixelPerfectCamera(_camera);
+
             // Zoom in: smaller ortho size = more zoomed in
-            if (_camera != null && _camera.orthographic)
+            if (_camera != null && _camera.orthographic && !_pixelPerfectOwnsOrtho)
             {
                 _camera.orthographicSize = targetOrthoSize;
             }
+        }
+
+        // Avoids a hard reference to the optional 2D Pixel Perfect package by
+        // resolving the type via reflection. Returns true if the component
+        // exists on the camera GameObject.
+        private static bool HasPixelPerfectCamera(Camera cam)
+        {
+            if (cam == null) return false;
+            var t = System.Type.GetType("UnityEngine.U2D.PixelPerfectCamera, Unity.2D.PixelPerfect.Runtime")
+                 ?? System.Type.GetType("UnityEngine.Experimental.Rendering.Universal.PixelPerfectCamera, Unity.RenderPipelines.Universal.Runtime");
+            if (t == null) return false;
+            return cam.GetComponent(t) != null;
         }
 
         private void LateUpdate()
@@ -87,13 +115,27 @@ namespace NightDash.Runtime
                 return;
             }
 
-            // Force ortho size every frame in case anything else overrides it
-            if (_camera.orthographic)
+            // Force ortho size every frame unless PixelPerfectCamera owns it.
+            if (_camera.orthographic && !_pixelPerfectOwnsOrtho)
             {
                 _camera.orthographicSize = targetOrthoSize;
             }
 
-            using var players = _playerQuery.ToEntityArray(Allocator.Temp);
+            // Guard against scenes without ECS world / player entity
+            // (e.g. AutoSetupPreview, editor preview scenes).
+            NativeArray<Entity> players;
+            try
+            {
+                players = _playerQuery.ToEntityArray(Allocator.Temp);
+            }
+            catch (System.Exception)
+            {
+                _initialized = false;
+                return;
+            }
+
+            using (players)
+            {
             if (players.Length == 0)
             {
                 return;
@@ -161,6 +203,7 @@ namespace NightDash.Runtime
             }
 
             _camera.transform.position = smoothed;
+            } // end using (players)
         }
 
         private bool EnsureInitialized()

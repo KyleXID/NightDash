@@ -17,6 +17,7 @@ namespace NightDash.Runtime
         private readonly Dictionary<string, StageData> _stageById = new();
         private readonly Dictionary<string, DifficultyModifierData> _difficultyById = new();
         private readonly Dictionary<string, MetaTreeData> _metaTreeByClassId = new();
+        private readonly Dictionary<string, SpriteAnimationSetSO> _animationSetById = new();
 
         public DataCatalog Catalog => dataCatalog;
 
@@ -48,6 +49,7 @@ namespace NightDash.Runtime
             _stageById.Clear();
             _difficultyById.Clear();
             _metaTreeByClassId.Clear();
+            _animationSetById.Clear();
 
             if (dataCatalog == null)
             {
@@ -62,10 +64,12 @@ namespace NightDash.Runtime
             AddRange(dataCatalog.stages, _stageById, x => x != null ? x.id : null, "StageData");
             AddRange(dataCatalog.difficultyModifiers, _difficultyById, x => x != null ? x.id : null, "DifficultyModifierData");
             AddRange(dataCatalog.metaTrees, _metaTreeByClassId, x => x != null ? x.classId : null, "MetaTreeData");
+            AddRange(dataCatalog.animationSets, _animationSetById, x => x != null ? x.id : null, "SpriteAnimationSetSO");
 
             NightDashLog.Info(
                 $"[NightDash] DataRegistry ready: classes={_classById.Count}, weapons={_weaponById.Count}, passives={_passiveById.Count}, " +
-                $"evolutions={_evolutionById.Count}, stages={_stageById.Count}, difficulty={_difficultyById.Count}, metaTrees={_metaTreeByClassId.Count}");
+                $"evolutions={_evolutionById.Count}, stages={_stageById.Count}, difficulty={_difficultyById.Count}, metaTrees={_metaTreeByClassId.Count}, " +
+                $"animationSets={_animationSetById.Count}");
         }
 
         public bool TryGetClass(string id, out ClassData value) => _classById.TryGetValue(id, out value);
@@ -75,6 +79,7 @@ namespace NightDash.Runtime
         public bool TryGetStage(string id, out StageData value) => _stageById.TryGetValue(id, out value);
         public bool TryGetDifficulty(string id, out DifficultyModifierData value) => _difficultyById.TryGetValue(id, out value);
         public bool TryGetMetaTree(string classId, out MetaTreeData value) => _metaTreeByClassId.TryGetValue(classId, out value);
+        public bool TryGetAnimationSet(string id, out SpriteAnimationSetSO value) => _animationSetById.TryGetValue(id, out value);
 
         private static void AddRange<T>(
             List<T> source,
