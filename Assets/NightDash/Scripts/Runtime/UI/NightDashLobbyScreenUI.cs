@@ -93,7 +93,11 @@ namespace NightDash.Runtime.UI
         private Image _campfireImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -80f);
+        // Pinned at Y = -120 (canvas-center anchored). Do not edit unless you
+        // also intend to move the campfire sprite itself — the environment
+        // warmth center (_FireCenterUV) and the per-card distance falloff are
+        // tuned independently and should not pull this value with them.
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
 
         // Tight halo right around the flames — small radius, soft pulse.
@@ -293,8 +297,12 @@ namespace NightDash.Runtime.UI
                 _warmthMaterial.SetVector("_FireCenterUV", new Vector4(0.5f, 0.45f, 0f, 0f));
                 _warmthMaterial.SetFloat("_FireRadiusUV", 0.40f);
                 _warmthMaterial.SetColor("_WarmthColor", new Color(0.50f, 0.24f, 0.06f, 1f));
-                _warmthMaterial.SetFloat("_GradientPower", 1.1f);
-                _warmthMaterial.SetFloat("_WarmthIntensity", 0.25f);
+                // Power 2.5 = sharp ease-in: light concentrates right next to
+                // the fire and fades quickly with distance. Peak intensity is
+                // bumped to 0.50 to make the close band genuinely dramatic;
+                // the falloff curve keeps the screen edge as quiet as before.
+                _warmthMaterial.SetFloat("_GradientPower", 2.5f);
+                _warmthMaterial.SetFloat("_WarmthIntensity", 0.50f);
                 bgImage.material = _warmthMaterial;
             }
             _backgroundImage = bgImage;
@@ -612,8 +620,10 @@ namespace NightDash.Runtime.UI
             // and characters flicker in sync with the flames.
             float pulseT = 0.5f + 0.5f * Mathf.Sin(_animTime * CardLightPulseHz * Mathf.PI * 2f);
             float pulse = Mathf.Lerp(CardLightPulseMin, CardLightPulseMax, pulseT);
-            // Base intensity 0.25 (toned down) modulated by the same pulse.
-            _warmthMaterial.SetFloat("_WarmthIntensity", 0.25f * pulse);
+            // Base intensity 0.50 — paired with GradientPower 2.5 so peak
+            // warmth right next to the fire is dramatic while distant edges
+            // stay quiet (steep falloff).
+            _warmthMaterial.SetFloat("_WarmthIntensity", 0.50f * pulse);
         }
 
         private void TickCardIdle()
