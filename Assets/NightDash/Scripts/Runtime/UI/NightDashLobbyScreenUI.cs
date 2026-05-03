@@ -23,11 +23,12 @@ namespace NightDash.Runtime.UI
     {
         // ------------------------------------------------------------------ tuning
         private const int    CharacterCardCount = 7;
-        private const float  CardHeight         = 200f;
-        private const float  CardSpacing        = 28f;
+        private const float  CardHeight         = 240f;
+        private const float  CardSpacing        = 32f;
         private const float  CardSelectedScale  = 1.18f;
         private const float  CardUnselectedScale = 0.95f;
-        private const float  IdleFps            = 6f;
+        private const float  IdleTimeScale      = 0.5f;  // < 1 = slower idle
+        private const float  CardYOffset        = 60f;
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -53,6 +54,7 @@ namespace NightDash.Runtime.UI
             public Image Image;
             public Text Label;
             public AnimationClipDef IdleClip;
+            public bool FacesLeft; // mirrors sprite when card is right of center
         }
 
         // ====================================================================
@@ -183,13 +185,13 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfirePlaceholder()
         {
-            // Phase 1 placeholder: a small warm dot in screen center where the
-            // animated campfire sprite will land in Phase 2.
+            // Phase 1 placeholder: a small warm dot near the bottom of the
+            // screen where the animated campfire sprite will land in Phase 2.
             var rect = CreateRect("CampfirePlaceholder", transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(120f, 160f);
-            rect.anchoredPosition = new Vector2(0f, -120f);
+            rect.anchoredPosition = new Vector2(0f, -260f);
 
             var img = rect.gameObject.AddComponent<Image>();
             img.color = new Color(1f, 0.55f, 0.18f, 0.85f);
@@ -207,9 +209,37 @@ namespace NightDash.Runtime.UI
             if (classes == null || classes.Count == 0) return;
 
             int cardCount = Mathf.Min(CharacterCardCount, classes.Count);
-            float totalWidth = cardCount * CardHeight * 0.55f + (cardCount - 1) * CardSpacing;
-            float startX = -totalWidth * 0.5f;
-            float cardWidth = CardHeight * 0.55f;
+
+            // Per-card width follows each PNG's native aspect ratio so every
+            // character renders at the same on-screen height regardless of
+            // how wide their silhouette is (shields/bows etc.).
+            float[] widths = new float[cardCount];
+            Sprite[] firstFrames = new Sprite[cardCount];
+            AnimationClipDef[] idleClips = new AnimationClipDef[cardCount];
+            for (int i = 0; i < cardCount; i++)
+            {
+                var classData = classes[i];
+                if (classData == null || string.IsNullOrEmpty(classData.id)) continue;
+                if (registry.TryGetAnimationSet(classData.id, out var animSet) && animSet != null)
+                {
+                    idleClips[i] = animSet.GetClipOrFallback("Idle", "Walk");
+                    if (idleClips[i] != null && idleClips[i].FrameCount > 0)
+                    {
+                        firstFrames[i] = idleClips[i].frames[0];
+                    }
+                }
+                float aspect = 0.6f;
+                if (firstFrames[i] != null && firstFrames[i].rect.height > 0f)
+                {
+                    aspect = firstFrames[i].rect.width / firstFrames[i].rect.height;
+                }
+                widths[i] = CardHeight * aspect;
+            }
+
+            float totalWidth = (cardCount - 1) * CardSpacing;
+            for (int i = 0; i < cardCount; i++) totalWidth += widths[i];
+            float cursor = -totalWidth * 0.5f;
+            int median = cardCount / 2; // 7 -> 3 (center). 0..2 face right, 4..6 face left.
 
             for (int i = 0; i < cardCount; i++)
             {
@@ -219,31 +249,22 @@ namespace NightDash.Runtime.UI
                 var rect = CreateRect($"Card_{classData.id}", transform);
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(cardWidth, CardHeight);
-                rect.anchoredPosition = new Vector2(startX + i * (cardWidth + CardSpacing) + cardWidth * 0.5f, 80f);
+                rect.sizeDelta = new Vector2(widths[i], CardHeight);
+                float cardX = cursor + widths[i] * 0.5f;
+                rect.anchoredPosition = new Vector2(cardX, CardYOffset);
 
                 var image = rect.gameObject.AddComponent<Image>();
                 image.preserveAspect = true;
                 image.raycastTarget = false;
+                if (firstFrames[i] != null) image.sprite = firstFrames[i];
 
-                AnimationClipDef idleClip = null;
-                if (registry.TryGetAnimationSet(classData.id, out var animSet) && animSet != null)
-                {
-                    idleClip = animSet.GetClipOrFallback("Idle", "Walk");
-                    if (idleClip != null && idleClip.FrameCount > 0)
-                    {
-                        var sprite = idleClip.frames[0];
-                        if (sprite != null) image.sprite = sprite;
-                    }
-                }
-
-                // Class name label below the card.
-                var labelRect = CreateRect("Label", rect);
-                labelRect.anchorMin = new Vector2(0f, 0f);
-                labelRect.anchorMax = new Vector2(1f, 0f);
+                // Class name label as a sibling of the card (not a child) so
+                // mirroring the card's localScale.x doesn't flip the text.
+                var labelRect = CreateRect($"Label_{classData.id}", transform);
+                labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0.5f);
                 labelRect.pivot = new Vector2(0.5f, 1f);
-                labelRect.anchoredPosition = new Vector2(0f, -8f);
-                labelRect.sizeDelta = new Vector2(0f, 32f);
+                labelRect.anchoredPosition = new Vector2(cardX, CardYOffset - CardHeight * 0.5f - 8f);
+                labelRect.sizeDelta = new Vector2(Mathf.Max(widths[i], 140f), 32f);
 
                 var label = labelRect.gameObject.AddComponent<Text>();
                 label.text = string.IsNullOrEmpty(classData.displayName) ? classData.id : classData.displayName;
@@ -259,8 +280,11 @@ namespace NightDash.Runtime.UI
                     Rect = rect,
                     Image = image,
                     Label = label,
-                    IdleClip = idleClip,
+                    IdleClip = idleClips[i],
+                    FacesLeft = i > median,
                 });
+
+                cursor += widths[i] + CardSpacing;
             }
         }
 
@@ -303,11 +327,12 @@ namespace NightDash.Runtime.UI
 
         private void TickCardIdle()
         {
+            float t = _animTime * IdleTimeScale;
             for (int i = 0; i < _cards.Count; i++)
             {
                 var card = _cards[i];
                 if (card.IdleClip == null || card.IdleClip.FrameCount == 0 || card.Image == null) continue;
-                var sprite = card.IdleClip.GetFrameAt(_animTime);
+                var sprite = card.IdleClip.GetFrameAt(t);
                 if (sprite != null) card.Image.sprite = sprite;
             }
         }
@@ -369,7 +394,10 @@ namespace NightDash.Runtime.UI
                     card.Label.color = c;
                 }
                 float scale = selected ? CardSelectedScale : CardUnselectedScale;
-                card.Rect.localScale = new Vector3(scale, scale, 1f);
+                // Negative X-scale flips the sprite. Cards right of center
+                // face left so the row visually points inward at the campfire.
+                float xScale = card.FacesLeft ? -scale : scale;
+                card.Rect.localScale = new Vector3(xScale, scale, 1f);
             }
         }
 
