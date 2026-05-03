@@ -28,7 +28,18 @@ namespace NightDash.Runtime
             }
             EntityManager em = world.EntityManager;
 
-            // 1) Sweep run-spawned entities. Persistent singletons don't
+            // 1) BEFORE destroying enemies, reset VFXBridge tracking so its
+            //    next LateUpdate doesn't fire OnEnemyDeath for every entity
+            //    we're about to remove. Without this, XPDropBridge would
+            //    spawn a fresh gem per zombie enemy → those pickups inherit
+            //    into the next run.
+            var vfxBridge = Object.FindFirstObjectByType<NightDashVFXBridge>();
+            if (vfxBridge != null)
+            {
+                vfxBridge.ResetTrackingForRunTeardown();
+            }
+
+            // 2) Sweep run-spawned entities. Persistent singletons don't
             //    carry these tags so they're untouched.
             //
             // PlayerTag is intentionally preserved — NightDashPlayableFallbackSystem

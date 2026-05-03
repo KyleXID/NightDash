@@ -124,6 +124,18 @@ namespace NightDash.Runtime
             _tracked.Clear();
         }
 
+        // Public hook used by RunTeardownBridge before EnemyTag entities are
+        // destroyed. Without this, the next LateUpdate sees "tracked enemies
+        // are no longer alive" and fires OnEnemyDeath for every previously
+        // tracked enemy → XPDropBridge spawns a fresh gem per dead enemy,
+        // and they get inherited by the next run.
+        public void ResetTrackingForRunTeardown()
+        {
+            _tracked.Clear();
+            _aliveBuffer.Clear();
+            _deadBuffer.Clear();
+        }
+
         // ====================================================================
         // World init
         // ====================================================================
