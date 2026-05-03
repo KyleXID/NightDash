@@ -105,12 +105,12 @@ namespace NightDash.Runtime.UI
         // this halo just gives the fire itself a little bloom.
         private RectTransform _glowHaloRect;
         private Image _glowHaloImage;
-        private const float GlowPulseHz   = 1.05f;
-        private const float GlowAlphaMin  = 0.18f;
-        private const float GlowAlphaMax  = 0.34f;
+        private const float GlowPulseHz   = 0.75f;
+        private const float GlowAlphaMin  = 0.12f;
+        private const float GlowAlphaMax  = 0.24f;
         private const float GlowScaleMin  = 0.95f;
         private const float GlowScaleMax  = 1.06f;
-        private static readonly Vector2 GlowHaloSize = new Vector2(245f, 245f);
+        private static readonly Vector2 GlowHaloSize = new Vector2(275f, 275f);
 
         // Per-card warmth wash. Both selected and unselected cards receive
         // the same warm add — only the base brightness differs. Gradient is
