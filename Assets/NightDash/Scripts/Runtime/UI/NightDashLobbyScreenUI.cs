@@ -371,7 +371,11 @@ namespace NightDash.Runtime.UI
             {
                 var card = _cards[i];
                 if (card.IdleClip == null || card.IdleClip.FrameCount == 0 || card.Image == null) continue;
-                var sprite = card.IdleClip.GetFrameAt(t);
+
+                // Only the selected card animates; everyone else holds frame 0.
+                Sprite sprite = (i == _classIndex)
+                    ? card.IdleClip.GetFrameAt(t)
+                    : card.IdleClip.frames[0];
                 if (sprite != null) card.Image.sprite = sprite;
             }
         }
@@ -407,7 +411,9 @@ namespace NightDash.Runtime.UI
         {
             if (_cards.Count == 0) return;
             int n = _cards.Count;
+            int prev = _classIndex;
             _classIndex = ((_classIndex + delta) % n + n) % n;
+            if (_classIndex != prev) _animTime = 0f; // restart idle from frame 0
             ApplySelectionVisuals();
         }
 
