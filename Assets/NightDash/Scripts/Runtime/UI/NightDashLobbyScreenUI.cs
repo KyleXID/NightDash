@@ -28,7 +28,7 @@ namespace NightDash.Runtime.UI
         private const float  CardUnselectedScale = 1.0f;
         // Selected card boosts its base brightness so it reads brighter
         // even though both states share the same warmth wash.
-        private const float  CardSelectedBrightness = 1.30f;
+        private const float  CardSelectedBrightness = 1.65f;
         private const float  IdleTimeScale      = 1.0f;
 
         // Campfire center. Cards split into left (4) and right (3) groups so
@@ -93,7 +93,7 @@ namespace NightDash.Runtime.UI
         private Image _campfireImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -80f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
 
         // Tight halo right around the flames — small radius, soft pulse.
@@ -290,11 +290,11 @@ namespace NightDash.Runtime.UI
             if (shader != null)
             {
                 _warmthMaterial = new Material(shader);
-                _warmthMaterial.SetVector("_FireCenterUV", new Vector4(0.5f, 0.40f, 0f, 0f));
-                _warmthMaterial.SetFloat("_FireRadiusUV", 0.55f);
-                _warmthMaterial.SetColor("_WarmthColor", new Color(0.65f, 0.32f, 0.08f, 1f));
-                _warmthMaterial.SetFloat("_GradientPower", 0.7f);
-                _warmthMaterial.SetFloat("_WarmthIntensity", 0.55f);
+                _warmthMaterial.SetVector("_FireCenterUV", new Vector4(0.5f, 0.45f, 0f, 0f));
+                _warmthMaterial.SetFloat("_FireRadiusUV", 0.40f);
+                _warmthMaterial.SetColor("_WarmthColor", new Color(0.50f, 0.24f, 0.06f, 1f));
+                _warmthMaterial.SetFloat("_GradientPower", 1.1f);
+                _warmthMaterial.SetFloat("_WarmthIntensity", 0.25f);
                 bgImage.material = _warmthMaterial;
             }
             _backgroundImage = bgImage;
@@ -612,8 +612,8 @@ namespace NightDash.Runtime.UI
             // and characters flicker in sync with the flames.
             float pulseT = 0.5f + 0.5f * Mathf.Sin(_animTime * CardLightPulseHz * Mathf.PI * 2f);
             float pulse = Mathf.Lerp(CardLightPulseMin, CardLightPulseMax, pulseT);
-            // Base intensity 0.55 set in BuildBackground; we modulate it.
-            _warmthMaterial.SetFloat("_WarmthIntensity", 0.55f * pulse);
+            // Base intensity 0.25 (toned down) modulated by the same pulse.
+            _warmthMaterial.SetFloat("_WarmthIntensity", 0.25f * pulse);
         }
 
         private void TickCardIdle()
