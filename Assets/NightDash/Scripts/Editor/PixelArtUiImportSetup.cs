@@ -11,12 +11,15 @@ namespace NightDash.Editor
     public class PixelArtUiImportSetup : AssetPostprocessor
     {
         const string UiRoot = "Assets/NightDash/Art/UI";
+        const string ResourcesUiRoot = "Assets/Resources/NightDash/UI";
         const string CampfireRoot = "Assets/NightDash/Art/UI/Lobby/Campfire";
+        const string ResourcesCampfireRoot = "Assets/Resources/NightDash/UI/Lobby/Campfire";
 
         void OnPreprocessTexture()
         {
             if (!assetPath.EndsWith(".png")) return;
-            if (!assetPath.StartsWith(UiRoot)) return;
+            bool inUiRoot = assetPath.StartsWith(UiRoot) || assetPath.StartsWith(ResourcesUiRoot);
+            if (!inUiRoot) return;
 
             TextureImporter importer = (TextureImporter)assetImporter;
             importer.textureType = TextureImporterType.Sprite;
@@ -35,7 +38,7 @@ namespace NightDash.Editor
             // Custom pivots (e.g. set by AutoDetectSpritePivot) survive.
             if (settings.spriteAlignment != (int)SpriteAlignment.Custom)
             {
-                if (assetPath.StartsWith(CampfireRoot))
+                if (assetPath.StartsWith(CampfireRoot) || assetPath.StartsWith(ResourcesCampfireRoot))
                 {
                     settings.spriteAlignment = (int)SpriteAlignment.BottomCenter;
                 }
