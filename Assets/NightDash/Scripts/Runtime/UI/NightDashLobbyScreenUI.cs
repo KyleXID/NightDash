@@ -31,11 +31,11 @@ namespace NightDash.Runtime.UI
         // Campfire center. Cards split into left (4) and right (3) groups so
         // the fire stays unobstructed in the middle. Closer-to-fire cards sit
         // higher; outer cards descend along a soft curve.
-        private static readonly Vector2 CampfireCenter = new Vector2(0f, -100f);
+        private static readonly Vector2 CampfireCenter = new Vector2(0f, -40f);
         private const int    LeftCardCount   = 4;
         private const int    RightCardCount  = 3;
-        private const float  CardFireGap     = 200f; // first card distance from fire (X)
-        private const float  CardStepX       = 240f; // X step between cards
+        private const float  CardFireGap     = 170f; // first card distance from fire (X)
+        private const float  CardStepX       = 200f; // X step between cards
         private const float  CardMaxYDrop    = -180f; // outermost card Y offset from fire
         private const float  CardCurvePower  = 1.6f;  // > 1 = ease-in (gentle near, steep far)
         // Outer-most card on each side gets pulled inward (X) and pushed down
