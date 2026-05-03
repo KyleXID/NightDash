@@ -339,7 +339,7 @@ namespace NightDash.Runtime
             rect.anchoredPosition = new Vector2(0f, 90f); // 90px above bottom
 
             var text = rect.gameObject.AddComponent<Text>();
-            text.text = "PRESS START";
+            text.text = "PRESS ANY BUTTONS";
             text.alignment = TextAnchor.MiddleCenter;
             text.fontSize = 56;
             text.fontStyle = FontStyle.Bold;
