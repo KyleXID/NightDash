@@ -624,31 +624,31 @@ namespace NightDash.Runtime.UI
 
         private void TickCampfire()
         {
-            // Frame swap DISABLED — the current PixelLab-generated 7-frame
-            // loop has subtle log/ember position drift between frames that
-            // reads as a "heartbeat" pulsing of the entire campfire body.
-            // Locked to frame_000 (set in BuildCampfire) until frames are
-            // re-generated with reference-locked logs (see Notion: PixelLab
-            // Prompts Title/Logo — "Custom Animation V3 with reference image"
-            // workflow). The glow halo pulse below is the intentional motion.
-            // To re-enable: uncomment the loop below.
-            // if (_campfireImage != null && _campfireFrames != null && _campfireFrames.Length > 0)
-            // {
-            //     int idx = Mathf.FloorToInt(_animTime * CampfireFps) % _campfireFrames.Length;
-            //     if (idx < 0) idx += _campfireFrames.Length;
-            //     var s = _campfireFrames[idx];
-            //     if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
-            // }
+            // Frame swap (uniform fps loop). Logs/embers are nearly static
+            // across frames (PixelLab Custom Animation V3 honored the
+            // reference); only the flame region animates.
+            if (_campfireImage != null && _campfireFrames != null && _campfireFrames.Length > 0)
+            {
+                int idx = Mathf.FloorToInt(_animTime * CampfireFps) % _campfireFrames.Length;
+                if (idx < 0) idx += _campfireFrames.Length;
+                var s = _campfireFrames[idx];
+                if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
+            }
 
-            // Soft halo right around the flames.
+            // Soft halo right around the flames. SCALE pulse intentionally
+            // disabled — halo sits in front of the campfire sprite (user
+            // request: light reads as foreground bloom), and a scale pulse
+            // there caused the halo's coverage of the sprite to oscillate,
+            // making the campfire body look like it was beating like a
+            // heart. Alpha pulse alone keeps the bloom alive without
+            // changing how much of the sprite is occluded.
             if (_glowHaloImage != null && _glowHaloRect != null)
             {
                 float u = (Mathf.Sin(_animTime * GlowPulseHz * Mathf.PI * 2f) + 1f) * 0.5f;
                 var c = _glowHaloImage.color;
                 c.a = Mathf.Lerp(GlowAlphaMin, GlowAlphaMax, u);
                 _glowHaloImage.color = c;
-                float scale = Mathf.Lerp(GlowScaleMin, GlowScaleMax, u);
-                _glowHaloRect.localScale = new Vector3(scale, scale, 1f);
+                _glowHaloRect.localScale = Vector3.one;
             }
         }
 
