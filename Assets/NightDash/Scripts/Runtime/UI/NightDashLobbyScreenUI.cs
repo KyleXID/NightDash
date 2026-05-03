@@ -349,6 +349,26 @@ namespace NightDash.Runtime.UI
                     FacesLeft = !onLeft,
                 });
             }
+
+            SortCardsByDepth();
+        }
+
+        // Reorders card sibling indices so cards with the lowest Y (visually
+        // closest to the camera) render on top, regardless of DataCatalog
+        // order. Astrologer / Gunslinger end up in front of their neighbours
+        // even though catalog index puts them at the ends.
+        private void SortCardsByDepth()
+        {
+            var sortedIdx = new List<int>(_cards.Count);
+            for (int i = 0; i < _cards.Count; i++) sortedIdx.Add(i);
+            // Highest Y first (rendered behind), lowest Y last (rendered on top).
+            sortedIdx.Sort((a, b) =>
+                _cards[b].Rect.anchoredPosition.y.CompareTo(_cards[a].Rect.anchoredPosition.y));
+            foreach (int i in sortedIdx)
+            {
+                if (_cards[i].Rect != null) _cards[i].Rect.SetAsLastSibling();
+                if (_cards[i].Label != null) _cards[i].Label.transform.SetAsLastSibling();
+            }
         }
 
         private void BuildHelpText()
