@@ -23,10 +23,10 @@ namespace NightDash.Runtime.UI
     {
         // ------------------------------------------------------------------ tuning
         private const int    CharacterCardCount = 7;
-        private const float  CardHeight         = 360f;
-        private const float  CardSpacing        = 40f;
-        private const float  CardSelectedScale  = 1.12f;
-        private const float  CardUnselectedScale = 0.92f;
+        private const float  CardHeight         = 200f;
+        private const float  CardSpacing        = 28f;
+        private const float  CardSelectedScale  = 1.18f;
+        private const float  CardUnselectedScale = 0.95f;
         private const float  IdleFps            = 6f;
 
         private static readonly Color CardSelectedTint   = Color.white;
@@ -149,6 +149,7 @@ namespace NightDash.Runtime.UI
             {
                 bgImage.texture = tex;
                 bgImage.color = Color.white;
+                ApplyCoverFitUv(bgImage);
             }
             else
             {
@@ -157,6 +158,27 @@ namespace NightDash.Runtime.UI
             }
             bgImage.raycastTarget = false;
             _backgroundLayer = bgRect.gameObject;
+        }
+
+        // Same cover-fit logic as the Title: keep native aspect, trim along
+        // the longer axis so the texture fills the screen without squashing.
+        private static void ApplyCoverFitUv(RawImage img)
+        {
+            if (img == null || img.texture == null) return;
+            float texAspect = (float)img.texture.width / Mathf.Max(1, img.texture.height);
+            float screenAspect = (float)Screen.width / Mathf.Max(1, Screen.height);
+            if (texAspect > screenAspect)
+            {
+                float fit = screenAspect / texAspect;
+                float pad = (1f - fit) * 0.5f;
+                img.uvRect = new Rect(pad, 0f, fit, 1f);
+            }
+            else
+            {
+                float fit = texAspect / screenAspect;
+                float pad = (1f - fit) * 0.5f;
+                img.uvRect = new Rect(0f, pad, 1f, fit);
+            }
         }
 
         private void BuildCampfirePlaceholder()
