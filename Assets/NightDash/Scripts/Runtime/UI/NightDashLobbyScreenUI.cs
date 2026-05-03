@@ -86,16 +86,27 @@ namespace NightDash.Runtime.UI
         private NightDashDebugVisualBridge _visualBridge;
         private Canvas _canvas;
         private GameObject _backgroundLayer;
+        private RawImage _backgroundImage;
+        private Material _warmthMaterial;
         private Text _stageLabel;
 
-        // Campfire sprite (Phase 2). The "light cast" effect is done entirely
-        // via per-card warmth tint (TickCardLighting) — no halo sprite, since
-        // a single circular PNG always reads as "round glowing object".
         private Image _campfireImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
         private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
+
+        // Tight halo right around the flames — small radius, soft pulse.
+        // The wide ambient wash is handled by the warmth shader on the BG;
+        // this halo just gives the fire itself a little bloom.
+        private RectTransform _glowHaloRect;
+        private Image _glowHaloImage;
+        private const float GlowPulseHz   = 1.4f;
+        private const float GlowAlphaMin  = 0.18f;
+        private const float GlowAlphaMax  = 0.34f;
+        private const float GlowScaleMin  = 0.95f;
+        private const float GlowScaleMax  = 1.06f;
+        private static readonly Vector2 GlowHaloSize = new Vector2(220f, 220f);
 
         // Per-card warmth wash. Both selected and unselected cards receive
         // the same warm add — only the base brightness differs. Gradient is
@@ -269,10 +280,24 @@ namespace NightDash.Runtime.UI
             }
             else
             {
-                // Fallback dim violet until the asset lands.
                 bgImage.color = new Color(0.06f, 0.04f, 0.12f, 1f);
             }
             bgImage.raycastTarget = false;
+
+            // Apply warmth-overlay shader so background props (stones, logs,
+            // trees) near the fire receive the same warmth wash as the cards.
+            var shader = Shader.Find("NightDash/UI/WarmthOverlay");
+            if (shader != null)
+            {
+                _warmthMaterial = new Material(shader);
+                _warmthMaterial.SetVector("_FireCenterUV", new Vector4(0.5f, 0.40f, 0f, 0f));
+                _warmthMaterial.SetFloat("_FireRadiusUV", 0.55f);
+                _warmthMaterial.SetColor("_WarmthColor", new Color(0.65f, 0.32f, 0.08f, 1f));
+                _warmthMaterial.SetFloat("_GradientPower", 0.7f);
+                _warmthMaterial.SetFloat("_WarmthIntensity", 0.55f);
+                bgImage.material = _warmthMaterial;
+            }
+            _backgroundImage = bgImage;
             _backgroundLayer = bgRect.gameObject;
         }
 
@@ -299,6 +324,31 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfire()
         {
+            // Tight halo behind the flame sprite. Small + soft so it reads
+            // as fire bloom, not as a separate glowing object.
+            var glowRect = CreateRect("CampfireGlow", transform);
+            glowRect.anchorMin = glowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            glowRect.pivot = new Vector2(0.5f, 0.5f);
+            glowRect.sizeDelta = GlowHaloSize;
+            glowRect.anchoredPosition = new Vector2(CampfireSpriteCenter.x,
+                                                    CampfireSpriteCenter.y + 20f);
+
+            var glowImage = glowRect.gameObject.AddComponent<Image>();
+            glowImage.preserveAspect = true;
+            glowImage.raycastTarget = false;
+            var glowSprite = Resources.Load<Sprite>("NightDash/UI/Lobby/lobby_campfire_glow_halo");
+            if (glowSprite != null)
+            {
+                glowImage.sprite = glowSprite;
+                glowImage.color = new Color(1f, 0.85f, 0.55f, GlowAlphaMin);
+            }
+            else
+            {
+                glowImage.color = new Color(1f, 0.55f, 0.20f, 0.20f);
+            }
+            _glowHaloRect = glowRect;
+            _glowHaloImage = glowImage;
+
             var fireRect = CreateRect("CampfireSprite", transform);
             fireRect.anchorMin = fireRect.anchorMax = new Vector2(0.5f, 0.5f);
             fireRect.pivot = new Vector2(0.5f, 0.5f);
@@ -487,6 +537,7 @@ namespace NightDash.Runtime.UI
             TickCardIdle();
             TickCampfire();
             TickCardLighting();
+            TickBackgroundWarmth();
 
             ReadInput(out bool left, out bool right, out bool up, out bool down, out bool confirm, out bool cancel);
 
@@ -541,6 +592,28 @@ namespace NightDash.Runtime.UI
                 var s = _campfireFrames[idx];
                 if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
             }
+
+            // Soft halo right around the flames.
+            if (_glowHaloImage != null && _glowHaloRect != null)
+            {
+                float u = (Mathf.Sin(_animTime * GlowPulseHz * Mathf.PI * 2f) + 1f) * 0.5f;
+                var c = _glowHaloImage.color;
+                c.a = Mathf.Lerp(GlowAlphaMin, GlowAlphaMax, u);
+                _glowHaloImage.color = c;
+                float scale = Mathf.Lerp(GlowScaleMin, GlowScaleMax, u);
+                _glowHaloRect.localScale = new Vector3(scale, scale, 1f);
+            }
+        }
+
+        private void TickBackgroundWarmth()
+        {
+            if (_warmthMaterial == null) return;
+            // Drive the same ambient pulse the cards use so background props
+            // and characters flicker in sync with the flames.
+            float pulseT = 0.5f + 0.5f * Mathf.Sin(_animTime * CardLightPulseHz * Mathf.PI * 2f);
+            float pulse = Mathf.Lerp(CardLightPulseMin, CardLightPulseMax, pulseT);
+            // Base intensity 0.55 set in BuildBackground; we modulate it.
+            _warmthMaterial.SetFloat("_WarmthIntensity", 0.55f * pulse);
         }
 
         private void TickCardIdle()
