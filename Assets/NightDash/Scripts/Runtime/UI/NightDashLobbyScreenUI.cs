@@ -91,14 +91,16 @@ namespace NightDash.Runtime.UI
         private Image _glowHaloImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        private const float GlowPulseHz         = 1.4f; // cycles per second
-        private const float GlowAlphaMin        = 0.45f;
-        private const float GlowAlphaMax        = 0.85f;
-        private const float GlowScaleMin        = 0.94f;
-        private const float GlowScaleMax        = 1.10f;
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -240f);
+        // Glow is rendered above cards as a soft light wash; pulse is gentle
+        // so the wash feels like flickering ambient light, not a pulsating blob.
+        private const float GlowPulseHz         = 1.0f;
+        private const float GlowAlphaMin        = 0.18f;
+        private const float GlowAlphaMax        = 0.34f;
+        private const float GlowScaleMin        = 0.97f;
+        private const float GlowScaleMax        = 1.04f;
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -200f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
-        private static readonly Vector2 GlowHaloSize         = new Vector2(560f, 560f);
+        private static readonly Vector2 GlowHaloSize         = new Vector2(900f, 900f);
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
@@ -456,15 +458,14 @@ namespace NightDash.Runtime.UI
             SortCardsByDepth();
         }
 
-        // Reorders card sibling indices so cards with the lowest Y (visually
-        // closest to the camera) render on top, regardless of DataCatalog
-        // order. Astrologer / Gunslinger end up in front of their neighbours
-        // even though catalog index puts them at the ends.
+        // Reorders sibling indices for proper depth + light layering:
+        //   1. Cards by Y (back to front).
+        //   2. Glow halo on top of all cards so light spills over them.
+        //   3. Stage / help labels on the very top.
         private void SortCardsByDepth()
         {
             var sortedIdx = new List<int>(_cards.Count);
             for (int i = 0; i < _cards.Count; i++) sortedIdx.Add(i);
-            // Highest Y first (rendered behind), lowest Y last (rendered on top).
             sortedIdx.Sort((a, b) =>
                 _cards[b].Rect.anchoredPosition.y.CompareTo(_cards[a].Rect.anchoredPosition.y));
             foreach (int i in sortedIdx)
@@ -472,6 +473,15 @@ namespace NightDash.Runtime.UI
                 if (_cards[i].Rect != null) _cards[i].Rect.SetAsLastSibling();
                 if (_cards[i].Label != null) _cards[i].Label.transform.SetAsLastSibling();
             }
+
+            // Glow halo on top of every card — soft warm wash falls onto
+            // characters' silhouettes (alpha-blended over the card sprites).
+            if (_glowHaloRect != null) _glowHaloRect.SetAsLastSibling();
+
+            // UI labels stay above the light wash so they remain readable.
+            if (_stageLabel != null) _stageLabel.transform.SetAsLastSibling();
+            var helpText = transform.Find("HelpText");
+            if (helpText != null) helpText.SetAsLastSibling();
         }
 
         private void BuildHelpText()
