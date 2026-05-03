@@ -63,6 +63,27 @@ namespace NightDash.Runtime
             {
                 bridge.DestroyAllViewsImmediate();
             }
+
+            // 6) Drop GameObject-based pickups (XP gems, health orbs) — these
+            //    are spawned by NightDashXPDropBridge as plain GameObjects, NOT
+            //    ECS entities, so the entity sweep above doesn't catch them.
+            //    Without this, abandoned pickups from the previous run would
+            //    fly to the new player on the very first frame.
+            var xpBridge = Object.FindFirstObjectByType<NightDashXPDropBridge>();
+            if (xpBridge != null)
+            {
+                xpBridge.ClearAllPickups();
+            }
+
+            // 7) Snap the camera to the (now-reset) player position and zero
+            //    its smoothing velocity. Otherwise the next run starts with a
+            //    visible 0.08s slide from the previous camera position back
+            //    to origin.
+            var camera = Object.FindFirstObjectByType<NightDashCameraFollow>();
+            if (camera != null)
+            {
+                camera.SnapToPlayer();
+            }
         }
 
         private static void DestroyEntitiesWith<T>(EntityManager em) where T : unmanaged, IComponentData

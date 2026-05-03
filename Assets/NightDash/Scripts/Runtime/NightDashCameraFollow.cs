@@ -206,6 +206,24 @@ namespace NightDash.Runtime
             } // end using (players)
         }
 
+        // Public hook for RunTeardownBridge: snap the camera to the player's
+        // current position and zero its smoothing velocity. Without this,
+        // SmoothDamp would lerp from the previous run's last camera position
+        // to the reset Player at origin — visible to the user as the camera
+        // sliding back to (0,0,0) over ~0.08s when starting a new run.
+        public void SnapToPlayer()
+        {
+            if (!EnsureInitialized() || _camera == null) return;
+
+            using NativeArray<Entity> players = _playerQuery.ToEntityArray(Allocator.Temp);
+            if (players.Length == 0) return;
+
+            LocalTransform pt = _entityManager.GetComponentData<LocalTransform>(players[0]);
+            float z = lockZ ? fixedZ : _camera.transform.position.z;
+            _camera.transform.position = new Vector3(pt.Position.x, pt.Position.y, z);
+            _velocity = Vector3.zero;
+        }
+
         private bool EnsureInitialized()
         {
             if (_initialized)

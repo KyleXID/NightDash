@@ -97,6 +97,22 @@ namespace NightDash.Runtime
             }
         }
 
+        // Public cleanup hook used by RunTeardownBridge when the player
+        // abandons the run via Pause Menu → Return to Lobby/Title. Both
+        // XP gems and health orbs live in _activeGems (same list).
+        public void ClearAllPickups()
+        {
+            for (int i = _activeGems.Count - 1; i >= 0; i--)
+            {
+                var gem = _activeGems[i];
+                if (gem != null && gem.gameObject != null)
+                {
+                    Destroy(gem.gameObject);
+                }
+            }
+            _activeGems.Clear();
+        }
+
         private void OnDestroy()
         {
             NightDashVFXBridge.OnEnemyDeath -= HandleEnemyDeath;
