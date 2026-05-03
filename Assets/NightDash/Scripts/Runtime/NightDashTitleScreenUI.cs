@@ -92,6 +92,12 @@ namespace NightDash.Runtime
             NightDashInputContextStack.Push(NightDashInputContext.Title);
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Title);
 
+            // Freeze gameplay while the title is visible. Without this,
+            // EnemySpawn / Combat / Movement systems continue running and the
+            // player can take damage from off-screen mobs before pressing
+            // Start. Restored in OnStartClicked.
+            Time.timeScale = 0f;
+
             // Restore default selection so keyboard/gamepad navigation has a focus.
             if (_firstButton != null)
             {
@@ -102,6 +108,12 @@ namespace NightDash.Runtime
         private void OnDisable()
         {
             NightDashInputContextStack.Pop(NightDashInputContext.Title);
+            // Defensive: ensure timescale is restored even if the screen is
+            // disabled by an unexpected path (e.g. scene reload).
+            if (Mathf.Approximately(Time.timeScale, 0f))
+            {
+                Time.timeScale = 1f;
+            }
         }
 
         private void Update()
@@ -174,7 +186,10 @@ namespace NightDash.Runtime
                 canvas = gameObject.AddComponent<Canvas>();
             }
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 1000;
+            // Higher than NightDashDebugVisualBridge sprite renderers
+            // (player baseSort 1000 + Y offset up to 200 = 1200) so Title
+            // always covers the game world.
+            canvas.sortingOrder = 5000;
 
             var scaler = gameObject.GetComponent<CanvasScaler>();
             if (scaler == null)
@@ -291,6 +306,9 @@ namespace NightDash.Runtime
                 _lobbyUi.enabled = true; // re-enable OnGUI for lobby drawing
                 _lobbyUi.SetLobbyVisible(true);
             }
+            // Resume time so gameplay simulation can run once the player
+            // confirms a class/stage. Title's freeze ends here.
+            Time.timeScale = 1f;
             gameObject.SetActive(false);
             NightDashLog.Info("[NightDash] Title Start clicked (Canvas UI).");
         }
