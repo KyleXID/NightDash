@@ -34,15 +34,27 @@ namespace NightDash.Runtime.UI
         private static readonly Vector2 CampfireCenter = new Vector2(0f, -40f);
         private const int    LeftCardCount   = 4;
         private const int    RightCardCount  = 3;
-        private const float  CardFireGap     = 170f; // first card distance from fire (X)
-        private const float  CardStepX       = 200f; // X step between cards
-        private const float  CardMaxYDrop    = -180f; // outermost card Y offset from fire
-        private const float  CardCurvePower  = 1.6f;  // > 1 = ease-in (gentle near, steep far)
-        // Outer-most card on each side gets pulled inward (X) and pushed down
-        // (Y) to form a small dual-row instead of a flat line. Asymmetric:
-        // user wanted the leftmost slot tucked between the next-two cards.
-        private const float  OuterPullInSteps = 1.5f; // outermost X = fire + 1.5*step
-        private const float  OuterExtraDrop   = -120f; // additional Y drop on top of CardMaxYDrop
+
+        // Per-card offsets from campfire center. Hand-tuned so the layout
+        // forms a soft "people gathered around a fire" shape:
+        //   - Paladin / Priest (innermost, closest to fire) flat at fire level.
+        //   - Warrior / Archer one step out, slightly lower.
+        //   - Mage one more step out, lower still and closer to Warrior.
+        //   - Astrologer / Gunslinger tucked inward + dropped further down,
+        //     forming a back row near the outer edges.
+        // Index order matches DataCatalog.classes:
+        //   0 Astrologer, 1 Mage, 2 Warrior, 3 Paladin,
+        //   4 Priest,     5 Archer, 6 Gunslinger
+        private static readonly Vector2[] CardOffsets = new Vector2[]
+        {
+            new Vector2(-440f, -260f), // 0 Astrologer (outer-back, left)
+            new Vector2(-520f, -110f), // 1 Mage (back row, near Warrior)
+            new Vector2(-370f,  -50f), // 2 Warrior
+            new Vector2(-170f,    0f), // 3 Paladin (closest to fire, left)
+            new Vector2( 170f,    0f), // 4 Priest  (closest to fire, right)
+            new Vector2( 370f,  -50f), // 5 Archer
+            new Vector2( 440f, -260f), // 6 Gunslinger (outer-back, right)
+        };
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -250,11 +262,7 @@ namespace NightDash.Runtime.UI
                 widths[i] = CardHeight * aspect;
             }
 
-            // Layout split. i in [0, LeftCardCount) -> left of fire,
-            // i in [LeftCardCount, cardCount) -> right of fire.
-            // Closer-to-fire = lower sideIndex = higher Y (less drop).
             int actualLeft = Mathf.Min(LeftCardCount, cardCount);
-            int actualRight = Mathf.Min(RightCardCount, cardCount - actualLeft);
 
             for (int i = 0; i < cardCount; i++)
             {
@@ -262,37 +270,22 @@ namespace NightDash.Runtime.UI
                 if (classData == null || string.IsNullOrEmpty(classData.id)) continue;
 
                 bool onLeft = i < actualLeft;
-                int sideIndex;     // 0 = closest to fire, larger = further
-                int sideTotal;
-                float side;
-                if (onLeft)
+
+                // Pick offset from the hand-tuned table; fall back to a
+                // simple linear layout if more than 7 classes ever appear.
+                Vector2 offset;
+                if (i < CardOffsets.Length)
                 {
-                    sideIndex = actualLeft - 1 - i; // i=last-of-left -> 0
-                    sideTotal = actualLeft;
-                    side = -1f;
+                    offset = CardOffsets[i];
                 }
                 else
                 {
-                    sideIndex = i - actualLeft;     // i=first-of-right -> 0
-                    sideTotal = actualRight;
-                    side = 1f;
+                    float fallbackX = onLeft ? -((i - actualLeft + 1) * 200f) : ((i - actualLeft + 1) * 200f);
+                    offset = new Vector2(fallbackX, -100f);
                 }
 
-                float xDist = CardFireGap + sideIndex * CardStepX;
-                float t = (sideTotal > 1) ? sideIndex / (float)(sideTotal - 1) : 0f;
-                float yDrop = CardMaxYDrop * Mathf.Pow(t, CardCurvePower);
-
-                // Outer-most card on each side: dual-row tuck. Pulled inward
-                // (between the previous two cards) and dropped further down.
-                bool isOutermost = sideTotal >= 3 && sideIndex == sideTotal - 1;
-                if (isOutermost)
-                {
-                    xDist = CardFireGap + OuterPullInSteps * CardStepX;
-                    yDrop = CardMaxYDrop + OuterExtraDrop;
-                }
-
-                float cardX = CampfireCenter.x + side * xDist;
-                float cardY = CampfireCenter.y + yDrop;
+                float cardX = CampfireCenter.x + offset.x;
+                float cardY = CampfireCenter.y + offset.y;
 
                 var rect = CreateRect($"Card_{classData.id}", transform);
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
