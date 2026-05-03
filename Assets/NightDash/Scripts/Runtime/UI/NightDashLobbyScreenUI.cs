@@ -84,6 +84,7 @@ namespace NightDash.Runtime.UI
         private Canvas _canvas;
         private GameObject _backgroundLayer;
         private GameObject _campfirePlaceholder;
+        private Text _stageLabel;
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
@@ -151,6 +152,7 @@ namespace NightDash.Runtime.UI
             _navIndex = DefaultNavIndex;
             _classIndex = NavOrder[_navIndex];
             ApplySelectionVisuals();
+            UpdateStageLabel();
             _animTime = 0f;
         }
 
@@ -187,7 +189,48 @@ namespace NightDash.Runtime.UI
 
             BuildBackground();
             BuildCampfirePlaceholder();
+            BuildStageLabel();
             BuildHelpText();
+        }
+
+        private void BuildStageLabel()
+        {
+            var rect = CreateRect("StageLabel", transform);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -60f);
+            rect.sizeDelta = new Vector2(900f, 80f);
+
+            var t = rect.gameObject.AddComponent<Text>();
+            t.alignment = TextAnchor.MiddleCenter;
+            t.fontSize = 40;
+            t.fontStyle = FontStyle.Bold;
+            t.color = Color.white;
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.raycastTarget = false;
+            _stageLabel = t;
+        }
+
+        private void UpdateStageLabel()
+        {
+            if (_stageLabel == null) return;
+            if (_stageIndex < 0 || _stageIndex >= _stageIds.Count)
+            {
+                _stageLabel.text = "";
+                return;
+            }
+            string id = _stageIds[_stageIndex];
+            string display = id;
+            var registry = DataRegistry.Instance;
+            if (registry != null && registry.TryGetStage(id, out var stage) && stage != null
+                && !string.IsNullOrEmpty(stage.displayName))
+            {
+                display = stage.displayName;
+            }
+            // Show prev/next hints only when there is somewhere to go.
+            string left = _stageIndex > 0 ? "<  " : "    ";
+            string right = _stageIndex < _stageIds.Count - 1 ? "  >" : "    ";
+            _stageLabel.text = $"{left}{display}{right}";
         }
 
         private void BuildBackground()
@@ -469,8 +512,10 @@ namespace NightDash.Runtime.UI
         private void MoveStage(int delta)
         {
             if (_stageIds.Count == 0) return;
-            int n = _stageIds.Count;
-            _stageIndex = ((_stageIndex + delta) % n + n) % n;
+            int prev = _stageIndex;
+            // Hard clamp at the ends, matching character navigation.
+            _stageIndex = Mathf.Clamp(_stageIndex + delta, 0, _stageIds.Count - 1);
+            if (_stageIndex != prev) UpdateStageLabel();
         }
 
         private void ApplySelectionVisuals()

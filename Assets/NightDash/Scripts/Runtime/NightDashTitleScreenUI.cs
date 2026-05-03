@@ -121,12 +121,10 @@ namespace NightDash.Runtime
         private void OnDisable()
         {
             NightDashInputContextStack.Pop(NightDashInputContext.Title);
-            // Defensive: ensure timescale is restored even if the screen is
-            // disabled by an unexpected path (e.g. scene reload).
-            if (Mathf.Approximately(Time.timeScale, 0f))
-            {
-                Time.timeScale = 1f;
-            }
+            // Title intentionally does NOT restore Time.timeScale here.
+            // The next screen (Lobby/Pause/etc.) owns the freeze policy:
+            // restoring on disable would un-pause the game right after
+            // Lobby's OnEnable just set timeScale=0.
         }
 
         private void HideGameplayViews()
