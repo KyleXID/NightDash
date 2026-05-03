@@ -31,13 +31,18 @@ namespace NightDash.Runtime.UI
         // Campfire center. Cards split into left (4) and right (3) groups so
         // the fire stays unobstructed in the middle. Closer-to-fire cards sit
         // higher; outer cards descend along a soft curve.
-        private static readonly Vector2 CampfireCenter = new Vector2(0f, -150f);
+        private static readonly Vector2 CampfireCenter = new Vector2(0f, -100f);
         private const int    LeftCardCount   = 4;
         private const int    RightCardCount  = 3;
         private const float  CardFireGap     = 200f; // first card distance from fire (X)
         private const float  CardStepX       = 240f; // X step between cards
         private const float  CardMaxYDrop    = -180f; // outermost card Y offset from fire
         private const float  CardCurvePower  = 1.6f;  // > 1 = ease-in (gentle near, steep far)
+        // Outer-most card on each side gets pulled inward (X) and pushed down
+        // (Y) to form a small dual-row instead of a flat line. Asymmetric:
+        // user wanted the leftmost slot tucked between the next-two cards.
+        private const float  OuterPullInSteps = 1.5f; // outermost X = fire + 1.5*step
+        private const float  OuterExtraDrop   = -120f; // additional Y drop on top of CardMaxYDrop
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -276,6 +281,16 @@ namespace NightDash.Runtime.UI
                 float xDist = CardFireGap + sideIndex * CardStepX;
                 float t = (sideTotal > 1) ? sideIndex / (float)(sideTotal - 1) : 0f;
                 float yDrop = CardMaxYDrop * Mathf.Pow(t, CardCurvePower);
+
+                // Outer-most card on each side: dual-row tuck. Pulled inward
+                // (between the previous two cards) and dropped further down.
+                bool isOutermost = sideTotal >= 3 && sideIndex == sideTotal - 1;
+                if (isOutermost)
+                {
+                    xDist = CardFireGap + OuterPullInSteps * CardStepX;
+                    yDrop = CardMaxYDrop + OuterExtraDrop;
+                }
+
                 float cardX = CampfireCenter.x + side * xDist;
                 float cardY = CampfireCenter.y + yDrop;
 
@@ -425,10 +440,16 @@ namespace NightDash.Runtime.UI
                     card.Label.color = c;
                 }
                 float scale = selected ? CardSelectedScale : CardUnselectedScale;
-                // Negative X-scale flips the sprite. Cards right of center
-                // face left so the row visually points inward at the campfire.
                 float xScale = card.FacesLeft ? -scale : scale;
                 card.Rect.localScale = new Vector3(xScale, scale, 1f);
+
+                // Selected card always renders on top of overlapping siblings
+                // (dual-row outer cards otherwise hide behind their neighbours).
+                if (selected)
+                {
+                    card.Rect.SetAsLastSibling();
+                    if (card.Label != null) card.Label.transform.SetAsLastSibling();
+                }
             }
         }
 
