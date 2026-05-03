@@ -24,8 +24,8 @@ namespace NightDash.Runtime.UI
         // ------------------------------------------------------------------ tuning
         private const int    CharacterCardCount = 7;
         private const float  CardHeight         = 240f;
-        private const float  CardSelectedScale  = 1.18f;
-        private const float  CardUnselectedScale = 0.95f;
+        private const float  CardSelectedScale  = 1.08f;
+        private const float  CardUnselectedScale = 1.0f;
         private const float  IdleTimeScale      = 1.0f;
 
         // Campfire center. Cards split into left (4) and right (3) groups so
@@ -50,7 +50,7 @@ namespace NightDash.Runtime.UI
             new Vector2(-260f, -240f), // 0 Astrologer (back row, closer to fire)
             new Vector2(-170f,    0f), // 1 Mage (closest to fire on left)
             new Vector2(-340f,  -50f), // 2 Warrior (closer to fire than before)
-            new Vector2(-480f, -210f), // 3 Paladin (outer-left, lower + closer to fire)
+            new Vector2(-480f, -180f), // 3 Paladin (outer-left, slightly above prev)
             new Vector2( 170f,    0f), // 4 Priest (closest to fire on right)
             new Vector2( 370f,  -50f), // 5 Archer
             new Vector2( 260f, -240f), // 6 Gunslinger (back row, mirror of Astrologer)
@@ -470,14 +470,8 @@ namespace NightDash.Runtime.UI
                 float scale = selected ? CardSelectedScale : CardUnselectedScale;
                 float xScale = card.FacesLeft ? -scale : scale;
                 card.Rect.localScale = new Vector3(xScale, scale, 1f);
-
-                // Selected card always renders on top of overlapping siblings
-                // (dual-row outer cards otherwise hide behind their neighbours).
-                if (selected)
-                {
-                    card.Rect.SetAsLastSibling();
-                    if (card.Label != null) card.Label.transform.SetAsLastSibling();
-                }
+                // No sibling reordering — preserve back-row perspective
+                // (Astrologer/Gunslinger stay behind their neighbours).
             }
         }
 
