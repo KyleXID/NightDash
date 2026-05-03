@@ -26,6 +26,9 @@ namespace NightDash.Runtime.UI
         private const float  CardHeight         = 240f;
         private const float  CardSelectedScale  = 1.08f;
         private const float  CardUnselectedScale = 1.0f;
+        // Selected card boosts its base brightness so it reads brighter
+        // even though both states share the same warmth wash.
+        private const float  CardSelectedBrightness = 1.30f;
         private const float  IdleTimeScale      = 1.0f;
 
         // Campfire center. Cards split into left (4) and right (3) groups so
@@ -94,15 +97,16 @@ namespace NightDash.Runtime.UI
         private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
 
-        // Per-card warmth wash. Cards near the fire pick up an orange tint;
-        // cards far away stay desaturated. Tint magnitude pulses gently so
-        // the lit faces look like they're flickering with the fire.
-        private const float CardLightFalloffPx    = 700f;  // max distance with any influence
+        // Per-card warmth wash. Both selected and unselected cards receive
+        // the same warm add — only the base brightness differs. Gradient is
+        // ease-out so cards close to the fire stay bright longer before
+        // falling off.
+        private const float CardLightFalloffPx    = 800f;
         private const float CardLightPulseHz      = 1.0f;
-        private const float CardLightPulseMin     = 0.85f;
-        private const float CardLightPulseMax     = 1.10f;
-        private static readonly Color CardWarmAddSelected   = new Color(0.40f, 0.20f, 0.05f, 0f);
-        private static readonly Color CardWarmAddUnselected = new Color(0.55f, 0.28f, 0.08f, 0f);
+        private const float CardLightPulseMin     = 0.88f;
+        private const float CardLightPulseMax     = 1.12f;
+        private const float CardWarmGradientPower = 0.7f; // < 1 = ease-out
+        private static readonly Color CardWarmAdd = new Color(0.65f, 0.32f, 0.08f, 0f);
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
@@ -509,11 +513,18 @@ namespace NightDash.Runtime.UI
                 if (card.Image == null || card.Rect == null) continue;
                 bool selected = i == _classIndex;
 
+                // Distance-based proximity, then ease-out so close cards
+                // hold near-1 longer before the gradient drops.
                 float dist = Vector2.Distance(card.Rect.anchoredPosition, CampfireSpriteCenter);
                 float proximity = Mathf.Clamp01(1f - dist / CardLightFalloffPx);
+                float gradient = Mathf.Pow(proximity, CardWarmGradientPower);
 
-                Color baseTint = selected ? CardSelectedTint : CardUnselectedTint;
-                Color warmAdd = (selected ? CardWarmAddSelected : CardWarmAddUnselected) * (proximity * pulse);
+                // Same warmth add for everyone; base brightness differentiates
+                // the selected card.
+                Color baseTint = selected
+                    ? CardUnselectedTint * CardSelectedBrightness
+                    : CardUnselectedTint;
+                Color warmAdd = CardWarmAdd * (gradient * pulse);
                 Color final = baseTint + warmAdd;
                 final.a = 1f;
                 card.Image.color = final;
