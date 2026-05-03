@@ -47,13 +47,13 @@ namespace NightDash.Runtime.UI
         //   4 Priest,     5 Archer, 6 Gunslinger
         private static readonly Vector2[] CardOffsets = new Vector2[]
         {
-            new Vector2(-440f, -260f), // 0 Astrologer (outer-back, left)
-            new Vector2(-520f, -110f), // 1 Mage (back row, near Warrior)
-            new Vector2(-370f,  -50f), // 2 Warrior
-            new Vector2(-170f,    0f), // 3 Paladin (closest to fire, left)
-            new Vector2( 170f,    0f), // 4 Priest  (closest to fire, right)
+            new Vector2(-300f, -240f), // 0 Astrologer (back row, between Warrior & Mage, closer to fire)
+            new Vector2(-170f,    0f), // 1 Mage (closest to fire on left)
+            new Vector2(-370f,  -50f), // 2 Warrior (middle of left front row)
+            new Vector2(-570f, -110f), // 3 Paladin (outermost left, furthest from fire)
+            new Vector2( 170f,    0f), // 4 Priest  (closest to fire on right)
             new Vector2( 370f,  -50f), // 5 Archer
-            new Vector2( 440f, -260f), // 6 Gunslinger (outer-back, right)
+            new Vector2( 300f, -240f), // 6 Gunslinger (back row, mirror of Astrologer)
         };
 
         private static readonly Color CardSelectedTint   = Color.white;
