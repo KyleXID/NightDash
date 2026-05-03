@@ -3,6 +3,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System;
 using NightDash.Runtime.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace NightDash.Runtime
 {
@@ -55,19 +58,10 @@ namespace NightDash.Runtime
             if (_lobbyUi != null)
             {
                 _lobbyUi.SetLobbyVisible(false);
-                if (titleTexture == null)
-                {
-                    titleTexture = _lobbyUi.TitleTexture;
-                }
-
-                if (logoTexture == null)
-                {
-                    logoTexture = _lobbyUi.TitleLogoTexture;
-                }
             }
 
-            // Resources fallback so the title works without inspector setup
-            // when assets are placed under Resources/NightDash/UI/Title/.
+            // Resources first — these are the latest authored assets.
+            // Lobby UI fallback only kicks in when Resources are missing.
             if (titleTexture == null)
             {
                 titleTexture = Resources.Load<Texture2D>("NightDash/UI/Title/title_screen_background");
@@ -75,6 +69,11 @@ namespace NightDash.Runtime
             if (logoTexture == null)
             {
                 logoTexture = Resources.Load<Texture2D>("NightDash/UI/Title/nightdash_logo");
+            }
+            if (_lobbyUi != null)
+            {
+                if (titleTexture == null) titleTexture = _lobbyUi.TitleTexture;
+                if (logoTexture == null) logoTexture = _lobbyUi.TitleLogoTexture;
             }
 
             EnsureEventSystem();
@@ -105,18 +104,27 @@ namespace NightDash.Runtime
             // Only this screen owns input while it is the topmost context.
             if (NightDashInputContextStack.Top != NightDashInputContext.Title) return;
 
-            if (NightDashUIInputRuntime.UpPressedThisFrame)
-            {
-                SelectIndex(_selectedIndex - 1);
-            }
-            else if (NightDashUIInputRuntime.DownPressedThisFrame)
-            {
-                SelectIndex(_selectedIndex + 1);
-            }
-            else if (NightDashUIInputRuntime.ConfirmPressedThisFrame)
-            {
-                ClickSelected();
-            }
+            // Direct keyboard polling — avoids Update-order dependency on
+            // NightDashUIInputRuntime and works whether or not Input System
+            // UI Module's default actions are wired up.
+            bool up, down, confirm;
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            up = kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame;
+            down = kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame;
+            confirm = kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame
+                      || kb.numpadEnterKey.wasPressedThisFrame;
+#else
+            up = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
+            down = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
+            confirm = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)
+                      || Input.GetKeyDown(KeyCode.KeypadEnter);
+#endif
+
+            if (up) SelectIndex(_selectedIndex - 1);
+            else if (down) SelectIndex(_selectedIndex + 1);
+            else if (confirm) ClickSelected();
         }
 
         private void SelectIndex(int next)
@@ -191,12 +199,20 @@ namespace NightDash.Runtime
 
             if (logoTexture != null)
             {
+                // Logo: top-center anchor, native aspect ratio preserved.
+                // Height fixed at 220px; width derived from texture proportions
+                // so 256x128 source renders at 440x220 without squashing.
                 var logoRect = CreateRect("TitleLogo", gameObject.transform);
-                logoRect.anchorMin = new Vector2(1f, 1f);
-                logoRect.anchorMax = new Vector2(1f, 1f);
-                logoRect.pivot = new Vector2(1f, 1f);
-                logoRect.anchoredPosition = new Vector2(-40f, -30f);
-                logoRect.sizeDelta = new Vector2(460f, 180f);
+                logoRect.anchorMin = new Vector2(0.5f, 1f);
+                logoRect.anchorMax = new Vector2(0.5f, 1f);
+                logoRect.pivot = new Vector2(0.5f, 1f);
+                logoRect.anchoredPosition = new Vector2(0f, -50f);
+
+                const float logoHeight = 220f;
+                float aspect = logoTexture.height > 0
+                    ? (float)logoTexture.width / logoTexture.height
+                    : 2f;
+                logoRect.sizeDelta = new Vector2(logoHeight * aspect, logoHeight);
 
                 var logoImage = logoRect.gameObject.AddComponent<RawImage>();
                 logoImage.texture = logoTexture;
