@@ -91,16 +91,26 @@ namespace NightDash.Runtime.UI
         private Image _glowHaloImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        // Glow is rendered above cards as a soft light wash; pulse is gentle
-        // so the wash feels like flickering ambient light, not a pulsating blob.
-        private const float GlowPulseHz         = 1.0f;
-        private const float GlowAlphaMin        = 0.18f;
-        private const float GlowAlphaMax        = 0.34f;
-        private const float GlowScaleMin        = 0.97f;
-        private const float GlowScaleMax        = 1.04f;
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -200f);
+        // Faint halo around the fire only — the real "light cast" effect is
+        // done via per-card warmth tint based on distance from the campfire.
+        private const float GlowPulseHz         = 1.2f;
+        private const float GlowAlphaMin        = 0.06f;
+        private const float GlowAlphaMax        = 0.12f;
+        private const float GlowScaleMin        = 0.96f;
+        private const float GlowScaleMax        = 1.05f;
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -160f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
-        private static readonly Vector2 GlowHaloSize         = new Vector2(900f, 900f);
+        private static readonly Vector2 GlowHaloSize         = new Vector2(420f, 420f);
+
+        // Per-card warmth wash. Cards near the fire pick up an orange tint;
+        // cards far away stay desaturated. Tint magnitude pulses gently so
+        // the lit faces look like they're flickering with the fire.
+        private const float CardLightFalloffPx    = 700f;  // max distance with any influence
+        private const float CardLightPulseHz      = 1.0f;
+        private const float CardLightPulseMin     = 0.85f;
+        private const float CardLightPulseMax     = 1.10f;
+        private static readonly Color CardWarmAddSelected   = new Color(0.40f, 0.20f, 0.05f, 0f);
+        private static readonly Color CardWarmAddUnselected = new Color(0.55f, 0.28f, 0.08f, 0f);
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
@@ -511,6 +521,7 @@ namespace NightDash.Runtime.UI
             _animTime += Time.unscaledDeltaTime;
             TickCardIdle();
             TickCampfire();
+            TickCardLighting();
 
             ReadInput(out bool left, out bool right, out bool up, out bool down, out bool confirm, out bool cancel);
 
@@ -520,6 +531,32 @@ namespace NightDash.Runtime.UI
             else if (down)  { MoveStage(+1); }
             else if (confirm) { StartRun(); }
             else if (cancel)  { BackToTitle(); }
+        }
+
+        // Per-card warmth wash — simulates fire light on each character without
+        // relying on a single halo sprite. Cards closer to the fire get more
+        // orange added on top of their selection base color; the magnitude
+        // pulses gently with the fire's rhythm.
+        private void TickCardLighting()
+        {
+            float pulseT = 0.5f + 0.5f * Mathf.Sin(_animTime * CardLightPulseHz * Mathf.PI * 2f);
+            float pulse = Mathf.Lerp(CardLightPulseMin, CardLightPulseMax, pulseT);
+
+            for (int i = 0; i < _cards.Count; i++)
+            {
+                var card = _cards[i];
+                if (card.Image == null || card.Rect == null) continue;
+                bool selected = i == _classIndex;
+
+                float dist = Vector2.Distance(card.Rect.anchoredPosition, CampfireSpriteCenter);
+                float proximity = Mathf.Clamp01(1f - dist / CardLightFalloffPx);
+
+                Color baseTint = selected ? CardSelectedTint : CardUnselectedTint;
+                Color warmAdd = (selected ? CardWarmAddSelected : CardWarmAddUnselected) * (proximity * pulse);
+                Color final = baseTint + warmAdd;
+                final.a = 1f;
+                card.Image.color = final;
+            }
         }
 
         private void TickCampfire()
@@ -619,7 +656,9 @@ namespace NightDash.Runtime.UI
                 var card = _cards[i];
                 if (card.Image == null || card.Rect == null) continue;
                 bool selected = i == _classIndex;
-                card.Image.color = selected ? CardSelectedTint : CardUnselectedTint;
+                // Image.color is updated every frame by TickCardLighting; we
+                // intentionally don't set it here so the selection change
+                // doesn't fight the warmth pulse.
                 if (card.Label != null)
                 {
                     var c = card.Label.color;
