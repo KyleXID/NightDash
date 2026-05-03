@@ -93,11 +93,11 @@ namespace NightDash.Runtime.UI
         private Image _campfireImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        // Pinned at Y = -120 (canvas-center anchored). Do not edit unless you
+        // Pinned at Y = -160 (canvas-center anchored). Do not edit unless you
         // also intend to move the campfire sprite itself — the environment
         // warmth center (_FireCenterUV) and the per-card distance falloff are
         // tuned independently and should not pull this value with them.
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -160f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
 
         // Tight halo right around the flames — small radius, soft pulse.
@@ -624,14 +624,21 @@ namespace NightDash.Runtime.UI
 
         private void TickCampfire()
         {
-            // Frame swap (uniform fps loop).
-            if (_campfireImage != null && _campfireFrames != null && _campfireFrames.Length > 0)
-            {
-                int idx = Mathf.FloorToInt(_animTime * CampfireFps) % _campfireFrames.Length;
-                if (idx < 0) idx += _campfireFrames.Length;
-                var s = _campfireFrames[idx];
-                if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
-            }
+            // Frame swap DISABLED — the current PixelLab-generated 7-frame
+            // loop has subtle log/ember position drift between frames that
+            // reads as a "heartbeat" pulsing of the entire campfire body.
+            // Locked to frame_000 (set in BuildCampfire) until frames are
+            // re-generated with reference-locked logs (see Notion: PixelLab
+            // Prompts Title/Logo — "Custom Animation V3 with reference image"
+            // workflow). The glow halo pulse below is the intentional motion.
+            // To re-enable: uncomment the loop below.
+            // if (_campfireImage != null && _campfireFrames != null && _campfireFrames.Length > 0)
+            // {
+            //     int idx = Mathf.FloorToInt(_animTime * CampfireFps) % _campfireFrames.Length;
+            //     if (idx < 0) idx += _campfireFrames.Length;
+            //     var s = _campfireFrames[idx];
+            //     if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
+            // }
 
             // Soft halo right around the flames.
             if (_glowHaloImage != null && _glowHaloRect != null)
