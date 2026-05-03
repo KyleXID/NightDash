@@ -18,6 +18,7 @@ using NightDash.ECS.Components;
 using NightDash.Runtime;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 #endif
 
 namespace NightDash.Runtime.UI
