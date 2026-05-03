@@ -211,22 +211,17 @@ namespace NightDash.Runtime
                 Destroy(child.gameObject);
             }
 
-            // Opaque black layer behind the title illustration. PixelLab's
-            // "OPAQUE" prompt still produced ~18% transparent pixels along
-            // the cliffs/trees silhouette, so without this the gameplay
-            // world bleeds through where alpha < 1.
-            var blackBg = CreateRect("OpaqueBackground", gameObject.transform);
-            var blackImage = blackBg.gameObject.AddComponent<Image>();
-            blackImage.color = Color.black;
-            blackImage.raycastTarget = false;
-            StretchFull(blackBg);
-
             var bg = CreateRect("TitleBackground", gameObject.transform);
             var bgImage = bg.gameObject.AddComponent<RawImage>();
             bgImage.texture = titleTexture;
             bgImage.color = Color.white;
             bgImage.raycastTarget = false;
             StretchFull(bg);
+
+            // Cover-fit the texture: keep native aspect ratio and trim the
+            // longer axis so the rendered image fills the full screen
+            // without horizontal/vertical squashing.
+            ApplyCoverFitUv(bgImage);
 
             if (logoTexture != null)
             {
@@ -417,6 +412,30 @@ namespace NightDash.Runtime
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
+        }
+
+        // Sets RawImage.uvRect so the texture renders in "cover" mode —
+        // native aspect preserved, longer axis trimmed. Centered.
+        private static void ApplyCoverFitUv(RawImage img)
+        {
+            if (img == null || img.texture == null) return;
+            float texAspect = (float)img.texture.width / Mathf.Max(1, img.texture.height);
+            float screenAspect = (float)Screen.width / Mathf.Max(1, Screen.height);
+
+            if (texAspect > screenAspect)
+            {
+                // Texture wider than screen — trim left/right.
+                float fit = screenAspect / texAspect;
+                float pad = (1f - fit) * 0.5f;
+                img.uvRect = new Rect(pad, 0f, fit, 1f);
+            }
+            else
+            {
+                // Texture taller than screen — trim top/bottom.
+                float fit = texAspect / screenAspect;
+                float pad = (1f - fit) * 0.5f;
+                img.uvRect = new Rect(0f, pad, 1f, fit);
+            }
         }
     }
 }
