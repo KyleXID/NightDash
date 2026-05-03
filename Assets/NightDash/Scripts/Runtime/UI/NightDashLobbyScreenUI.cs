@@ -500,23 +500,50 @@ namespace NightDash.Runtime.UI
             SortCardsByDepth();
         }
 
-        // Reorders sibling indices for proper depth + light layering:
-        //   1. Cards by Y (back to front).
-        //   2. Glow halo on top of all cards so light spills over them.
-        //   3. Stage / help labels on the very top.
+        // Reorders sibling indices to compose the lobby with proper depth.
+        // Cards on the far side of the fire (anchoredY above the glow halo,
+        // i.e. visually further from camera) sit BEHIND the halo so light
+        // washes over them. Cards on the near side sit IN FRONT of the halo
+        // so they read as foreground silhouettes the fire is back-lighting.
+        // Final stack (back → front):
+        //   bg → CampfireSprite → back cards (Y desc) → glow halo
+        //   → front cards (Y desc) → stage label → help text
         private void SortCardsByDepth()
         {
+            float glowY = _glowHaloRect != null
+                ? _glowHaloRect.anchoredPosition.y
+                : float.NegativeInfinity;
+
             var sortedIdx = new List<int>(_cards.Count);
             for (int i = 0; i < _cards.Count; i++) sortedIdx.Add(i);
+            // Y descending = back-to-front (higher Y is further from camera).
             sortedIdx.Sort((a, b) =>
                 _cards[b].Rect.anchoredPosition.y.CompareTo(_cards[a].Rect.anchoredPosition.y));
+
+            // 1) Back cards (Y > glowY) become the next siblings in order.
             foreach (int i in sortedIdx)
             {
-                if (_cards[i].Rect != null) _cards[i].Rect.SetAsLastSibling();
+                if (_cards[i].Rect == null) continue;
+                if (_cards[i].Rect.anchoredPosition.y <= glowY) continue;
+                _cards[i].Rect.SetAsLastSibling();
                 if (_cards[i].Label != null) _cards[i].Label.transform.SetAsLastSibling();
             }
 
-            // UI labels stay above the cards so they remain readable.
+            // 2) Halo on top of the back cards so the fire glow spills onto
+            // characters standing on the far side of the campfire.
+            if (_glowHaloRect != null) _glowHaloRect.SetAsLastSibling();
+
+            // 3) Front cards (Y <= glowY) on top of the halo — they occlude
+            // the bloom because they stand between the fire and the camera.
+            foreach (int i in sortedIdx)
+            {
+                if (_cards[i].Rect == null) continue;
+                if (_cards[i].Rect.anchoredPosition.y > glowY) continue;
+                _cards[i].Rect.SetAsLastSibling();
+                if (_cards[i].Label != null) _cards[i].Label.transform.SetAsLastSibling();
+            }
+
+            // UI labels on the very top so they stay readable through bloom.
             if (_stageLabel != null) _stageLabel.transform.SetAsLastSibling();
             var helpText = transform.Find("HelpText");
             if (helpText != null) helpText.SetAsLastSibling();
