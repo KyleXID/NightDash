@@ -28,7 +28,7 @@ namespace NightDash.Runtime.UI
         private const float  CardUnselectedScale = 1.0f;
         // Selected card boosts its base brightness so it reads brighter
         // even though both states share the same warmth wash.
-        private const float  CardSelectedBrightness = 1.65f;
+        private const float  CardSelectedBrightness = 2.05f;
         private const float  IdleTimeScale      = 1.0f;
 
         // Campfire center. Cards split into left (4) and right (3) groups so
@@ -332,31 +332,10 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfire()
         {
-            // Tight halo behind the flame sprite. Small + soft so it reads
-            // as fire bloom, not as a separate glowing object.
-            var glowRect = CreateRect("CampfireGlow", transform);
-            glowRect.anchorMin = glowRect.anchorMax = new Vector2(0.5f, 0.5f);
-            glowRect.pivot = new Vector2(0.5f, 0.5f);
-            glowRect.sizeDelta = GlowHaloSize;
-            glowRect.anchoredPosition = new Vector2(CampfireSpriteCenter.x,
-                                                    CampfireSpriteCenter.y + 20f);
-
-            var glowImage = glowRect.gameObject.AddComponent<Image>();
-            glowImage.preserveAspect = true;
-            glowImage.raycastTarget = false;
-            var glowSprite = Resources.Load<Sprite>("NightDash/UI/Lobby/lobby_campfire_glow_halo");
-            if (glowSprite != null)
-            {
-                glowImage.sprite = glowSprite;
-                glowImage.color = new Color(1f, 0.85f, 0.55f, GlowAlphaMin);
-            }
-            else
-            {
-                glowImage.color = new Color(1f, 0.55f, 0.20f, 0.20f);
-            }
-            _glowHaloRect = glowRect;
-            _glowHaloImage = glowImage;
-
+            // Build the flame sprite first so the glow halo (created next)
+            // becomes a later sibling and renders ON TOP of the sprite.
+            // The halo's additive-feeling alpha pulse then reads as light
+            // spilling forward off the flames, not a disc behind them.
             var fireRect = CreateRect("CampfireSprite", transform);
             fireRect.anchorMin = fireRect.anchorMax = new Vector2(0.5f, 0.5f);
             fireRect.pivot = new Vector2(0.5f, 0.5f);
@@ -377,6 +356,32 @@ namespace NightDash.Runtime.UI
                 fireImage.color = new Color(1f, 0.55f, 0.18f, 0.85f); // visual stub
             }
             _campfireImage = fireImage;
+
+            // Glow halo lifted +60 over the sprite center so it hovers around
+            // the flame tips rather than the log base, and rendered after the
+            // sprite so it sits in front (light reads as foreground bloom).
+            var glowRect = CreateRect("CampfireGlow", transform);
+            glowRect.anchorMin = glowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            glowRect.pivot = new Vector2(0.5f, 0.5f);
+            glowRect.sizeDelta = GlowHaloSize;
+            glowRect.anchoredPosition = new Vector2(CampfireSpriteCenter.x,
+                                                    CampfireSpriteCenter.y + 60f);
+
+            var glowImage = glowRect.gameObject.AddComponent<Image>();
+            glowImage.preserveAspect = true;
+            glowImage.raycastTarget = false;
+            var glowSprite = Resources.Load<Sprite>("NightDash/UI/Lobby/lobby_campfire_glow_halo");
+            if (glowSprite != null)
+            {
+                glowImage.sprite = glowSprite;
+                glowImage.color = new Color(1f, 0.85f, 0.55f, GlowAlphaMin);
+            }
+            else
+            {
+                glowImage.color = new Color(1f, 0.55f, 0.20f, 0.20f);
+            }
+            _glowHaloRect = glowRect;
+            _glowHaloImage = glowImage;
         }
 
         private static Sprite[] LoadCampfireFrames()
