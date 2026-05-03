@@ -798,9 +798,18 @@ namespace NightDash.Runtime.UI
             bool applied = RunSelectionLobbyWorldBridge.TryApplySelectionToCurrentWorld(stageId, classId);
             NightDashLog.Info($"[NightDash] Lobby Start: stage='{stageId}', class='{classId}', applied={applied}.");
 
-            // Resume sim, restore gameplay views, hide self.
+            // Resume sim, restore gameplay views, hand off input context.
             Time.timeScale = 1f;
             RestoreGameplayViews();
+
+            // Explicitly hand off the input context to Playing BEFORE we
+            // disable. OnDisable's Pop(Lobby) below will silently no-op
+            // because Top is now Playing — that's the intended invariant.
+            // Without this Push, ESC during gameplay has nothing to bind
+            // to and the Pause Menu would never trigger (silent failure).
+            NightDashInputContextStack.Pop(NightDashInputContext.Lobby);
+            NightDashInputContextStack.Push(NightDashInputContext.Playing);
+
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Playing);
             gameObject.SetActive(false);
         }
@@ -808,6 +817,11 @@ namespace NightDash.Runtime.UI
         private void BackToTitle()
         {
             // Title screen handles its own pause + view-hide on enable.
+            // Pop Lobby first so Title.OnEnable's Push(Title) lands on a
+            // clean stack — otherwise OnDisable's Pop(Lobby) would silently
+            // fail (Top would already be Title) and Lobby would leak.
+            NightDashInputContextStack.Pop(NightDashInputContext.Lobby);
+
             var title = FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
             if (title != null) title.gameObject.SetActive(true);
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Title);
