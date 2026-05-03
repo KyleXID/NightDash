@@ -50,7 +50,7 @@ namespace NightDash.Runtime.UI
             new Vector2(-260f, -240f), // 0 Astrologer (back row, closer to fire)
             new Vector2(-170f,    0f), // 1 Mage (closest to fire on left)
             new Vector2(-340f,  -50f), // 2 Warrior (closer to fire than before)
-            new Vector2(-570f, -150f), // 3 Paladin (outermost left, slightly lower)
+            new Vector2(-480f, -210f), // 3 Paladin (outer-left, lower + closer to fire)
             new Vector2( 170f,    0f), // 4 Priest (closest to fire on right)
             new Vector2( 370f,  -50f), // 5 Archer
             new Vector2( 260f, -240f), // 6 Gunslinger (back row, mirror of Astrologer)
@@ -234,13 +234,14 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfirePlaceholder()
         {
-            // Phase 1 placeholder: a small warm dot at the campfire center
-            // where the animated sprite + glow halo will land in Phase 2.
+            // Phase 1 placeholder: a small warm dot below the card row where
+            // the animated campfire sprite will sit in Phase 2. Independent
+            // Y from CampfireCenter (which is the card layout anchor).
             var rect = CreateRect("CampfirePlaceholder", transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(120f, 160f);
-            rect.anchoredPosition = CampfireCenter;
+            rect.anchoredPosition = new Vector2(CampfireCenter.x, -240f);
 
             var img = rect.gameObject.AddComponent<Image>();
             img.color = new Color(1f, 0.55f, 0.18f, 0.85f);
