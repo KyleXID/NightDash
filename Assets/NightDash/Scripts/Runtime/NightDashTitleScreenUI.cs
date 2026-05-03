@@ -25,6 +25,8 @@ namespace NightDash.Runtime
 
         private RunSelectionLobbyUI _lobbyUi;
         private GameObject _firstButton;
+        private readonly GameObject[] _menuButtons = new GameObject[4];
+        private int _selectedIndex;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
@@ -98,6 +100,49 @@ namespace NightDash.Runtime
             NightDashInputContextStack.Pop(NightDashInputContext.Title);
         }
 
+        private void Update()
+        {
+            // Only this screen owns input while it is the topmost context.
+            if (NightDashInputContextStack.Top != NightDashInputContext.Title) return;
+
+            if (NightDashUIInputRuntime.UpPressedThisFrame)
+            {
+                SelectIndex(_selectedIndex - 1);
+            }
+            else if (NightDashUIInputRuntime.DownPressedThisFrame)
+            {
+                SelectIndex(_selectedIndex + 1);
+            }
+            else if (NightDashUIInputRuntime.ConfirmPressedThisFrame)
+            {
+                ClickSelected();
+            }
+        }
+
+        private void SelectIndex(int next)
+        {
+            int len = _menuButtons.Length;
+            if (len == 0) return;
+            _selectedIndex = ((next % len) + len) % len;
+            var go = _menuButtons[_selectedIndex];
+            if (go != null && EventSystem.current != null)
+            {
+                EventSystem.current.SetSelectedGameObject(go);
+            }
+        }
+
+        private void ClickSelected()
+        {
+            if (_selectedIndex < 0 || _selectedIndex >= _menuButtons.Length) return;
+            var go = _menuButtons[_selectedIndex];
+            if (go == null) return;
+            var btn = go.GetComponent<Button>();
+            if (btn != null && btn.interactable)
+            {
+                btn.onClick.Invoke();
+            }
+        }
+
         public void SetTitleTexture(Texture2D texture)
         {
             titleTexture = texture;
@@ -158,39 +203,32 @@ namespace NightDash.Runtime
                 logoImage.color = Color.white;
             }
 
-            // 4-button vertical stack centered horizontally, anchored to lower
-            // third of the screen. EventSystem handles arrow-key navigation
-            // automatically once first selection is set in OnEnable.
-            const float buttonWidth = 460f;
-            const float buttonHeight = 90f;
-            const float buttonSpacing = 14f;
-            const float bottomY = 0.32f; // anchor of the bottom button
+            // 4-button vertical stack. Absolute pixel offsets from screen
+            // center keep layout predictable across CanvasScaler match modes
+            // and Pixel Perfect Camera. First button at -150 below center,
+            // each subsequent button 110px lower.
+            _menuButtons[0] = CreateMenuButton("StartButton", ButtonStartLabel, 0, OnStartClicked);
+            _menuButtons[1] = CreateMenuButton("ContinueButton", ButtonContinueLabel, 1, OnContinueClicked);
+            _menuButtons[2] = CreateMenuButton("SettingsButton", ButtonSettingsLabel, 2, OnSettingsClicked);
+            _menuButtons[3] = CreateMenuButton("QuitButton", ButtonQuitLabel, 3, OnQuitClicked);
 
-            var startBtn = CreateMenuButton("StartButton", ButtonStartLabel,
-                new Vector2(0.5f, bottomY + 3f * (buttonHeight + buttonSpacing) / referenceResolution.y),
-                new Vector2(buttonWidth, buttonHeight), OnStartClicked);
-            CreateMenuButton("ContinueButton", ButtonContinueLabel,
-                new Vector2(0.5f, bottomY + 2f * (buttonHeight + buttonSpacing) / referenceResolution.y),
-                new Vector2(buttonWidth, buttonHeight), OnContinueClicked);
-            CreateMenuButton("SettingsButton", ButtonSettingsLabel,
-                new Vector2(0.5f, bottomY + 1f * (buttonHeight + buttonSpacing) / referenceResolution.y),
-                new Vector2(buttonWidth, buttonHeight), OnSettingsClicked);
-            CreateMenuButton("QuitButton", ButtonQuitLabel,
-                new Vector2(0.5f, bottomY),
-                new Vector2(buttonWidth, buttonHeight), OnQuitClicked);
-
-            _firstButton = startBtn;
+            _firstButton = _menuButtons[0];
+            _selectedIndex = 0;
         }
 
-        // Returns the GameObject so the caller can set first-selection target.
-        private GameObject CreateMenuButton(string name, string label, Vector2 anchor, Vector2 size, UnityEngine.Events.UnityAction onClick)
+        // Returns the GameObject so the caller can populate _menuButtons.
+        private GameObject CreateMenuButton(string name, string label, int slotIndex, UnityEngine.Events.UnityAction onClick)
         {
+            const float buttonWidth = 460f;
+            const float buttonHeight = 90f;
+            const float buttonSpacing = 20f;
+            const float topY = -150f; // first button below screen center
+
             var rect = CreateRect(name, gameObject.transform);
-            rect.anchorMin = anchor;
-            rect.anchorMax = anchor;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = size;
-            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(buttonWidth, buttonHeight);
+            rect.anchoredPosition = new Vector2(0f, topY - slotIndex * (buttonHeight + buttonSpacing));
 
             var image = rect.gameObject.AddComponent<Image>();
             image.color = Color.white;
