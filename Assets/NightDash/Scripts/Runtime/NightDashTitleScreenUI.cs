@@ -65,16 +65,16 @@ namespace NightDash.Runtime
                 _lobbyUi.enabled = false;
             }
 
-            // Resources first — these are the latest authored assets.
-            // Lobby UI fallback only kicks in when Resources are missing.
-            if (titleTexture == null)
-            {
-                titleTexture = Resources.Load<Texture2D>("NightDash/UI/Title/title_screen_background");
-            }
-            if (logoTexture == null)
-            {
-                logoTexture = Resources.Load<Texture2D>("NightDash/UI/Title/nightdash_logo");
-            }
+            // Resources are the latest authored assets and ALWAYS win when
+            // present. SerializeField values (e.g. baked by
+            // NightDashBootstrapSceneSetup) and lobby-UI fallback are used
+            // only when Resources are missing.
+            var resTitle = Resources.Load<Texture2D>("NightDash/UI/Title/title_screen_background");
+            if (resTitle != null) titleTexture = resTitle;
+
+            var resLogo = Resources.Load<Texture2D>("NightDash/UI/Title/nightdash_logo");
+            if (resLogo != null) logoTexture = resLogo;
+
             if (_lobbyUi != null)
             {
                 if (titleTexture == null) titleTexture = _lobbyUi.TitleTexture;
