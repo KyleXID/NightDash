@@ -305,15 +305,8 @@ namespace NightDash.Runtime
                 Destroy(child.gameObject);
             }
 
-            // Dim violet base layer behind the illustration. Fills any
-            // transparent regions of the PNG with a tone that blends naturally
-            // with the dark fantasy sky palette (instead of a harsh black).
-            var baseLayer = CreateRect("BaseLayer", gameObject.transform);
-            var baseImage = baseLayer.gameObject.AddComponent<Image>();
-            baseImage.color = new Color(0.10f, 0.05f, 0.18f, 1f);
-            baseImage.raycastTarget = false;
-            StretchFull(baseLayer);
-
+            // PNG is alpha-trimmed externally so we no longer need a base
+            // layer. Cover-fit the trimmed illustration over the full screen.
             var bg = CreateRect("TitleBackground", gameObject.transform);
             var bgImage = bg.gameObject.AddComponent<RawImage>();
             bgImage.texture = titleTexture;
