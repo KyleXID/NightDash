@@ -47,14 +47,33 @@ namespace NightDash.Runtime.UI
         //   4 Priest,     5 Archer, 6 Gunslinger
         private static readonly Vector2[] CardOffsets = new Vector2[]
         {
-            new Vector2(-300f, -240f), // 0 Astrologer (back row, between Warrior & Mage, closer to fire)
+            new Vector2(-260f, -240f), // 0 Astrologer (back row, closer to fire)
             new Vector2(-170f,    0f), // 1 Mage (closest to fire on left)
-            new Vector2(-370f,  -50f), // 2 Warrior (middle of left front row)
-            new Vector2(-570f, -110f), // 3 Paladin (outermost left, furthest from fire)
-            new Vector2( 170f,    0f), // 4 Priest  (closest to fire on right)
+            new Vector2(-340f,  -50f), // 2 Warrior (closer to fire than before)
+            new Vector2(-570f, -150f), // 3 Paladin (outermost left, slightly lower)
+            new Vector2( 170f,    0f), // 4 Priest (closest to fire on right)
             new Vector2( 370f,  -50f), // 5 Archer
-            new Vector2( 300f, -240f), // 6 Gunslinger (back row, mirror of Astrologer)
+            new Vector2( 260f, -240f), // 6 Gunslinger (back row, mirror of Astrologer)
         };
+
+        // Navigation sequence — visual left-to-right flow across cards.
+        // Hand-authored so arrow keys traverse front row first, then back-row
+        // dead-ends. No wrap-around at either end.
+        //   <-: Warrior -> Paladin -> Astrologer | (cannot go further)
+        //   ->: Warrior -> Mage -> Priest -> Archer -> Gunslinger | (cannot go further)
+        // Numbers are DataCatalog.classes indices (0=Astrologer, 1=Mage,
+        // 2=Warrior, 3=Paladin, 4=Priest, 5=Archer, 6=Gunslinger).
+        private static readonly int[] NavOrder = new int[]
+        {
+            0, // Astrologer (leftmost end)
+            3, // Paladin
+            2, // Warrior (default start)
+            1, // Mage
+            4, // Priest
+            5, // Archer
+            6, // Gunslinger (rightmost end)
+        };
+        private const int DefaultNavIndex = 2; // -> Warrior
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -68,7 +87,8 @@ namespace NightDash.Runtime.UI
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
-        private int _classIndex;
+        private int _classIndex; // index into _cards / DataCatalog.classes
+        private int _navIndex;   // index into NavOrder
         private int _stageIndex;
         private bool _initialized;
         private float _animTime;
@@ -123,10 +143,13 @@ namespace NightDash.Runtime.UI
                 _legacyLobbyUi.enabled = false;
             }
 
-            // Restore previous selection (PlayerPrefs-backed).
-            RunSelectionSession.GetCurrent(out string savedStage, out string savedClass);
-            _classIndex = FindClassIndex(savedClass);
+            // Stage selection restores from PlayerPrefs as before, but
+            // character always starts on Warrior per design — explicit
+            // mid-row anchor for arrow-key navigation.
+            RunSelectionSession.GetCurrent(out string savedStage, out _);
             _stageIndex = FindStageIndex(savedStage);
+            _navIndex = DefaultNavIndex;
+            _classIndex = NavOrder[_navIndex];
             ApplySelectionVisuals();
             _animTime = 0f;
         }
@@ -409,11 +432,16 @@ namespace NightDash.Runtime.UI
         // ====================================================================
         private void MoveClass(int delta)
         {
-            if (_cards.Count == 0) return;
-            int n = _cards.Count;
-            int prev = _classIndex;
-            _classIndex = ((_classIndex + delta) % n + n) % n;
-            if (_classIndex != prev) _animTime = 0f; // restart idle from frame 0
+            if (_cards.Count == 0 || NavOrder.Length == 0) return;
+            int prevNav = _navIndex;
+            // Hard clamp: no wrap-around at either end of NavOrder.
+            _navIndex = Mathf.Clamp(_navIndex + delta, 0, NavOrder.Length - 1);
+            if (_navIndex == prevNav) return;
+
+            int classIdx = NavOrder[_navIndex];
+            if (classIdx < 0 || classIdx >= _cards.Count) return;
+            _classIndex = classIdx;
+            _animTime = 0f; // restart idle from frame 0
             ApplySelectionVisuals();
         }
 
