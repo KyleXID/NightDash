@@ -9,6 +9,8 @@
 // Player, Projectile) are destroyed wholesale.
 
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 using UnityEngine;
 using NightDash.ECS.Components;
 
@@ -28,10 +30,16 @@ namespace NightDash.Runtime
 
             // 1) Sweep run-spawned entities. Persistent singletons don't
             //    carry these tags so they're untouched.
+            //
+            // PlayerTag is intentionally preserved — NightDashPlayableFallbackSystem
+            // is a one-shot bootstrap (InitializationSystemGroup with Enabled=false
+            // self-disable) so destroying the Player entity here would leave the
+            // next run with no Player and no respawn path. We reset its
+            // CombatStats and LocalTransform instead.
             DestroyEntitiesWith<EnemyTag>(em);
             DestroyEntitiesWith<BossTag>(em);
-            DestroyEntitiesWith<PlayerTag>(em);
             DestroyEntitiesWith<ProjectileData>(em);
+            ResetPlayerForNextRun(em);
 
             // 2) Reset gameplay state singleton (zero IsRunActive / Elapsed /
             //    Level / Experience) via the existing lobby bridge helper.
@@ -64,6 +72,23 @@ namespace NightDash.Runtime
             {
                 em.DestroyEntity(q);
             }
+        }
+
+        // Restores HP to MaxHealth and snaps position to origin so the next
+        // run starts from a clean state without rebuilding the Player entity.
+        private static void ResetPlayerForNextRun(EntityManager em)
+        {
+            using var q = em.CreateEntityQuery(
+                ComponentType.ReadWrite<PlayerTag>(),
+                ComponentType.ReadWrite<CombatStats>(),
+                ComponentType.ReadWrite<LocalTransform>());
+            if (q.IsEmptyIgnoreFilter) return;
+
+            Entity player = q.GetSingletonEntity();
+            CombatStats stats = em.GetComponentData<CombatStats>(player);
+            stats.CurrentHealth = stats.MaxHealth > 0f ? stats.MaxHealth : 100f;
+            em.SetComponentData(player, stats);
+            em.SetComponentData(player, LocalTransform.FromPosition(new float3(0f, 0f, 0f)));
         }
 
         private static void ClearRunNavigationRequest(EntityManager em)

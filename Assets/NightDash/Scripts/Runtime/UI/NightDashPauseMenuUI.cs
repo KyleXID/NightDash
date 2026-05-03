@@ -33,16 +33,23 @@ namespace NightDash.Runtime.UI
         private const string ButtonResumeLabel = "Resume";
         private const string ButtonSettingsLabel = "Settings";
         private const string ButtonReturnLobbyLabel = "Return to Lobby";
+        private const string ButtonReturnTitleLabel = "Return to Title";
         private const string ButtonQuitLabel = "Quit";
 
         // Settings is intentionally disabled in M3 — placeholder until the
         // settings panel ships in a later sprint. Navigation skips it.
-        private static readonly bool[] ButtonEnabled = { true, false, true, true };
+        private const int ButtonCount = 5;
+        private const int IdxResume = 0;
+        private const int IdxSettings = 1;
+        private const int IdxReturnLobby = 2;
+        private const int IdxReturnTitle = 3;
+        private const int IdxQuit = 4;
+        private static readonly bool[] ButtonEnabled = { true, false, true, true, true };
 
         private Canvas _canvas;
         private GameObject _backdrop;
-        private readonly GameObject[] _buttonObjects = new GameObject[4];
-        private readonly Text[] _buttonLabels = new Text[4];
+        private readonly GameObject[] _buttonObjects = new GameObject[ButtonCount];
+        private readonly Text[] _buttonLabels = new Text[ButtonCount];
         private int _selectedIndex;
 
         // Set true when a menu action explicitly hands off ownership of
@@ -50,6 +57,14 @@ namespace NightDash.Runtime.UI
         // true, OnDisable will NOT restore timeScale — letting the next
         // screen apply its own policy.
         private bool _handsOffTimeScale;
+
+        // Confirmation dialog state. Destructive actions (Return to Lobby,
+        // Return to Title, Quit) prompt the user with Yes/No before
+        // committing. Enter = Yes, Esc = No.
+        private GameObject _confirmOverlay;
+        private Text _confirmMessageLabel;
+        private bool _confirmActive;
+        private System.Action _confirmAction;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
@@ -77,6 +92,7 @@ namespace NightDash.Runtime.UI
             EnsurePauseTag();
 
             _handsOffTimeScale = false;
+            HideConfirm(); // Reset any leftover dialog state from a prior session.
             SelectIndex(FirstEnabledIndex());
         }
 
@@ -102,6 +118,22 @@ namespace NightDash.Runtime.UI
 
             ReadKeyboard(out bool up, out bool down, out bool confirm, out bool cancel);
 
+            if (_confirmActive)
+            {
+                // Yes/No prompt — only confirm/cancel are meaningful.
+                if (confirm)
+                {
+                    var action = _confirmAction;
+                    HideConfirm();
+                    action?.Invoke();
+                }
+                else if (cancel)
+                {
+                    HideConfirm();
+                }
+                return;
+            }
+
             if (up) SelectIndex(StepIndex(_selectedIndex, -1));
             else if (down) SelectIndex(StepIndex(_selectedIndex, +1));
             else if (confirm) ClickSelected();
@@ -116,10 +148,17 @@ namespace NightDash.Runtime.UI
         {
             switch (_selectedIndex)
             {
-                case 0: Resume(); break;
-                case 1: /* Settings disabled */ break;
-                case 2: ReturnToLobby(); break;
-                case 3: Quit(); break;
+                case IdxResume: Resume(); break;
+                case IdxSettings: /* Settings disabled */ break;
+                case IdxReturnLobby:
+                    ShowConfirm("Return to Lobby?\nCurrent run will be discarded.", ReturnToLobby);
+                    break;
+                case IdxReturnTitle:
+                    ShowConfirm("Return to Title?\nCurrent run will be discarded.", ReturnToTitle);
+                    break;
+                case IdxQuit:
+                    ShowConfirm("Quit the game?", Quit);
+                    break;
             }
         }
 
@@ -154,6 +193,45 @@ namespace NightDash.Runtime.UI
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
             gameObject.SetActive(false);
             // OnDisable's Pop(Pause) silently no-ops because Top is Lobby.
+        }
+
+        private void ReturnToTitle()
+        {
+            // Same hand-off contract as ReturnToLobby — full teardown +
+            // explicit context unwind — but the next screen is Title.
+            _handsOffTimeScale = true;
+
+            RunTeardownBridge.DestroyCurrentRun();
+
+            NightDashInputContextStack.Pop(NightDashInputContext.Pause);
+            NightDashInputContextStack.Pop(NightDashInputContext.Playing);
+
+            var title = FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
+            if (title != null) title.gameObject.SetActive(true);
+            // Title.OnEnable pushes Title and applies its own timeScale=0
+            // policy + HideGameplayViews.
+
+            NightDashUIScreenRouter.GoTo(NightDashUIScreen.Title);
+            gameObject.SetActive(false);
+        }
+
+        // ====================================================================
+        // Confirmation dialog
+        // ====================================================================
+
+        private void ShowConfirm(string message, System.Action onYes)
+        {
+            _confirmActive = true;
+            _confirmAction = onYes;
+            if (_confirmMessageLabel != null) _confirmMessageLabel.text = message;
+            if (_confirmOverlay != null) _confirmOverlay.SetActive(true);
+        }
+
+        private void HideConfirm()
+        {
+            _confirmActive = false;
+            _confirmAction = null;
+            if (_confirmOverlay != null) _confirmOverlay.SetActive(false);
         }
 
         private static void Quit()
@@ -259,6 +337,7 @@ namespace NightDash.Runtime.UI
             BuildBackdrop();
             BuildTitleLabel();
             BuildButtons();
+            BuildConfirmOverlay();
         }
 
         private void BuildBackdrop()
@@ -299,7 +378,14 @@ namespace NightDash.Runtime.UI
 
         private void BuildButtons()
         {
-            string[] labels = { ButtonResumeLabel, ButtonSettingsLabel, ButtonReturnLobbyLabel, ButtonQuitLabel };
+            string[] labels =
+            {
+                ButtonResumeLabel,
+                ButtonSettingsLabel,
+                ButtonReturnLobbyLabel,
+                ButtonReturnTitleLabel,
+                ButtonQuitLabel,
+            };
 
             const float buttonWidth = 360f;
             const float buttonHeight = 60f;
@@ -344,6 +430,64 @@ namespace NightDash.Runtime.UI
                 _buttonObjects[i] = go;
                 _buttonLabels[i] = text;
             }
+        }
+
+        private void BuildConfirmOverlay()
+        {
+            // Full-screen dim that swallows the menu visually + a centered
+            // message panel with a Yes/No hint. Starts inactive; ShowConfirm
+            // populates the message and toggles it on.
+            var root = new GameObject("ConfirmOverlay");
+            var rootRect = root.AddComponent<RectTransform>();
+            rootRect.SetParent(transform, false);
+            rootRect.anchorMin = Vector2.zero;
+            rootRect.anchorMax = Vector2.one;
+            rootRect.offsetMin = Vector2.zero;
+            rootRect.offsetMax = Vector2.zero;
+
+            var dim = root.AddComponent<Image>();
+            dim.color = new Color(0f, 0f, 0f, 0.78f);
+            dim.raycastTarget = true;
+
+            var msgGo = new GameObject("Message");
+            var msgRect = msgGo.AddComponent<RectTransform>();
+            msgRect.SetParent(rootRect, false);
+            msgRect.anchorMin = new Vector2(0.5f, 0.5f);
+            msgRect.anchorMax = new Vector2(0.5f, 0.5f);
+            msgRect.pivot = new Vector2(0.5f, 0.5f);
+            msgRect.sizeDelta = new Vector2(900f, 220f);
+            msgRect.anchoredPosition = new Vector2(0f, 30f);
+
+            var msgText = msgGo.AddComponent<Text>();
+            msgText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            msgText.fontSize = 44;
+            msgText.fontStyle = FontStyle.Bold;
+            msgText.alignment = TextAnchor.MiddleCenter;
+            msgText.color = new Color(1f, 0.92f, 0.78f, 1f);
+            msgText.raycastTarget = false;
+            msgText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            msgText.verticalOverflow = VerticalWrapMode.Overflow;
+
+            var hintGo = new GameObject("Hint");
+            var hintRect = hintGo.AddComponent<RectTransform>();
+            hintRect.SetParent(rootRect, false);
+            hintRect.anchorMin = new Vector2(0.5f, 0.5f);
+            hintRect.anchorMax = new Vector2(0.5f, 0.5f);
+            hintRect.pivot = new Vector2(0.5f, 0.5f);
+            hintRect.sizeDelta = new Vector2(900f, 60f);
+            hintRect.anchoredPosition = new Vector2(0f, -120f);
+
+            var hintText = hintGo.AddComponent<Text>();
+            hintText.text = "Enter: Yes        Esc: No";
+            hintText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hintText.fontSize = 26;
+            hintText.alignment = TextAnchor.MiddleCenter;
+            hintText.color = new Color(0.78f, 0.74f, 0.68f, 1f);
+            hintText.raycastTarget = false;
+
+            _confirmOverlay = root;
+            _confirmMessageLabel = msgText;
+            root.SetActive(false);
         }
 
         private void SelectIndex(int idx)
