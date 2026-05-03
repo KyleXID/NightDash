@@ -58,6 +58,11 @@ namespace NightDash.Runtime
             if (_lobbyUi != null)
             {
                 _lobbyUi.SetLobbyVisible(false);
+                // SetLobbyVisible only hides the lobby panel; the OnGUI loop
+                // still draws the legacy title texture each frame and covers
+                // our Canvas. Disabling the component stops OnGUI entirely
+                // until Start is clicked.
+                _lobbyUi.enabled = false;
             }
 
             // Resources first — these are the latest authored assets.
@@ -281,7 +286,11 @@ namespace NightDash.Runtime
             // preserved for backwards compatibility until M2 swaps it for
             // a router-driven panel.
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
-            if (_lobbyUi != null) _lobbyUi.SetLobbyVisible(true);
+            if (_lobbyUi != null)
+            {
+                _lobbyUi.enabled = true; // re-enable OnGUI for lobby drawing
+                _lobbyUi.SetLobbyVisible(true);
+            }
             gameObject.SetActive(false);
             NightDashLog.Info("[NightDash] Title Start clicked (Canvas UI).");
         }
