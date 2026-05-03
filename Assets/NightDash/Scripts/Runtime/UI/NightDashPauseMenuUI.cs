@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using NightDash.ECS.Components;
+using NightDash.Runtime;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -129,16 +130,29 @@ namespace NightDash.Runtime.UI
 
         private void ReturnToLobby()
         {
-            // Phase 4 will route through RunTeardownBridge.DestroyCurrentRun()
-            // before activating Lobby. For now this is a soft transition that
-            // hides the pause menu and surfaces Lobby — entities from the run
-            // are NOT yet cleaned up. TODO(M3 Phase 4): wire teardown bridge.
+            // Hand off Time.timeScale ownership to Lobby. OnDisable will
+            // skip the 1x restore so Lobby.OnEnable's timeScale=0 sticks.
             _handsOffTimeScale = true;
+
+            // Sweep run-spawned entities, reset GameLoopState, clear pending
+            // navigation, drop pooled views. Persistent singletons survive.
+            RunTeardownBridge.DestroyCurrentRun();
+
+            // Explicit context cleanup. Pop Pause AND Playing — we're
+            // abandoning the gameplay session entirely. Without the Playing
+            // pop, the stack would leak [Playing, Lobby] and the next ESC
+            // during gameplay would not even fire (already-in-Pause guard
+            // would think we're nested).
+            NightDashInputContextStack.Pop(NightDashInputContext.Pause);
+            NightDashInputContextStack.Pop(NightDashInputContext.Playing);
 
             var lobby = FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
             if (lobby != null) lobby.gameObject.SetActive(true);
+            // Lobby.OnEnable now pushes Lobby and applies timeScale=0.
+
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
             gameObject.SetActive(false);
+            // OnDisable's Pop(Pause) silently no-ops because Top is Lobby.
         }
 
         private static void Quit()
