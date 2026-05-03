@@ -295,8 +295,6 @@ namespace NightDash.Runtime.UI
                     IdleClip = idleClips[i],
                     FacesLeft = i > median,
                 });
-
-                cursor += widths[i] + CardSpacing;
             }
         }
 
