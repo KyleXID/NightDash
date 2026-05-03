@@ -427,19 +427,23 @@ namespace NightDash.Runtime
 
         private void OnStartClicked()
         {
-            // Route through M0 ScreenRouter; lobby UI's existing toggle is
-            // preserved for backwards compatibility until M2 swaps it for
-            // a router-driven panel.
+            // Hand off to NightDashLobbyScreenUI (M2). The legacy
+            // RunSelectionLobbyUI stays disabled — it draws via OnGUI and
+            // would otherwise overlay the new Canvas lobby.
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
-            if (_lobbyUi != null)
+            var lobby = FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
+            if (lobby != null)
             {
-                _lobbyUi.enabled = true; // re-enable OnGUI for lobby drawing
-                _lobbyUi.SetLobbyVisible(true);
+                lobby.gameObject.SetActive(true);
             }
-            // Resume time so gameplay simulation can run once the player
-            // confirms a class/stage. Title's freeze ends here.
-            Time.timeScale = 1f;
-            RestoreGameplayViews();
+            else if (_lobbyUi != null)
+            {
+                // Fallback: legacy lobby if Canvas one is missing.
+                _lobbyUi.enabled = true;
+                _lobbyUi.SetLobbyVisible(true);
+                Time.timeScale = 1f;
+                RestoreGameplayViews();
+            }
             gameObject.SetActive(false);
             NightDashLog.Info("[NightDash] Title Start clicked (Canvas UI).");
         }
