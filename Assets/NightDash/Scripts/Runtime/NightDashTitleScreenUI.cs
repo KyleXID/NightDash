@@ -329,7 +329,7 @@ namespace NightDash.Runtime
                 logoRect.pivot = new Vector2(0.5f, 1f);
                 logoRect.anchoredPosition = new Vector2(0f, -60f);
 
-                const float logoHeight = 280f;
+                const float logoHeight = 360f;
                 float aspect = logoTexture.height > 0
                     ? (float)logoTexture.width / logoTexture.height
                     : 2f;
