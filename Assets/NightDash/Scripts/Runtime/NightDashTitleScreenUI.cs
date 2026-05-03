@@ -211,10 +211,21 @@ namespace NightDash.Runtime
                 Destroy(child.gameObject);
             }
 
+            // Opaque black layer behind the title illustration. PixelLab's
+            // "OPAQUE" prompt still produced ~18% transparent pixels along
+            // the cliffs/trees silhouette, so without this the gameplay
+            // world bleeds through where alpha < 1.
+            var blackBg = CreateRect("OpaqueBackground", gameObject.transform);
+            var blackImage = blackBg.gameObject.AddComponent<Image>();
+            blackImage.color = Color.black;
+            blackImage.raycastTarget = false;
+            StretchFull(blackBg);
+
             var bg = CreateRect("TitleBackground", gameObject.transform);
             var bgImage = bg.gameObject.AddComponent<RawImage>();
             bgImage.texture = titleTexture;
             bgImage.color = Color.white;
+            bgImage.raycastTarget = false;
             StretchFull(bg);
 
             if (logoTexture != null)
