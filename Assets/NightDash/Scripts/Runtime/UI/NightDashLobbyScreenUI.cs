@@ -97,8 +97,8 @@ namespace NightDash.Runtime.UI
         // also intend to move the campfire sprite itself — the environment
         // warmth center (_FireCenterUV) and the per-card distance falloff are
         // tuned independently and should not pull this value with them.
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -160f);
-        private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(25f, -135f);
+        private static readonly Vector2 CampfireSpriteSize   = new Vector2(250f, 325f);
 
         // Tight halo right around the flames — small radius, soft pulse.
         // The wide ambient wash is handled by the warmth shader on the BG;
@@ -110,7 +110,7 @@ namespace NightDash.Runtime.UI
         private const float GlowAlphaMax  = 0.24f;
         private const float GlowScaleMin  = 0.95f;
         private const float GlowScaleMax  = 1.06f;
-        private static readonly Vector2 GlowHaloSize = new Vector2(275f, 275f);
+        private static readonly Vector2 GlowHaloSize = new Vector2(310f, 310f);
 
         // Per-card warmth wash. Both selected and unselected cards receive
         // the same warm add — only the base brightness differs. Gradient is
