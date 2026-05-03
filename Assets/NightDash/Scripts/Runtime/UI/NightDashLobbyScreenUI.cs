@@ -24,11 +24,17 @@ namespace NightDash.Runtime.UI
         // ------------------------------------------------------------------ tuning
         private const int    CharacterCardCount = 7;
         private const float  CardHeight         = 240f;
-        private const float  CardSpacing        = 32f;
         private const float  CardSelectedScale  = 1.18f;
         private const float  CardUnselectedScale = 0.95f;
-        private const float  IdleTimeScale      = 0.5f;  // < 1 = slower idle
-        private const float  CardYOffset        = 60f;
+        private const float  IdleTimeScale      = 1.0f;  // user requested original speed
+
+        // Campfire center (also the arc center) and arc geometry. Cards sit
+        // on a half-circle around the fire; left cards face right, right
+        // cards face left, all looking inward.
+        private static readonly Vector2 CampfireCenter = new Vector2(0f, -150f);
+        private const float  ArcRadius     = 280f;
+        private const float  ArcStartDeg   = 195f;  // left side
+        private const float  ArcEndDeg     = 345f;  // right side
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -185,13 +191,13 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfirePlaceholder()
         {
-            // Phase 1 placeholder: a small warm dot near the bottom of the
-            // screen where the animated campfire sprite will land in Phase 2.
+            // Phase 1 placeholder: a small warm dot at the campfire center
+            // where the animated sprite + glow halo will land in Phase 2.
             var rect = CreateRect("CampfirePlaceholder", transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(120f, 160f);
-            rect.anchoredPosition = new Vector2(0f, -260f);
+            rect.anchoredPosition = CampfireCenter;
 
             var img = rect.gameObject.AddComponent<Image>();
             img.color = new Color(1f, 0.55f, 0.18f, 0.85f);
@@ -236,22 +242,28 @@ namespace NightDash.Runtime.UI
                 widths[i] = CardHeight * aspect;
             }
 
-            float totalWidth = (cardCount - 1) * CardSpacing;
-            for (int i = 0; i < cardCount; i++) totalWidth += widths[i];
-            float cursor = -totalWidth * 0.5f;
-            int median = cardCount / 2; // 7 -> 3 (center). 0..2 face right, 4..6 face left.
+            int median = cardCount / 2; // 0..median-1 face right, median+1..end face left.
 
             for (int i = 0; i < cardCount; i++)
             {
                 var classData = classes[i];
                 if (classData == null || string.IsNullOrEmpty(classData.id)) continue;
 
+                // Half-circle layout around the campfire. t=0 -> arc start
+                // (left), t=1 -> arc end (right). Card sits on the lower
+                // half of the circle so silhouettes appear in front of the
+                // fire from the player's perspective.
+                float t = (cardCount > 1) ? i / (float)(cardCount - 1) : 0.5f;
+                float angleDeg = Mathf.Lerp(ArcStartDeg, ArcEndDeg, t);
+                float angleRad = angleDeg * Mathf.Deg2Rad;
+                float cardX = CampfireCenter.x + ArcRadius * Mathf.Cos(angleRad);
+                float cardY = CampfireCenter.y + ArcRadius * Mathf.Sin(angleRad);
+
                 var rect = CreateRect($"Card_{classData.id}", transform);
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
                 rect.sizeDelta = new Vector2(widths[i], CardHeight);
-                float cardX = cursor + widths[i] * 0.5f;
-                rect.anchoredPosition = new Vector2(cardX, CardYOffset);
+                rect.anchoredPosition = new Vector2(cardX, cardY);
 
                 var image = rect.gameObject.AddComponent<Image>();
                 image.preserveAspect = true;
@@ -263,7 +275,7 @@ namespace NightDash.Runtime.UI
                 var labelRect = CreateRect($"Label_{classData.id}", transform);
                 labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0.5f);
                 labelRect.pivot = new Vector2(0.5f, 1f);
-                labelRect.anchoredPosition = new Vector2(cardX, CardYOffset - CardHeight * 0.5f - 8f);
+                labelRect.anchoredPosition = new Vector2(cardX, cardY - CardHeight * 0.5f - 8f);
                 labelRect.sizeDelta = new Vector2(Mathf.Max(widths[i], 140f), 32f);
 
                 var label = labelRect.gameObject.AddComponent<Text>();
