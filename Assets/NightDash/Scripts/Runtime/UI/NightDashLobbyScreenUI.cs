@@ -26,15 +26,18 @@ namespace NightDash.Runtime.UI
         private const float  CardHeight         = 240f;
         private const float  CardSelectedScale  = 1.18f;
         private const float  CardUnselectedScale = 0.95f;
-        private const float  IdleTimeScale      = 1.0f;  // user requested original speed
+        private const float  IdleTimeScale      = 1.0f;
 
-        // Campfire center (also the arc center) and arc geometry. Cards sit
-        // on a half-circle around the fire; left cards face right, right
-        // cards face left, all looking inward.
+        // Campfire center. Cards split into left (4) and right (3) groups so
+        // the fire stays unobstructed in the middle. Closer-to-fire cards sit
+        // higher; outer cards descend along a soft curve.
         private static readonly Vector2 CampfireCenter = new Vector2(0f, -150f);
-        private const float  ArcRadius     = 280f;
-        private const float  ArcStartDeg   = 195f;  // left side
-        private const float  ArcEndDeg     = 345f;  // right side
+        private const int    LeftCardCount   = 4;
+        private const int    RightCardCount  = 3;
+        private const float  CardFireGap     = 200f; // first card distance from fire (X)
+        private const float  CardStepX       = 240f; // X step between cards
+        private const float  CardMaxYDrop    = -180f; // outermost card Y offset from fire
+        private const float  CardCurvePower  = 1.6f;  // > 1 = ease-in (gentle near, steep far)
 
         private static readonly Color CardSelectedTint   = Color.white;
         private static readonly Color CardUnselectedTint = new Color(0.32f, 0.30f, 0.42f, 1f);
@@ -242,22 +245,39 @@ namespace NightDash.Runtime.UI
                 widths[i] = CardHeight * aspect;
             }
 
-            int median = cardCount / 2; // 0..median-1 face right, median+1..end face left.
+            // Layout split. i in [0, LeftCardCount) -> left of fire,
+            // i in [LeftCardCount, cardCount) -> right of fire.
+            // Closer-to-fire = lower sideIndex = higher Y (less drop).
+            int actualLeft = Mathf.Min(LeftCardCount, cardCount);
+            int actualRight = Mathf.Min(RightCardCount, cardCount - actualLeft);
 
             for (int i = 0; i < cardCount; i++)
             {
                 var classData = classes[i];
                 if (classData == null || string.IsNullOrEmpty(classData.id)) continue;
 
-                // Half-circle layout around the campfire. t=0 -> arc start
-                // (left), t=1 -> arc end (right). Card sits on the lower
-                // half of the circle so silhouettes appear in front of the
-                // fire from the player's perspective.
-                float t = (cardCount > 1) ? i / (float)(cardCount - 1) : 0.5f;
-                float angleDeg = Mathf.Lerp(ArcStartDeg, ArcEndDeg, t);
-                float angleRad = angleDeg * Mathf.Deg2Rad;
-                float cardX = CampfireCenter.x + ArcRadius * Mathf.Cos(angleRad);
-                float cardY = CampfireCenter.y + ArcRadius * Mathf.Sin(angleRad);
+                bool onLeft = i < actualLeft;
+                int sideIndex;     // 0 = closest to fire, larger = further
+                int sideTotal;
+                float side;
+                if (onLeft)
+                {
+                    sideIndex = actualLeft - 1 - i; // i=last-of-left -> 0
+                    sideTotal = actualLeft;
+                    side = -1f;
+                }
+                else
+                {
+                    sideIndex = i - actualLeft;     // i=first-of-right -> 0
+                    sideTotal = actualRight;
+                    side = 1f;
+                }
+
+                float xDist = CardFireGap + sideIndex * CardStepX;
+                float t = (sideTotal > 1) ? sideIndex / (float)(sideTotal - 1) : 0f;
+                float yDrop = CardMaxYDrop * Mathf.Pow(t, CardCurvePower);
+                float cardX = CampfireCenter.x + side * xDist;
+                float cardY = CampfireCenter.y + yDrop;
 
                 var rect = CreateRect($"Card_{classData.id}", transform);
                 rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -293,7 +313,8 @@ namespace NightDash.Runtime.UI
                     Image = image,
                     Label = label,
                     IdleClip = idleClips[i],
-                    FacesLeft = i > median,
+                    // Right-side cards mirror so they face inward toward fire.
+                    FacesLeft = !onLeft,
                 });
             }
         }
