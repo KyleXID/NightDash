@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "84f11cf4-ce17-4ea2-a877-fb3c3cb6a755",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera\n- Both eyes equally visible from front (visible just below \n  the wide hat brim shadow)\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- STEEL REVOLVER held in the RIGHT HAND at the right hip level, \n  barrel pointing slightly DOWNWARD AND OUTWARD (NOT pointing \n  straight down, NOT raised)\n- A second holstered revolver visible on the LEFT HIP\n- Right arm relaxed at the side, body squared forward\n- Left arm hangs naturally at the side\n- Both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall confident adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with DARK BLACK PUPIL in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front, just below the hat \n  brim shadow\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n- NO stubble pixels (face is clean)\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- Messy DARK HAIR partially hidden under a WIDE-BRIM LEATHER HAT \n  with a subtle band\n- Hat brim casts a clean shadow band across the upper face but \n  eyes still CLEARLY visible from front (eyes positioned just \n  below the brim shadow)\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, weathered confident build, mid-20s\n- Long DARK BROWN LEATHER TRENCH COAT over a dark vest and shirt\n- Sturdy leather belt with a BANDOLIER OF BULLETS across the chest\n- Dark leather gloves, dark trousers, scuffed dark leather boots\n- Two STEEL REVOLVERS: one in the right hand, one holstered on \n  the left hip\n- Faded RED BANDANA at the neck, visible above the coat collar\n\nCOLOR PALETTE:\n- Faded red bandana is the ONLY saturated accent\n- Limited palette ~16-24 colors of dark leather brown, charcoal, \n  dim copper, faded red, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera\n- Both eyes equally visible from front (visible just below \n  the wide hat brim shadow)\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- STEEL REVOLVER held in the RIGHT HAND at the right hip level, \n  barrel pointing slightly DOWNWARD AND OUTWARD (NOT pointing \n  straight down, NOT raised)\n- A second holstered revolver visible on the LEFT HIP\n- Right arm relaxed at the side, body squared forward\n- Left arm hangs naturally at the side\n- Both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall confident adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with DARK BLACK PUPIL in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front, just below the hat \n  brim shadow\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n- NO stubble pixels (face is clean)\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- Messy DARK HAIR partially hidden under a WIDE-BRIM LEATHER HAT \n  with a subtle band\n- Hat brim casts a clean shadow band across the upper face but \n  eyes still CLEARLY visible from front (eyes positioned just \n  below the brim shadow)\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, weathered confident build, mid-20s\n- Long DARK BROWN LEATHER TRENCH COAT over a dark vest and shirt\n- Sturdy leather belt with a BANDOLIER OF BULLETS across the chest\n- Dark leather gloves, dark trousers, scuffed dark leather boots\n- Two STEEL REVOLVERS: one in the right hand, one holstered on \n  the left hip\n- Faded RED BANDANA at the neck, visible above the coat collar\n\nCOLOR PALETTE:\n- Faded red bandana is the ONLY saturated accent\n- Limited palette ~16-24 colors of dark leather brown, charcoal, \n  dim copper, faded red, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 140,
+      "height": 140
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T11:11:52.304742+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219": {
+        "south-east": [
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_000.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_001.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_002.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_003.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_004.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_005.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_006.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_007.png",
+          "animations/Casual_confident_walking_cycle_for_a_weathered_dar-ba6be219/south-east/frame_008.png"
+        ]
+      },
+      "Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886": {
+        "south-east": [
+          "animations/Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886/south-east/frame_000.png",
+          "animations/Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886/south-east/frame_001.png",
+          "animations/Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886/south-east/frame_002.png",
+          "animations/Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886/south-east/frame_003.png",
+          "animations/Subtle_idle_breathing_animation_for_a_weathered_da-1de6b886/south-east/frame_004.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T11:59:42.749514"
+}

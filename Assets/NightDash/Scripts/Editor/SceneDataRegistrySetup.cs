@@ -8,11 +8,11 @@ namespace NightDash.Editor
 {
     public static class SceneDataRegistrySetup
     {
-        private const string ScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string ScenePath = "Assets/Scenes/NightDashMain.unity";
         private const string CatalogPath = "Assets/NightDash/Data/data_catalog.asset";
 
-        [MenuItem("NightDash/Scene/Attach DataRegistry To SampleScene")]
-        public static void AttachToSampleScene()
+        [MenuItem("NightDash/Scene/Attach DataRegistry To NightDashMain")]
+        public static void AttachToNightDashMain()
         {
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             var catalog = AssetDatabase.LoadAssetAtPath<DataCatalog>(CatalogPath);
@@ -37,7 +37,7 @@ namespace NightDash.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
-            Debug.Log("[NightDash] DataRegistry attached to SampleScene and catalog assigned.");
+            Debug.Log("[NightDash] DataRegistry attached to NightDashMain and catalog assigned.");
         }
     }
 }

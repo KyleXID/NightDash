@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "4ecabe6b-a3cf-440e-928b-f5f88bc96e34",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera \n  (NOT turned, NOT tilted, NOT angled)\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- TALL WOODEN STAFF held in the RIGHT HAND at the right side\n- Staff held vertically, gnarled head visible above the shoulder, \n  staff bottom near the ground but SLIGHTLY RAISED \n  (NOT planted on the ground)\n- Right arm relaxed and slightly bent\n- Body squared forward, both shoulders parallel to camera\n- Left arm hangs naturally at the side\n\nPROPORTIONS:\n- Tall slender adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with a clearly visible DARK BLACK \n  PUPIL dot in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- Dark messy hair partially hidden under a deep tattered HOODED CLOAK\n- Hood casts subtle shadow over the upper face but eyes still \n  CLEARLY visible from front\n- A few stray strands escape from under the hood at the sides\n- DO NOT cover the entire face with shadow\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, slender intelligent build, mid-20s\n- Deep MIDNIGHT-BLUE long robe with worn purple trim, layered fabric\n- Tattered hooded cloak draped over the shoulders\n- Leather belt with small pouches across the waist\n- Clothbound ankle boots with dim metal buckles\n- Tall wooden staff: gnarled dark wood, topped with a small \n  CRACKED BLUE CRYSTAL emitting a faint subtle cyan glow (NOT bright)\n\nCOLOR PALETTE:\n- Cool cyan crystal glow is the ONLY saturated accent\n- Limited palette ~16-24 colors of midnight-blue, deep purple, \n  charcoal, dark wood brown, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera \n  (NOT turned, NOT tilted, NOT angled)\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- TALL WOODEN STAFF held in the RIGHT HAND at the right side\n- Staff held vertically, gnarled head visible above the shoulder, \n  staff bottom near the ground but SLIGHTLY RAISED \n  (NOT planted on the ground)\n- Right arm relaxed and slightly bent\n- Body squared forward, both shoulders parallel to camera\n- Left arm hangs naturally at the side\n\nPROPORTIONS:\n- Tall slender adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with a clearly visible DARK BLACK \n  PUPIL dot in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- Dark messy hair partially hidden under a deep tattered HOODED CLOAK\n- Hood casts subtle shadow over the upper face but eyes still \n  CLEARLY visible from front\n- A few stray strands escape from under the hood at the sides\n- DO NOT cover the entire face with shadow\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, slender intelligent build, mid-20s\n- Deep MIDNIGHT-BLUE long robe with worn purple trim, layered fabric\n- Tattered hooded cloak draped over the shoulders\n- Leather belt with small pouches across the waist\n- Clothbound ankle boots with dim metal buckles\n- Tall wooden staff: gnarled dark wood, topped with a small \n  CRACKED BLUE CRYSTAL emitting a faint subtle cyan glow (NOT bright)\n\nCOLOR PALETTE:\n- Cool cyan crystal glow is the ONLY saturated accent\n- Limited palette ~16-24 colors of midnight-blue, deep purple, \n  charcoal, dark wood brown, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 136,
+      "height": 136
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T10:44:49.691767+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4": {
+        "south-east": [
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_000.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_001.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_002.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_003.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_004.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_005.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_006.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_007.png",
+          "animations/Calm_flowing_walking_cycle_for_a_dark_fantasy_spel-dcfd6ee4/south-east/frame_008.png"
+        ]
+      },
+      "Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d": {
+        "south-east": [
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d/south-east/frame_000.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d/south-east/frame_001.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d/south-east/frame_002.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d/south-east/frame_003.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-7821270d/south-east/frame_004.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-03T00:45:30.378258"
+}

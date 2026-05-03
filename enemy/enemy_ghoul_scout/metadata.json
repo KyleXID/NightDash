@@ -1,0 +1,43 @@
+{
+  "character": {
+    "id": "e812353e-9c2d-4509-96b8-4f96a70f79ee",
+    "name": "TRUE pixel art creature, 16-bit JRPG dark fantasy horror. ROTTED\nUNDEAD GHOUL CORPSE creature, NOT a living human. STRICT FRONT-FACING\nPOSE for 8-direction rotation.\n\nCREATURE TYPE \u2014 ROTTED UNDEAD CORPSE (CRITICAL):\n- This is a DECAYED CORPSE-like creature, NOT a living human\n- Entire body (face, neck, hands, torso, legs) is THE SAME pale\n  gray-green rotted flesh tone \u2014 uniformly rotted skin throughout\n- NO human-colored skin anywhere \u2014 ABSOLUTELY NO normal peach/beige/\n  tan/pink human skin tone on any body part including the face\n- Face skin is IDENTICAL to body skin: pale gray-green rotted flesh\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body squared toward viewer, shoulders parallel\n- Head looks straight forward at camera\n- Hunched stalking posture, slightly leaning forward\n- Both feet visible, slight crouch stance\n\nPROPORTIONS:\n- Small hunched undead corpse, gaunt skeletal frame\n- ~5-head ratio (smaller than player), thin emaciated body\n- Slightly shorter than player (~80% height)\n\nFACE \u2014 UNDEAD MINIMALIST (gray-green rotted skin, NOT human skin):\n- Face skin tone: PALE GRAY-GREEN ROTTED FLESH (same as body, NOT\n  human peach/beige)\n- HOLLOW BLACK EYE SOCKETS with faint DIM RED PINPRICKS deep inside\n  (no white sclera, just void with red glow)\n- NO mouth, NO nose \u2014 face surface is decayed gray-green skin\n- Subtle darker decay patches on face for texture\n- Sharp 1-pixel dark outline around eye sockets\n\nHAIR:\n- Sparse stringy gray-black hair, mostly bald with patches\n- Tattered cloth wrapping around the head\n\nBODY AND EQUIPMENT:\n- Pale gray-green rotted flesh with visible darker decay patches\n  across entire body (face, arms, torso, legs all same tone)\n- Tattered cloth wrappings around waist and arms (no armor)\n- Clawed bony hands held forward in creeping pose\n- Bare feet with long claw nails\n\nCOLOR PALETTE \u2014 STRICT:\n- Dim red eye glow is the ONLY saturated accent\n- ENTIRE body INCLUDING FACE uses limited palette ~14 colors of:\n  pale gray-green rotted flesh (face + body), darker green-gray\n  decay patches, dirty bone white claws, charcoal cloth, dim red eyes\n- \u2605 ABSOLUTELY NO human skin tones (peach, beige, tan, pink) ANYWHERE\n  on the sprite \u2014 face must use the SAME gray-green tone as the body\n\nRENDERING:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 NO white specks, NO dust particles, NO sparkles\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art creature, 16-bit JRPG dark fantasy horror. ROTTED\nUNDEAD GHOUL CORPSE creature, NOT a living human. STRICT FRONT-FACING\nPOSE for 8-direction rotation.\n\nCREATURE TYPE \u2014 ROTTED UNDEAD CORPSE (CRITICAL):\n- This is a DECAYED CORPSE-like creature, NOT a living human\n- Entire body (face, neck, hands, torso, legs) is THE SAME pale\n  gray-green rotted flesh tone \u2014 uniformly rotted skin throughout\n- NO human-colored skin anywhere \u2014 ABSOLUTELY NO normal peach/beige/\n  tan/pink human skin tone on any body part including the face\n- Face skin is IDENTICAL to body skin: pale gray-green rotted flesh\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body squared toward viewer, shoulders parallel\n- Head looks straight forward at camera\n- Hunched stalking posture, slightly leaning forward\n- Both feet visible, slight crouch stance\n\nPROPORTIONS:\n- Small hunched undead corpse, gaunt skeletal frame\n- ~5-head ratio (smaller than player), thin emaciated body\n- Slightly shorter than player (~80% height)\n\nFACE \u2014 UNDEAD MINIMALIST (gray-green rotted skin, NOT human skin):\n- Face skin tone: PALE GRAY-GREEN ROTTED FLESH (same as body, NOT\n  human peach/beige)\n- HOLLOW BLACK EYE SOCKETS with faint DIM RED PINPRICKS deep inside\n  (no white sclera, just void with red glow)\n- NO mouth, NO nose \u2014 face surface is decayed gray-green skin\n- Subtle darker decay patches on face for texture\n- Sharp 1-pixel dark outline around eye sockets\n\nHAIR:\n- Sparse stringy gray-black hair, mostly bald with patches\n- Tattered cloth wrapping around the head\n\nBODY AND EQUIPMENT:\n- Pale gray-green rotted flesh with visible darker decay patches\n  across entire body (face, arms, torso, legs all same tone)\n- Tattered cloth wrappings around waist and arms (no armor)\n- Clawed bony hands held forward in creeping pose\n- Bare feet with long claw nails\n\nCOLOR PALETTE \u2014 STRICT:\n- Dim red eye glow is the ONLY saturated accent\n- ENTIRE body INCLUDING FACE uses limited palette ~14 colors of:\n  pale gray-green rotted flesh (face + body), darker green-gray\n  decay patches, dirty bone white claws, charcoal cloth, dim red eyes\n- \u2605 ABSOLUTELY NO human skin tones (peach, beige, tan, pink) ANYWHERE\n  on the sprite \u2014 face must use the SAME gray-green tone as the body\n\nRENDERING:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 NO white specks, NO dust particles, NO sparkles\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 84,
+      "height": 84
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T12:08:02.107137+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd": {
+        "south-east": [
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_000.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_001.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_002.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_003.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_004.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_005.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_006.png",
+          "animations/Menacing_walking_cycle_for_a_Stage_1_burning_waste-672db3bd/south-east/frame_007.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T13:59:01.620636"
+}

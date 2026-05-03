@@ -1,0 +1,40 @@
+{
+  "character": {
+    "id": "7d39935e-14a0-46a2-b695-dd6d1c31899a",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style). \nSTRICT FRONT-FACING POSE for 8-direction rotation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body facing the viewer, both wings spread symmetrically\n- Wing tips equal width on both sides\n- Hovering pose with slight forward lean\n\nPROPORTIONS:\n- Mid-size flying bat creature, wingspan ~1.5x body width\n- Compact body with leathery membrane wings\n\nFACE \u2014 BEAST MINIMALIST:\n- Two SMALL DIM ORANGE GLOWING EYES set deep in face\n- NO white sclera, just glowing pinpricks\n- Sharp small fangs visible at the bottom of the snout (only fangs, \n  no mouth shape)\n- Small flat nose visible (BEAST EXCEPTION \u2014 quadruped/animal allowed)\n\nBODY AND EQUIPMENT:\n- Charred black leathery skin with DIM ORANGE EMBER SEAMS across \n  the body and wing membranes (cooling lava look)\n- Wings half-extended in mid-flight pose\n- Small clawed feet tucked under\n- Embers and soot trailing along wing edges (small clean ember \n  pixels, not random sparkles)\n\nCOLOR PALETTE:\n- Dim ember orange seams and eye glow are the saturated accents\n- Limited palette ~12 colors of charred black, dark gray, dim ember orange\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 Ember pixels along wings are deliberate (clean shaped, not noise)\n\u2605 NO random white specks, NO sparkles outside designated ember areas\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow (creature is flying)",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style). \nSTRICT FRONT-FACING POSE for 8-direction rotation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body facing the viewer, both wings spread symmetrically\n- Wing tips equal width on both sides\n- Hovering pose with slight forward lean\n\nPROPORTIONS:\n- Mid-size flying bat creature, wingspan ~1.5x body width\n- Compact body with leathery membrane wings\n\nFACE \u2014 BEAST MINIMALIST:\n- Two SMALL DIM ORANGE GLOWING EYES set deep in face\n- NO white sclera, just glowing pinpricks\n- Sharp small fangs visible at the bottom of the snout (only fangs, \n  no mouth shape)\n- Small flat nose visible (BEAST EXCEPTION \u2014 quadruped/animal allowed)\n\nBODY AND EQUIPMENT:\n- Charred black leathery skin with DIM ORANGE EMBER SEAMS across \n  the body and wing membranes (cooling lava look)\n- Wings half-extended in mid-flight pose\n- Small clawed feet tucked under\n- Embers and soot trailing along wing edges (small clean ember \n  pixels, not random sparkles)\n\nCOLOR PALETTE:\n- Dim ember orange seams and eye glow are the saturated accents\n- Limited palette ~12 colors of charred black, dark gray, dim ember orange\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 Ember pixels along wings are deliberate (clean shaped, not noise)\n\u2605 NO random white specks, NO sparkles outside designated ember areas\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow (creature is flying)",
+    "size": {
+      "width": 92,
+      "height": 92
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T12:21:11.685313+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c": {
+        "south-east": [
+          "animations/Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c/south-east/frame_000.png",
+          "animations/Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c/south-east/frame_001.png",
+          "animations/Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c/south-east/frame_002.png",
+          "animations/Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c/south-east/frame_003.png",
+          "animations/Ember_bat_hovering_in_place_ONLY_wings_flapping._C-1afe285c/south-east/frame_004.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T13:58:36.581871"
+}

@@ -1,0 +1,44 @@
+{
+  "character": {
+    "id": "5ac25a1b-7ff5-4748-b14f-82c8f1b73a64",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style). \nSTRICT FRONT-FACING POSE for 8-direction rotation.\n\nPOSE:\n- SOUTH-FACING base sprite, body squared toward viewer\n- Both shoulders parallel, head straight forward\n- Imposing armored stance, slightly menacing\n\nPROPORTIONS:\n- Tall imposing humanoid, ~7-head ratio with broader shoulders \n  than player (1.2x scale)\n- Heavy armored silhouette\n\nFACE \u2014 HORNED HELMET MINIMALIST:\n- Full black HORNED HELMET covering the face\n- Eyes are GLOWING DIM CRIMSON SLITS visible through the helmet \n  visor (horizontal slits, not pinpricks)\n- NO mouth, NO nose \u2014 helmet covers everything\n- Two short horns curve back from helmet sides\n\nHAIR:\n- Hidden under helmet, no visible hair\n\nBODY AND EQUIPMENT:\n- Heavy BLACKENED PLATE ARMOR with DIM CRIMSON RUNIC GLOW along \n  the seams (chest, pauldrons, gauntlets, boots)\n- Tattered DARK BURGUNDY CAPE attached at both shoulders, falling \n  to the knees, jagged edges\n- Wielding an EXECUTIONER'S GREATAXE in BOTH HANDS held vertically \n  in front of the body (axe head visible above the chest, blade \n  facing camera, tip pointing down but NOT touching the ground)\n- Heavy plated boots with crimson rune accents\n\nCOLOR PALETTE:\n- Dim crimson rune glow and eye slits are the saturated accents\n- Limited palette ~18 colors of charcoal, blackened steel, \n  dark burgundy, dim crimson\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 Crimson rune glow is deliberate clean pattern (not random)\n\u2605 NO random white specks, NO sparkles\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style). \nSTRICT FRONT-FACING POSE for 8-direction rotation.\n\nPOSE:\n- SOUTH-FACING base sprite, body squared toward viewer\n- Both shoulders parallel, head straight forward\n- Imposing armored stance, slightly menacing\n\nPROPORTIONS:\n- Tall imposing humanoid, ~7-head ratio with broader shoulders \n  than player (1.2x scale)\n- Heavy armored silhouette\n\nFACE \u2014 HORNED HELMET MINIMALIST:\n- Full black HORNED HELMET covering the face\n- Eyes are GLOWING DIM CRIMSON SLITS visible through the helmet \n  visor (horizontal slits, not pinpricks)\n- NO mouth, NO nose \u2014 helmet covers everything\n- Two short horns curve back from helmet sides\n\nHAIR:\n- Hidden under helmet, no visible hair\n\nBODY AND EQUIPMENT:\n- Heavy BLACKENED PLATE ARMOR with DIM CRIMSON RUNIC GLOW along \n  the seams (chest, pauldrons, gauntlets, boots)\n- Tattered DARK BURGUNDY CAPE attached at both shoulders, falling \n  to the knees, jagged edges\n- Wielding an EXECUTIONER'S GREATAXE in BOTH HANDS held vertically \n  in front of the body (axe head visible above the chest, blade \n  facing camera, tip pointing down but NOT touching the ground)\n- Heavy plated boots with crimson rune accents\n\nCOLOR PALETTE:\n- Dim crimson rune glow and eye slits are the saturated accents\n- Limited palette ~18 colors of charcoal, blackened steel, \n  dark burgundy, dim crimson\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 Crimson rune glow is deliberate clean pattern (not random)\n\u2605 NO random white specks, NO sparkles\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 140,
+      "height": 140
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T11:57:04.22678+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb": {
+        "south-east": [
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_000.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_001.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_002.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_003.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_004.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_005.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_006.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_007.png",
+          "animations/Wastes_executor_elite_walk._Slow_imposing_executio-0079cedb/south-east/frame_008.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T14:01:53.758048"
+}

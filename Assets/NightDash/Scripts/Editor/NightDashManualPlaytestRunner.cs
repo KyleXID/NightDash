@@ -12,7 +12,7 @@ namespace NightDash.Editor
 {
     public static class NightDashManualPlaytestRunner
     {
-        private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string NightDashMainPath = "Assets/Scenes/NightDashMain.unity";
         private const string ActiveKey = "NightDash.ManualPlaytest.Active";
         private const string StepKey = "NightDash.ManualPlaytest.Step";
         private const string DeadlineKey = "NightDash.ManualPlaytest.Deadline";
@@ -111,7 +111,7 @@ namespace NightDash.Editor
         {
             EditorApplication.delayCall -= BeginPlaytest;
             Debug.Log("[NightDash][Playtest] Opening sample scene and entering Play Mode.");
-            EditorSceneManager.OpenScene(SampleScenePath);
+            EditorSceneManager.OpenScene(NightDashMainPath);
             if (!EditorApplication.isPlaying)
             {
                 EditorApplication.isPlaying = true;

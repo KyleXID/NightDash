@@ -85,7 +85,7 @@
 - Data SO 정의: `Assets/NightDash/Scripts/Data/`
 - Data 에셋: `Assets/NightDash/Data/`
 - 테스트: `Assets/NightDash/Tests/PlayMode/`
-- 메인 씬: `Assets/Scenes/SampleScene.unity`
+- 메인 씬: `Assets/Scenes/NightDashMain.unity`
 
 ## 6. 금지 사항
 

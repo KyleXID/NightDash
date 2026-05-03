@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "6fd589bd-14f3-42ea-9fff-94514b19416c",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera \n  (NOT turned, NOT tilted, NOT angled)\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- Small CELESTIAL ORB cradled gently in the LEFT HAND at the \n  left side, palm up, fingers curled around the orb\n- Thin curved DAGGER (or wand) held in the RIGHT HAND at the \n  right side, blade angled slightly downward and outward but \n  NOT touching the ground\n- Both arms relaxed at the sides, slightly bent\n- Body squared forward, both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall mysterious adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with a clearly visible DARK BLACK \n  PUPIL dot in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- LONG DARK HAIR tied loosely back at the nape with a thin band, \n  with a partial fringe falling forward to lightly shadow above \n  the eye area (eyes still clearly visible)\n- Individual strands clearly visible at the silhouette edges, \n  jagged sharp tips\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, mysterious composed bearing, mid-20s\n- Dark VIOLET LONG COAT with embroidered CONSTELLATION PATTERN \n  in dim gold thread along the trim, sleeves, and hem\n- Layered cloth and leather under the coat\n- High dark leather boots, fingerless gloves\n- Celestial orb: small spherical glass containing miniature stars, \n  emitting a faint AMBER-GOLD glow (subtle, not bright)\n- Curved dagger: slim dark steel with a small dim gold pommel\n\nCOLOR PALETTE:\n- Amber-gold orb glow is the ONLY saturated accent\n- Limited palette ~16-24 colors of dark violet, deep purple, \n  charcoal, dim gold, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera \n  (NOT turned, NOT tilted, NOT angled)\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- Small CELESTIAL ORB cradled gently in the LEFT HAND at the \n  left side, palm up, fingers curled around the orb\n- Thin curved DAGGER (or wand) held in the RIGHT HAND at the \n  right side, blade angled slightly downward and outward but \n  NOT touching the ground\n- Both arms relaxed at the sides, slightly bent\n- Body squared forward, both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall mysterious adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with a clearly visible DARK BLACK \n  PUPIL dot in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- LONG DARK HAIR tied loosely back at the nape with a thin band, \n  with a partial fringe falling forward to lightly shadow above \n  the eye area (eyes still clearly visible)\n- Individual strands clearly visible at the silhouette edges, \n  jagged sharp tips\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, mysterious composed bearing, mid-20s\n- Dark VIOLET LONG COAT with embroidered CONSTELLATION PATTERN \n  in dim gold thread along the trim, sleeves, and hem\n- Layered cloth and leather under the coat\n- High dark leather boots, fingerless gloves\n- Celestial orb: small spherical glass containing miniature stars, \n  emitting a faint AMBER-GOLD glow (subtle, not bright)\n- Curved dagger: slim dark steel with a small dim gold pommel\n\nCOLOR PALETTE:\n- Amber-gold orb glow is the ONLY saturated accent\n- Limited palette ~16-24 colors of dark violet, deep purple, \n  charcoal, dim gold, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 144,
+      "height": 144
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T10:45:18.323231+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96": {
+        "south-east": [
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_000.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_001.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_002.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_003.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_004.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_005.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_006.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_007.png",
+          "animations/Graceful_mysterious_walking_cycle_for_a_dark_fanta-a0ad7f96/south-east/frame_008.png"
+        ]
+      },
+      "Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4": {
+        "south-east": [
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4/south-east/frame_000.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4/south-east/frame_001.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4/south-east/frame_002.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4/south-east/frame_003.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-531b1db4/south-east/frame_004.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T11:58:29.650663"
+}

@@ -10,7 +10,7 @@ namespace NightDash.Editor
 {
     public static class NightDashStage01EnvironmentSetup
     {
-        private const string ScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string ScenePath = "Assets/Scenes/NightDashMain.unity";
         private const string EnvironmentRootName = "Stage01Environment";
         private const string LegacyRootName = "NightDashStageEnvironmentArt";
 
@@ -60,7 +60,7 @@ namespace NightDash.Editor
             BuildScene();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[NightDash] Stage01 environment sliced and applied to SampleScene.");
+            Debug.Log("[NightDash] Stage01 environment sliced and applied to NightDashMain.");
         }
 
         public static void ApplyStage01EnvironmentBatch()

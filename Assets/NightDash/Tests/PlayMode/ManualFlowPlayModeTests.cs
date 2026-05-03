@@ -15,7 +15,7 @@ namespace NightDash.Tests.PlayMode
 {
     public class ManualFlowPlayModeTests
     {
-        private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string SampleScenePath = "Assets/Scenes/NightDashMain.unity";
 
         [UnityTest]
         public IEnumerator Stage1_VerticalSlice_ManualFlowChecks()

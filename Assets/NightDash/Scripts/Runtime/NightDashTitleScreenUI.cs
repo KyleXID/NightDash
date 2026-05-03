@@ -27,6 +27,7 @@ namespace NightDash.Runtime
         private const string ButtonQuitLabel = "Quit";
 
         private RunSelectionLobbyUI _lobbyUi;
+        private NightDashDebugVisualBridge _visualBridge;
         private GameObject _firstButton;
         private readonly GameObject[] _menuButtons = new GameObject[4];
         private int _selectedIndex;
@@ -111,6 +112,10 @@ namespace NightDash.Runtime
             _pressStartPulseTime = 0f;
             SetMenuVisible(false);
             SetPressStartVisible(true);
+
+            // Hide gameplay sprites entirely so PNG transparency areas don't
+            // bleed game content through the title illustration.
+            HideGameplayViews();
         }
 
         private void OnDisable()
@@ -121,6 +126,31 @@ namespace NightDash.Runtime
             if (Mathf.Approximately(Time.timeScale, 0f))
             {
                 Time.timeScale = 1f;
+            }
+        }
+
+        private void HideGameplayViews()
+        {
+            if (_visualBridge == null)
+            {
+                _visualBridge = FindFirstObjectByType<NightDashDebugVisualBridge>();
+            }
+            if (_visualBridge != null)
+            {
+                _visualBridge.DestroyAllViewsImmediate();
+                _visualBridge.enabled = false;
+            }
+        }
+
+        private void RestoreGameplayViews()
+        {
+            if (_visualBridge == null)
+            {
+                _visualBridge = FindFirstObjectByType<NightDashDebugVisualBridge>();
+            }
+            if (_visualBridge != null)
+            {
+                _visualBridge.enabled = true;
             }
         }
 
@@ -275,6 +305,15 @@ namespace NightDash.Runtime
                 Destroy(child.gameObject);
             }
 
+            // Dim violet base layer behind the illustration. Fills any
+            // transparent regions of the PNG with a tone that blends naturally
+            // with the dark fantasy sky palette (instead of a harsh black).
+            var baseLayer = CreateRect("BaseLayer", gameObject.transform);
+            var baseImage = baseLayer.gameObject.AddComponent<Image>();
+            baseImage.color = new Color(0.10f, 0.05f, 0.18f, 1f);
+            baseImage.raycastTarget = false;
+            StretchFull(baseLayer);
+
             var bg = CreateRect("TitleBackground", gameObject.transform);
             var bgImage = bg.gameObject.AddComponent<RawImage>();
             bgImage.texture = titleTexture;
@@ -289,16 +328,15 @@ namespace NightDash.Runtime
 
             if (logoTexture != null)
             {
-                // Logo: top-LEFT anchor, larger size. Background hero is in
-                // center-bottom of the illustration so the logo lives in the
-                // empty top-left sky region.
+                // Logo: top-CENTER anchor, native aspect preserved. Hero sky
+                // illustration leaves clear sky in the upper area for the logo.
                 var logoRect = CreateRect("TitleLogo", gameObject.transform);
-                logoRect.anchorMin = new Vector2(0f, 1f);
-                logoRect.anchorMax = new Vector2(0f, 1f);
-                logoRect.pivot = new Vector2(0f, 1f);
-                logoRect.anchoredPosition = new Vector2(60f, -60f);
+                logoRect.anchorMin = new Vector2(0.5f, 1f);
+                logoRect.anchorMax = new Vector2(0.5f, 1f);
+                logoRect.pivot = new Vector2(0.5f, 1f);
+                logoRect.anchoredPosition = new Vector2(0f, -60f);
 
-                const float logoHeight = 320f;
+                const float logoHeight = 280f;
                 float aspect = logoTexture.height > 0
                     ? (float)logoTexture.width / logoTexture.height
                     : 2f;
@@ -408,6 +446,7 @@ namespace NightDash.Runtime
             // Resume time so gameplay simulation can run once the player
             // confirms a class/stage. Title's freeze ends here.
             Time.timeScale = 1f;
+            RestoreGameplayViews();
             gameObject.SetActive(false);
             NightDashLog.Info("[NightDash] Title Start clicked (Canvas UI).");
         }

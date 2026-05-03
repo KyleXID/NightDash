@@ -5,7 +5,7 @@
 // projectiles.
 //
 // Note: class/file/GUID intentionally preserved during the sprite-animation
-// pipeline upgrade so SampleScene's serialized component reference stays
+// pipeline upgrade so NightDashMain's serialized component reference stays
 // intact. Rename pass deferred to a pre-release cleanup PR.
 // ============================================================================
 
@@ -112,7 +112,7 @@ namespace NightDash.Runtime
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreate()
         {
-            // Skip if a SampleScene-bound instance already exists.
+            // Skip if a NightDashMain-bound instance already exists.
             if (FindAnyObjectByType<NightDashDebugVisualBridge>() != null) return;
 
             var go = new GameObject("[NightDash] DebugVisualBridge");
@@ -143,6 +143,18 @@ namespace NightDash.Runtime
             DestroyAllViews(_enemyViews);
             DestroyAllViews(_bossViews);
             DestroyAllProjectiles(_projectileViews);
+        }
+
+        // Clears every spawned view GameObject. Called by Title/Lobby UI when
+        // the gameplay world should be visually invisible (entities may still
+        // exist in the ECS world, they just have no rendered counterpart).
+        public void DestroyAllViewsImmediate()
+        {
+            DestroyAllViews(_playerViews);
+            DestroyAllViews(_enemyViews);
+            DestroyAllViews(_bossViews);
+            DestroyAllProjectiles(_projectileViews);
+            _lastPositions.Clear();
         }
 
         // ====================================================================

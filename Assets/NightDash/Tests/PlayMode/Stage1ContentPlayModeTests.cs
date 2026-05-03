@@ -1,5 +1,5 @@
 // S4-02: Stage 1 신규 콘텐츠 PlayMode 시나리오 3종.
-// 기존 ManualFlowPlayModeTests 패턴 (SampleScene load + reflection-assisted control) 확장.
+// 기존 ManualFlowPlayModeTests 패턴 (NightDashMain load + reflection-assisted control) 확장.
 // 주의: batchmode EditMode harness에서는 PlayMode 시나리오가 scene-load timing 제약으로
 // skip/fail 할 수 있음 — Unity Editor Test Runner 권장 실행 경로.
 
@@ -21,7 +21,7 @@ namespace NightDash.Tests.PlayMode
 {
     public class Stage1ContentPlayModeTests
     {
-        private const string SampleScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string SampleScenePath = "Assets/Scenes/NightDashMain.unity";
 
         [SetUp]
         public void ClearSaveKeys()

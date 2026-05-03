@@ -9,17 +9,17 @@ namespace NightDash.Editor
 {
     public static class NightDashBootstrapSceneSetup
     {
-        private const string ScenePath = "Assets/Scenes/SampleScene.unity";
+        private const string ScenePath = "Assets/Scenes/NightDashMain.unity";
         private const string CatalogPath = "Assets/NightDash/Data/data_catalog.asset";
         private const string TitleImagePath = "Assets/NightDash/Art/UI/Title/nightdash_title.png";
         private const string TitleLogoPath = "Assets/NightDash/Art/UI/Title/nightdash_logo.png";
 
-        [MenuItem("NightDash/Scene/Setup SampleScene Bootstrap")]
-        public static void SetupSampleSceneBootstrap()
+        [MenuItem("NightDash/Scene/Setup NightDashMain Bootstrap")]
+        public static void SetupNightDashMainBootstrap()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                Debug.LogWarning("[NightDash] Stop Play Mode first, then run Scene/Setup SampleScene Bootstrap.");
+                Debug.LogWarning("[NightDash] Stop Play Mode first, then run Scene/Setup NightDashMain Bootstrap.");
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace NightDash.Editor
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
 
-            Debug.Log("[NightDash] SampleScene bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + PlayerInputRuntime + CameraFollow + DebugVisualBridge + RuntimeToggles + catalog).");
+            Debug.Log("[NightDash] NightDashMain bootstrap setup completed (NightDashBootstrap + DataRegistry + RunSelectionLobbyUI + PlayerInputRuntime + CameraFollow + DebugVisualBridge + RuntimeToggles + catalog).");
         }
     }
 }

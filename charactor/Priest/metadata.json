@@ -1,0 +1,53 @@
+{
+  "character": {
+    "id": "8a786f4f-2463-47c0-93f4-97f840ebc524",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- GOLDEN ANKH-STAFF (or holy mace) held in the RIGHT HAND at \n  the right side, staff vertical, ankh head visible above shoulder, \n  staff bottom slightly raised (NOT planted on the ground)\n- CLOSED PRAYER BOOK held against the chest with the LEFT HAND, \n  spine of the book vertical, visible from front\n- Both arms relaxed, body squared forward\n- Both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall slender adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with DARK BLACK PUPIL in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front, calm expression\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- SHOULDER-LENGTH PALE HAIR partially hidden under a deep hood\n- Hood casts subtle shadow over the upper face but eyes still \n  clearly visible from front\n- A few pale strands escape from under the hood\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, slender contemplative build, mid-20s\n- Long OFF-WHITE AND BEIGE ROBE with worn DIM GOLD EMBROIDERY \n  along the hem and sleeves\n- Tattered hood draped over the head and shoulders\n- Simple rope belt at the waist\n- Plain leather sandals or soft cloth boots\n- Golden ankh-staff: dim gold metal with weathered patina, \n  ankh symbol at the top\n- Closed prayer book: dark leather cover with a small gold cross emblem\n\nCOLOR PALETTE:\n- Dim warm gold embroidery and ankh staff are the LOW-SATURATION \n  warm accents (subtle, not bright)\n- Limited palette ~16-24 colors of off-white ivory, beige, charcoal, \n  dim warm gold, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), but \nwith a STRICT FRONT-FACING NEUTRAL POSE for 8-direction rotation \nbase sprite generation.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- This is a SOUTH-FACING base sprite for 8-direction rotation\n- Character body is squared DIRECTLY toward the viewer\n- Both shoulders are equally visible at equal width \n  (shoulders parallel to camera plane)\n- Head looks STRAIGHT FORWARD at the camera\n- Both eyes equally visible from front\n- Both feet visible facing forward, stance neutral and balanced\n- NOT a dynamic action pose, NOT a 3/4 angled hero pose\n\nWEAPON POSE:\n- GOLDEN ANKH-STAFF (or holy mace) held in the RIGHT HAND at \n  the right side, staff vertical, ankh head visible above shoulder, \n  staff bottom slightly raised (NOT planted on the ground)\n- CLOSED PRAYER BOOK held against the chest with the LEFT HAND, \n  spine of the book vertical, visible from front\n- Both arms relaxed, body squared forward\n- Both shoulders parallel to camera\n\nPROPORTIONS:\n- Tall slender adult human proportions, ~7-head ratio with a \n  SMALL HEAD relative to the body\n- Slim long torso, distinctly elongated legs\n- Head occupies only ~1/7 of total character height\n\nFACE \u2014 16-bit JRPG MINIMALIST with DETAILED EYES:\n\nEYES \u2014 anime-style with WHITE SCLERA and DARK PUPIL:\n- Each eye approximately 3 pixels wide \u00d7 2-3 pixels tall\n- WHITE SCLERA background with DARK BLACK PUPIL in the center\n- Sharp 1-pixel dark outline around each eye\n- Both eyes equally visible from front, calm expression\n- Lighter pale skin so WHITE SCLERA contrasts clearly\n\nNO MOUTH \u2014 ABSOLUTE STRICT REQUIREMENT:\n- The entire area below the eyes is COMPLETELY SMOOTH BLANK SKIN\n- NO mouth line, NO lip shape, NO chin shading\n\nNO NOSE \u2014 ABSOLUTE STRICT REQUIREMENT:\n- NO nose bridge, NO nostril dots, NO nose shadow\n\nEyebrows: 1-2 short dark pixels above each eye (subtle).\n\nHAIR:\n- SHOULDER-LENGTH PALE HAIR partially hidden under a deep hood\n- Hood casts subtle shadow over the upper face but eyes still \n  clearly visible from front\n- A few pale strands escape from under the hood\n\nBODY AND EQUIPMENT (medium detail, secondary focus):\n- Adult, slender contemplative build, mid-20s\n- Long OFF-WHITE AND BEIGE ROBE with worn DIM GOLD EMBROIDERY \n  along the hem and sleeves\n- Tattered hood draped over the head and shoulders\n- Simple rope belt at the waist\n- Plain leather sandals or soft cloth boots\n- Golden ankh-staff: dim gold metal with weathered patina, \n  ankh symbol at the top\n- Closed prayer book: dark leather cover with a small gold cross emblem\n\nCOLOR PALETTE:\n- Dim warm gold embroidery and ankh staff are the LOW-SATURATION \n  warm accents (subtle, not bright)\n- Limited palette ~16-24 colors of off-white ivory, beige, charcoal, \n  dim warm gold, with skin tones for face only\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\nCLEAN OUTPUT \u2014 STRICT:\n\u2605 CLEAN SOLID COLOR SHAPES ONLY\n\u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles, \n  NO stars, NO floating dots, NO noise pixels\n\u2605 TRUE transparent PNG (alpha=0)\n\u2605 NO shadow on the ground",
+    "size": {
+      "width": 144,
+      "height": 144
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T10:46:54.807778+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6": {
+        "south-east": [
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_000.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_001.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_002.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_003.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_004.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_005.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_006.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_007.png",
+          "animations/Serene_gentle_walking_cycle_for_a_dark_fantasy_pri-8d3fd1d6/south-east/frame_008.png"
+        ]
+      },
+      "Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821": {
+        "south-east": [
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821/south-east/frame_000.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821/south-east/frame_001.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821/south-east/frame_002.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821/south-east/frame_003.png",
+          "animations/Subtle_idle_breathing_animation_for_a_dark_fantasy-c9b02821/south-east/frame_004.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T11:57:59.036572"
+}

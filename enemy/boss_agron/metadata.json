@@ -1,0 +1,57 @@
+{
+  "character": {
+    "id": "39826319-99c0-454c-abeb-e19a6ced17f8",
+    "name": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), \nDEMON-KING BOSS variant. STRICT FRONT-FACING POSE.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body squared DIRECTLY toward the viewer\n- Both shoulders parallel to camera, equal width visible\n- Head straight forward\n- Imposing wide stance with both feet planted firmly\n- Greatsword held in right hand at the right side, blade angled \n  slightly upward and outward (NOT planted on ground)\n\nPROPORTIONS:\n- MASSIVE armored demon-king (~2.5x player size on canvas)\n- Imposing 1.4x broader shoulders, longer limbs\n- ~7-head ratio with relatively SMALL HEAD (helmet) compared \n  to massive armored body\n\nFACE \u2014 DEMON-KING MINIMALIST:\n- Full HORNED DEMON HELMET (no face visible)\n- Eyes are FIERCE GLOWING DIM RED EYE-SLITS (horizontal, intimidating)\n- NO mouth, NO nose \u2014 helmet covers everything\n- Two large twisted DARK HORNS curve back and up from helmet sides\n\nHAIR:\n- Hidden under helmet, no visible hair\n\nBODY AND EQUIPMENT:\n- ANCIENT BLACKENED PLATE ARMOR cracked with GLOWING MOLTEN \n  ORANGE-RED SEAMS across the chest, pauldrons, gauntlets, boots\n- Massive HORNED HELMET with curved dark horns\n- Cape of CHARRED CHAINS hanging from the shoulders \n  (thick black chain links with slight ember glow)\n- Wielding a GIANT FLAMING GREATSWORD in the RIGHT HAND at the \n  right side, blade tip pointing slightly upward and outward, \n  blade has a SUBTLE ORANGE GLOW along the entire edge \n  (NOT bright fire, just smoldering molten heat)\n- Heavy plated boots with magma-red rune glow\n- Left arm hangs at the side, gauntlet visible\n\nCOLOR PALETTE:\n- Molten orange-red armor seams, sword glow, eye slits, magma \n  rune glow are the dominant saturated accents\n- Limited palette ~22 colors of charcoal, blackened steel, \n  molten orange-red, dim crimson\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\n  CLEAN OUTPUT \u2014 ABSOLUTE STRICT REQUIREMENTS:\n  \u2605 OUTLINE INTEGRITY: The outline must be SOLID PURE BLACK pixels only.\n    NEVER white pixels in or near the outline. NEVER colored pixels\n    along the silhouette edge.\n  \u2605 MOLTEN GLOW CONTAINMENT: Ember/molten glow stays STRICTLY INSIDE\n    designated armor crack patterns ONLY. NEVER spills onto the outline.\n    NEVER extends beyond the armor surface. NEVER appears outside\n    the character silhouette.\n  \u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles,\n    NO stars, NO floating dots, NO noise pixels around the silhouette.\n  \u2605 The pixel transition from character to transparent background\n    must be CLEAN: solid character pixels \u2192 black outline pixel\n    \u2192 transparent. NO intermediate noise.\n  \u2605 CLEAN SOLID COLOR SHAPES ONLY.\n  \u2605 TRUE transparent PNG (alpha=0).\n  \u2605 NO shadow on the ground.",
+    "prompt": "TRUE pixel art with OCTOPATH TRAVELER character sprite color \npalette and pixel detail level (HD-2D 16-bit JRPG style), \nDEMON-KING BOSS variant. STRICT FRONT-FACING POSE.\n\nPOSE \u2014 ABSOLUTELY CRITICAL:\n- SOUTH-FACING base sprite for 8-direction rotation\n- Body squared DIRECTLY toward the viewer\n- Both shoulders parallel to camera, equal width visible\n- Head straight forward\n- Imposing wide stance with both feet planted firmly\n- Greatsword held in right hand at the right side, blade angled \n  slightly upward and outward (NOT planted on ground)\n\nPROPORTIONS:\n- MASSIVE armored demon-king (~2.5x player size on canvas)\n- Imposing 1.4x broader shoulders, longer limbs\n- ~7-head ratio with relatively SMALL HEAD (helmet) compared \n  to massive armored body\n\nFACE \u2014 DEMON-KING MINIMALIST:\n- Full HORNED DEMON HELMET (no face visible)\n- Eyes are FIERCE GLOWING DIM RED EYE-SLITS (horizontal, intimidating)\n- NO mouth, NO nose \u2014 helmet covers everything\n- Two large twisted DARK HORNS curve back and up from helmet sides\n\nHAIR:\n- Hidden under helmet, no visible hair\n\nBODY AND EQUIPMENT:\n- ANCIENT BLACKENED PLATE ARMOR cracked with GLOWING MOLTEN \n  ORANGE-RED SEAMS across the chest, pauldrons, gauntlets, boots\n- Massive HORNED HELMET with curved dark horns\n- Cape of CHARRED CHAINS hanging from the shoulders \n  (thick black chain links with slight ember glow)\n- Wielding a GIANT FLAMING GREATSWORD in the RIGHT HAND at the \n  right side, blade tip pointing slightly upward and outward, \n  blade has a SUBTLE ORANGE GLOW along the entire edge \n  (NOT bright fire, just smoldering molten heat)\n- Heavy plated boots with magma-red rune glow\n- Left arm hangs at the side, gauntlet visible\n\nCOLOR PALETTE:\n- Molten orange-red armor seams, sword glow, eye slits, magma \n  rune glow are the dominant saturated accents\n- Limited palette ~22 colors of charcoal, blackened steel, \n  molten orange-red, dim crimson\n\nRENDERING STYLE:\n- Single black outline, no anti-aliasing, sharp pixel edges\n- Basic flat shading with subtle dithering, NO smooth gradients\n\n  CLEAN OUTPUT \u2014 ABSOLUTE STRICT REQUIREMENTS:\n  \u2605 OUTLINE INTEGRITY: The outline must be SOLID PURE BLACK pixels only.\n    NEVER white pixels in or near the outline. NEVER colored pixels\n    along the silhouette edge.\n  \u2605 MOLTEN GLOW CONTAINMENT: Ember/molten glow stays STRICTLY INSIDE\n    designated armor crack patterns ONLY. NEVER spills onto the outline.\n    NEVER extends beyond the armor surface. NEVER appears outside\n    the character silhouette.\n  \u2605 ABSOLUTELY NO white specks, NO dust particles, NO sparkles,\n    NO stars, NO floating dots, NO noise pixels around the silhouette.\n  \u2605 The pixel transition from character to transparent background\n    must be CLEAN: solid character pixels \u2192 black outline pixel\n    \u2192 transparent. NO intermediate noise.\n  \u2605 CLEAN SOLID COLOR SHAPES ONLY.\n  \u2605 TRUE transparent PNG (alpha=0).\n  \u2605 NO shadow on the ground.",
+    "size": {
+      "width": 256,
+      "height": 256
+    },
+    "template_id": "mannequin",
+    "directions": 8,
+    "view": "low top-down",
+    "created_at": "2026-05-02T12:14:39.677767+00:00"
+  },
+  "frames": {
+    "rotations": {
+      "south": "rotations/south.png",
+      "south-east": "rotations/south-east.png",
+      "east": "rotations/east.png",
+      "north-east": "rotations/north-east.png",
+      "north": "rotations/north.png",
+      "north-west": "rotations/north-west.png",
+      "west": "rotations/west.png",
+      "south-west": "rotations/south-west.png"
+    },
+    "animations": {
+      "Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9": {
+        "south": [
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_000.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_001.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_002.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_003.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_004.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_005.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_006.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_007.png",
+          "animations/Devastating_overhead_slam_attack_for_boss_Agron_fi-5edebda9/south/frame_008.png"
+        ]
+      },
+      "Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc": {
+        "south": [
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_000.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_001.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_002.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_003.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_004.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_005.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_006.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_007.png",
+          "animations/Thunderous_walking_cycle_for_boss_Agron_fire_knigh-86221efc/south/frame_008.png"
+        ]
+      }
+    }
+  },
+  "export_version": "2.0",
+  "export_date": "2026-05-02T12:32:47.692947"
+}
