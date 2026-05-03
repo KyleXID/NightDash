@@ -85,22 +85,14 @@ namespace NightDash.Runtime.UI
         private GameObject _backgroundLayer;
         private Text _stageLabel;
 
-        // Campfire sprite + glow halo (Phase 2)
+        // Campfire sprite (Phase 2). The "light cast" effect is done entirely
+        // via per-card warmth tint (TickCardLighting) — no halo sprite, since
+        // a single circular PNG always reads as "round glowing object".
         private Image _campfireImage;
-        private RectTransform _glowHaloRect;
-        private Image _glowHaloImage;
         private Sprite[] _campfireFrames;
         private const float CampfireFps         = 8f;
-        // Faint halo around the fire only — the real "light cast" effect is
-        // done via per-card warmth tint based on distance from the campfire.
-        private const float GlowPulseHz         = 1.2f;
-        private const float GlowAlphaMin        = 0.06f;
-        private const float GlowAlphaMax        = 0.12f;
-        private const float GlowScaleMin        = 0.96f;
-        private const float GlowScaleMax        = 1.05f;
-        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -160f);
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -120f);
         private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
-        private static readonly Vector2 GlowHaloSize         = new Vector2(420f, 420f);
 
         // Per-card warmth wash. Cards near the fire pick up an orange tint;
         // cards far away stay desaturated. Tint magnitude pulses gently so
@@ -303,33 +295,6 @@ namespace NightDash.Runtime.UI
 
         private void BuildCampfire()
         {
-            // Glow halo first (under the sprite), centered slightly above the
-            // fire so warm light spills onto the lower halves of the cards.
-            var glowRect = CreateRect("CampfireGlow", transform);
-            glowRect.anchorMin = glowRect.anchorMax = new Vector2(0.5f, 0.5f);
-            glowRect.pivot = new Vector2(0.5f, 0.5f);
-            glowRect.sizeDelta = GlowHaloSize;
-            glowRect.anchoredPosition = new Vector2(CampfireSpriteCenter.x,
-                                                    CampfireSpriteCenter.y + 30f);
-
-            var glowImage = glowRect.gameObject.AddComponent<Image>();
-            glowImage.preserveAspect = true;
-            glowImage.raycastTarget = false;
-            var glowSprite = Resources.Load<Sprite>("NightDash/UI/Lobby/lobby_campfire_glow_halo");
-            if (glowSprite != null)
-            {
-                glowImage.sprite = glowSprite;
-                glowImage.color = new Color(1f, 1f, 1f, GlowAlphaMin);
-            }
-            else
-            {
-                // Fallback: solid warm circle if the asset is missing.
-                glowImage.color = new Color(1f, 0.55f, 0.20f, 0.30f);
-            }
-            _glowHaloRect = glowRect;
-            _glowHaloImage = glowImage;
-
-            // Campfire sprite on top of the halo.
             var fireRect = CreateRect("CampfireSprite", transform);
             fireRect.anchorMin = fireRect.anchorMax = new Vector2(0.5f, 0.5f);
             fireRect.pivot = new Vector2(0.5f, 0.5f);
@@ -484,11 +449,7 @@ namespace NightDash.Runtime.UI
                 if (_cards[i].Label != null) _cards[i].Label.transform.SetAsLastSibling();
             }
 
-            // Glow halo on top of every card — soft warm wash falls onto
-            // characters' silhouettes (alpha-blended over the card sprites).
-            if (_glowHaloRect != null) _glowHaloRect.SetAsLastSibling();
-
-            // UI labels stay above the light wash so they remain readable.
+            // UI labels stay above the cards so they remain readable.
             if (_stageLabel != null) _stageLabel.transform.SetAsLastSibling();
             var helpText = transform.Find("HelpText");
             if (helpText != null) helpText.SetAsLastSibling();
@@ -568,17 +529,6 @@ namespace NightDash.Runtime.UI
                 if (idx < 0) idx += _campfireFrames.Length;
                 var s = _campfireFrames[idx];
                 if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
-            }
-
-            // Glow halo: alpha + scale pulse on a sine wave.
-            if (_glowHaloImage != null && _glowHaloRect != null)
-            {
-                float u = (Mathf.Sin(_animTime * GlowPulseHz * Mathf.PI * 2f) + 1f) * 0.5f;
-                var c = _glowHaloImage.color;
-                c.a = Mathf.Lerp(GlowAlphaMin, GlowAlphaMax, u);
-                _glowHaloImage.color = c;
-                float scale = Mathf.Lerp(GlowScaleMin, GlowScaleMax, u);
-                _glowHaloRect.localScale = new Vector3(scale, scale, 1f);
             }
         }
 
