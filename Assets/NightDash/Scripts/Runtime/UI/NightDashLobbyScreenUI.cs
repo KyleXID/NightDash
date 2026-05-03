@@ -83,8 +83,22 @@ namespace NightDash.Runtime.UI
         private NightDashDebugVisualBridge _visualBridge;
         private Canvas _canvas;
         private GameObject _backgroundLayer;
-        private GameObject _campfirePlaceholder;
         private Text _stageLabel;
+
+        // Campfire sprite + glow halo (Phase 2)
+        private Image _campfireImage;
+        private RectTransform _glowHaloRect;
+        private Image _glowHaloImage;
+        private Sprite[] _campfireFrames;
+        private const float CampfireFps         = 8f;
+        private const float GlowPulseHz         = 1.4f; // cycles per second
+        private const float GlowAlphaMin        = 0.45f;
+        private const float GlowAlphaMax        = 0.85f;
+        private const float GlowScaleMin        = 0.94f;
+        private const float GlowScaleMax        = 1.10f;
+        private static readonly Vector2 CampfireSpriteCenter = new Vector2(0f, -240f);
+        private static readonly Vector2 CampfireSpriteSize   = new Vector2(220f, 290f);
+        private static readonly Vector2 GlowHaloSize         = new Vector2(560f, 560f);
 
         private readonly List<CharacterCard> _cards = new();
         private readonly List<string> _stageIds = new();
@@ -188,7 +202,7 @@ namespace NightDash.Runtime.UI
             }
 
             BuildBackground();
-            BuildCampfirePlaceholder();
+            BuildCampfire();
             BuildStageLabel();
             BuildHelpText();
         }
@@ -275,21 +289,67 @@ namespace NightDash.Runtime.UI
             }
         }
 
-        private void BuildCampfirePlaceholder()
+        private void BuildCampfire()
         {
-            // Phase 1 placeholder: a small warm dot below the card row where
-            // the animated campfire sprite will sit in Phase 2. Independent
-            // Y from CampfireCenter (which is the card layout anchor).
-            var rect = CreateRect("CampfirePlaceholder", transform);
-            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(120f, 160f);
-            rect.anchoredPosition = new Vector2(CampfireCenter.x, -240f);
+            // Glow halo first (under the sprite), centered slightly above the
+            // fire so warm light spills onto the lower halves of the cards.
+            var glowRect = CreateRect("CampfireGlow", transform);
+            glowRect.anchorMin = glowRect.anchorMax = new Vector2(0.5f, 0.5f);
+            glowRect.pivot = new Vector2(0.5f, 0.5f);
+            glowRect.sizeDelta = GlowHaloSize;
+            glowRect.anchoredPosition = new Vector2(CampfireSpriteCenter.x,
+                                                    CampfireSpriteCenter.y + 30f);
 
-            var img = rect.gameObject.AddComponent<Image>();
-            img.color = new Color(1f, 0.55f, 0.18f, 0.85f);
-            img.raycastTarget = false;
-            _campfirePlaceholder = rect.gameObject;
+            var glowImage = glowRect.gameObject.AddComponent<Image>();
+            glowImage.preserveAspect = true;
+            glowImage.raycastTarget = false;
+            var glowSprite = Resources.Load<Sprite>("NightDash/UI/Lobby/lobby_campfire_glow_halo");
+            if (glowSprite != null)
+            {
+                glowImage.sprite = glowSprite;
+                glowImage.color = new Color(1f, 1f, 1f, GlowAlphaMin);
+            }
+            else
+            {
+                // Fallback: solid warm circle if the asset is missing.
+                glowImage.color = new Color(1f, 0.55f, 0.20f, 0.30f);
+            }
+            _glowHaloRect = glowRect;
+            _glowHaloImage = glowImage;
+
+            // Campfire sprite on top of the halo.
+            var fireRect = CreateRect("CampfireSprite", transform);
+            fireRect.anchorMin = fireRect.anchorMax = new Vector2(0.5f, 0.5f);
+            fireRect.pivot = new Vector2(0.5f, 0.5f);
+            fireRect.sizeDelta = CampfireSpriteSize;
+            fireRect.anchoredPosition = CampfireSpriteCenter;
+
+            var fireImage = fireRect.gameObject.AddComponent<Image>();
+            fireImage.preserveAspect = true;
+            fireImage.raycastTarget = false;
+            _campfireFrames = LoadCampfireFrames();
+            if (_campfireFrames != null && _campfireFrames.Length > 0)
+            {
+                fireImage.sprite = _campfireFrames[0];
+                fireImage.color = Color.white;
+            }
+            else
+            {
+                fireImage.color = new Color(1f, 0.55f, 0.18f, 0.85f); // visual stub
+            }
+            _campfireImage = fireImage;
+        }
+
+        private static Sprite[] LoadCampfireFrames()
+        {
+            var list = new List<Sprite>(8);
+            for (int i = 0; i < 16; i++)
+            {
+                var s = Resources.Load<Sprite>($"NightDash/UI/Lobby/Campfire/frame_{i:000}");
+                if (s == null) break;
+                list.Add(s);
+            }
+            return list.Count > 0 ? list.ToArray() : null;
         }
 
         private void BuildCards()
@@ -440,6 +500,7 @@ namespace NightDash.Runtime.UI
 
             _animTime += Time.unscaledDeltaTime;
             TickCardIdle();
+            TickCampfire();
 
             ReadInput(out bool left, out bool right, out bool up, out bool down, out bool confirm, out bool cancel);
 
@@ -449,6 +510,29 @@ namespace NightDash.Runtime.UI
             else if (down)  { MoveStage(+1); }
             else if (confirm) { StartRun(); }
             else if (cancel)  { BackToTitle(); }
+        }
+
+        private void TickCampfire()
+        {
+            // Frame swap (uniform fps loop).
+            if (_campfireImage != null && _campfireFrames != null && _campfireFrames.Length > 0)
+            {
+                int idx = Mathf.FloorToInt(_animTime * CampfireFps) % _campfireFrames.Length;
+                if (idx < 0) idx += _campfireFrames.Length;
+                var s = _campfireFrames[idx];
+                if (s != null && _campfireImage.sprite != s) _campfireImage.sprite = s;
+            }
+
+            // Glow halo: alpha + scale pulse on a sine wave.
+            if (_glowHaloImage != null && _glowHaloRect != null)
+            {
+                float u = (Mathf.Sin(_animTime * GlowPulseHz * Mathf.PI * 2f) + 1f) * 0.5f;
+                var c = _glowHaloImage.color;
+                c.a = Mathf.Lerp(GlowAlphaMin, GlowAlphaMax, u);
+                _glowHaloImage.color = c;
+                float scale = Mathf.Lerp(GlowScaleMin, GlowScaleMax, u);
+                _glowHaloRect.localScale = new Vector3(scale, scale, 1f);
+            }
         }
 
         private void TickCardIdle()
