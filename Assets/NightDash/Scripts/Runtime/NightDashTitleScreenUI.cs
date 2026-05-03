@@ -31,6 +31,12 @@ namespace NightDash.Runtime
         private readonly GameObject[] _menuButtons = new GameObject[4];
         private int _selectedIndex;
 
+        // Two-state title: initial (PRESS START prompt) -> menu (4-button stack).
+        private GameObject _pressStartText;
+        private Text _pressStartLabel;
+        private bool _menuRevealed;
+        private float _pressStartPulseTime;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
@@ -98,11 +104,13 @@ namespace NightDash.Runtime
             // Start. Restored in OnStartClicked.
             Time.timeScale = 0f;
 
-            // Restore default selection so keyboard/gamepad navigation has a focus.
-            if (_firstButton != null)
-            {
-                EventSystem.current?.SetSelectedGameObject(_firstButton);
-            }
+            // Always start in the PRESS START state. Menu only opens after the
+            // player presses any confirm key. Keeps the central hero artwork
+            // unobstructed on first impression.
+            _menuRevealed = false;
+            _pressStartPulseTime = 0f;
+            SetMenuVisible(false);
+            SetPressStartVisible(true);
         }
 
         private void OnDisable()
@@ -124,7 +132,7 @@ namespace NightDash.Runtime
             // Direct keyboard polling — avoids Update-order dependency on
             // NightDashUIInputRuntime and works whether or not Input System
             // UI Module's default actions are wired up.
-            bool up, down, confirm;
+            bool up, down, confirm, cancel;
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
             if (kb == null) return;
@@ -132,16 +140,72 @@ namespace NightDash.Runtime
             down = kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame;
             confirm = kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame
                       || kb.numpadEnterKey.wasPressedThisFrame;
+            cancel = kb.escapeKey.wasPressedThisFrame;
 #else
             up = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
             down = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
             confirm = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)
                       || Input.GetKeyDown(KeyCode.KeypadEnter);
+            cancel = Input.GetKeyDown(KeyCode.Escape);
 #endif
 
-            if (up) SelectIndex(_selectedIndex - 1);
-            else if (down) SelectIndex(_selectedIndex + 1);
-            else if (confirm) ClickSelected();
+            if (!_menuRevealed)
+            {
+                // Initial state: pulse PRESS START, wait for any confirm.
+                PulsePressStart();
+                if (confirm) RevealMenu();
+            }
+            else
+            {
+                if (up) SelectIndex(_selectedIndex - 1);
+                else if (down) SelectIndex(_selectedIndex + 1);
+                else if (confirm) ClickSelected();
+                else if (cancel) HideMenu();
+            }
+        }
+
+        private void PulsePressStart()
+        {
+            if (_pressStartLabel == null) return;
+            // unscaledDeltaTime so the pulse keeps running while timeScale=0.
+            _pressStartPulseTime += Time.unscaledDeltaTime;
+            float a = 0.35f + 0.65f * Mathf.PingPong(_pressStartPulseTime * 1.4f, 1f);
+            var c = _pressStartLabel.color;
+            c.a = a;
+            _pressStartLabel.color = c;
+        }
+
+        private void RevealMenu()
+        {
+            _menuRevealed = true;
+            SetPressStartVisible(false);
+            SetMenuVisible(true);
+            if (_firstButton != null)
+            {
+                EventSystem.current?.SetSelectedGameObject(_firstButton);
+            }
+            _selectedIndex = 0;
+        }
+
+        private void HideMenu()
+        {
+            _menuRevealed = false;
+            SetMenuVisible(false);
+            SetPressStartVisible(true);
+            _pressStartPulseTime = 0f;
+        }
+
+        private void SetMenuVisible(bool visible)
+        {
+            for (int i = 0; i < _menuButtons.Length; i++)
+            {
+                if (_menuButtons[i] != null) _menuButtons[i].SetActive(visible);
+            }
+        }
+
+        private void SetPressStartVisible(bool visible)
+        {
+            if (_pressStartText != null) _pressStartText.SetActive(visible);
         }
 
         private void SelectIndex(int next)
@@ -225,16 +289,16 @@ namespace NightDash.Runtime
 
             if (logoTexture != null)
             {
-                // Logo: top-center anchor, native aspect ratio preserved.
-                // Height fixed at 220px; width derived from texture proportions
-                // so 256x128 source renders at 440x220 without squashing.
+                // Logo: top-LEFT anchor, larger size. Background hero is in
+                // center-bottom of the illustration so the logo lives in the
+                // empty top-left sky region.
                 var logoRect = CreateRect("TitleLogo", gameObject.transform);
-                logoRect.anchorMin = new Vector2(0.5f, 1f);
-                logoRect.anchorMax = new Vector2(0.5f, 1f);
-                logoRect.pivot = new Vector2(0.5f, 1f);
-                logoRect.anchoredPosition = new Vector2(0f, -50f);
+                logoRect.anchorMin = new Vector2(0f, 1f);
+                logoRect.anchorMax = new Vector2(0f, 1f);
+                logoRect.pivot = new Vector2(0f, 1f);
+                logoRect.anchoredPosition = new Vector2(60f, -60f);
 
-                const float logoHeight = 220f;
+                const float logoHeight = 320f;
                 float aspect = logoTexture.height > 0
                     ? (float)logoTexture.width / logoTexture.height
                     : 2f;
@@ -243,7 +307,12 @@ namespace NightDash.Runtime
                 var logoImage = logoRect.gameObject.AddComponent<RawImage>();
                 logoImage.texture = logoTexture;
                 logoImage.color = Color.white;
+                logoImage.raycastTarget = false;
             }
+
+            // PRESS START prompt — bottom-center, pulsed alpha. Visible only
+            // before the player confirms; replaced by the 4-button menu.
+            BuildPressStartLabel();
 
             // 4-button vertical stack. Absolute pixel offsets from screen
             // center keep layout predictable across CanvasScaler match modes
@@ -256,6 +325,30 @@ namespace NightDash.Runtime
 
             _firstButton = _menuButtons[0];
             _selectedIndex = 0;
+
+            // Hide menu until the player confirms PRESS START.
+            SetMenuVisible(false);
+        }
+
+        private void BuildPressStartLabel()
+        {
+            var rect = CreateRect("PressStart", gameObject.transform);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(800f, 90f);
+            rect.anchoredPosition = new Vector2(0f, 90f); // 90px above bottom
+
+            var text = rect.gameObject.AddComponent<Text>();
+            text.text = "PRESS START";
+            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = 56;
+            text.fontStyle = FontStyle.Bold;
+            text.color = Color.white;
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.raycastTarget = false;
+
+            _pressStartText = rect.gameObject;
+            _pressStartLabel = text;
         }
 
         // Returns the GameObject so the caller can populate _menuButtons.
