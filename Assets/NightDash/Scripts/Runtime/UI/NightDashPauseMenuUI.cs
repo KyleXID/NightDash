@@ -376,8 +376,10 @@ namespace NightDash.Runtime.UI
             var go = new GameObject("PausedTitle");
             var rect = go.AddComponent<RectTransform>();
             rect.SetParent(transform, false);
-            rect.anchorMin = new Vector2(0.5f, 0.78f);
-            rect.anchorMax = new Vector2(0.5f, 0.78f);
+            // Anchored higher (0.88) so the 5-button stack below has room
+            // without the title overlapping the topmost button.
+            rect.anchorMin = new Vector2(0.5f, 0.88f);
+            rect.anchorMax = new Vector2(0.5f, 0.88f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(600f, 120f);
             rect.anchoredPosition = Vector2.zero;
@@ -411,7 +413,9 @@ namespace NightDash.Runtime.UI
             const float buttonWidth = 404f;
             const float buttonHeight = 148f;
             const float buttonSpacing = 16f;
-            const float stackY = -20f;
+            // stackY pulls the whole stack downward so the topmost button
+            // (Resume) clears the PAUSED title at anchor 0.88.
+            const float stackY = -95f;
 
             int n = labels.Length;
             float totalHeight = n * buttonHeight + (n - 1) * buttonSpacing;
