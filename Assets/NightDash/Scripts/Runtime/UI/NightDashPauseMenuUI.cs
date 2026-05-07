@@ -428,7 +428,8 @@ namespace NightDash.Runtime.UI
 
                 var bg = go.AddComponent<Image>();
                 bg.sprite = _buttonSpriteDefault;
-                bg.preserveAspect = true;
+                bg.type = Image.Type.Sliced; // 9-slice — corners stay pixel-perfect.
+                bg.pixelsPerUnitMultiplier = 1f;
                 bg.color = Color.white;
                 bg.raycastTarget = false; // Keyboard-only menu.
 

@@ -49,6 +49,19 @@ namespace NightDash.Editor
             }
             settings.spriteMeshType = SpriteMeshType.FullRect;
             settings.spriteExtrude = 0;
+
+            // 9-slice border for button frames so Image type=Sliced can stretch
+            // the center across arbitrary RectTransform sizes while leaving the
+            // bronze trim corners + rivets pixel-perfect. Border format is
+            // Vector4(left, bottom, right, top) in source-pixel units.
+            // Tuned for 128×56 button sprites with frame body at (14,9)~(115,46)
+            // and rivet groups in each corner.
+            string fileName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            if (fileName.StartsWith("nd_ui_frame_button_"))
+            {
+                settings.spriteBorder = new Vector4(22f, 18f, 22f, 14f);
+            }
+
             importer.SetTextureSettings(settings);
         }
     }

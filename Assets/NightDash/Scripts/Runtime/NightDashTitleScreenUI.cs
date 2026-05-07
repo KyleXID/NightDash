@@ -13,10 +13,6 @@ namespace NightDash.Runtime
     {
         [SerializeField] private Texture2D titleTexture;
         [SerializeField] private Texture2D logoTexture;
-        [SerializeField] private Texture2D buttonDefaultTexture;
-        [SerializeField] private Texture2D buttonHoverTexture;
-        [SerializeField] private Texture2D buttonPressedTexture;
-        [SerializeField] private Texture2D buttonDisabledTexture;
         [SerializeField] private Vector2 referenceResolution = new Vector2(1920f, 1080f);
 
         // Sprint B M1: 4-button menu. Localization deferred to a future sprint;
@@ -30,7 +26,16 @@ namespace NightDash.Runtime
         private NightDashDebugVisualBridge _visualBridge;
         private GameObject _firstButton;
         private readonly GameObject[] _menuButtons = new GameObject[4];
+        private readonly Text[] _menuButtonLabels = new Text[4];
+        private readonly System.Action[] _menuButtonActions = new System.Action[4];
         private int _selectedIndex;
+
+        // Button frame 4-state sprites loaded once at Awake. Same pattern as
+        // PauseMenu — Resources.Load + 9-slice (Image.type = Sliced) so the
+        // bronze trim corners stay pixel-perfect at any RectTransform size.
+        private Sprite _buttonSpriteDefault;
+        private Sprite _buttonSpriteHover;
+        private Sprite _buttonSpriteDisabled;
 
         // Two-state title: initial (PRESS START prompt) -> menu (4-button stack).
         private GameObject _pressStartText;
@@ -89,7 +94,7 @@ namespace NightDash.Runtime
             }
 
             EnsureEventSystem();
-            LoadButtonFrameTextures();
+            LoadButtonSprites();
             BuildCanvas();
         }
 
@@ -208,11 +213,11 @@ namespace NightDash.Runtime
             _menuRevealed = true;
             SetPressStartVisible(false);
             SetMenuVisible(true);
-            if (_firstButton != null)
-            {
-                EventSystem.current?.SetSelectedGameObject(_firstButton);
-            }
-            _selectedIndex = 0;
+            // Apply hover sprite + label color to the first button. We don't
+            // rely on EventSystem.SetSelectedGameObject anymore — keyboard
+            // navigation goes through Update polling + SelectIndex direct
+            // sprite swap (mirrors NightDashPauseMenuUI).
+            SelectIndex(0);
         }
 
         private void HideMenu()
@@ -241,23 +246,32 @@ namespace NightDash.Runtime
             int len = _menuButtons.Length;
             if (len == 0) return;
             _selectedIndex = ((next % len) + len) % len;
-            var go = _menuButtons[_selectedIndex];
-            if (go != null && EventSystem.current != null)
+            for (int i = 0; i < len; i++)
             {
-                EventSystem.current.SetSelectedGameObject(go);
+                var go = _menuButtons[i];
+                if (go == null) continue;
+                bool selected = (i == _selectedIndex);
+
+                var img = go.GetComponent<Image>();
+                if (img != null)
+                {
+                    img.sprite = selected ? _buttonSpriteHover : _buttonSpriteDefault;
+                    img.color = Color.white;
+                }
+                if (_menuButtonLabels[i] != null)
+                {
+                    _menuButtonLabels[i].color = selected
+                        ? new Color(1f, 0.95f, 0.78f, 1f)   // warm parchment when selected
+                        : new Color(0.85f, 0.82f, 0.74f, 1f);
+                }
             }
         }
 
         private void ClickSelected()
         {
-            if (_selectedIndex < 0 || _selectedIndex >= _menuButtons.Length) return;
-            var go = _menuButtons[_selectedIndex];
-            if (go == null) return;
-            var btn = go.GetComponent<Button>();
-            if (btn != null && btn.interactable)
-            {
-                btn.onClick.Invoke();
-            }
+            if (_selectedIndex < 0 || _selectedIndex >= _menuButtonActions.Length) return;
+            var action = _menuButtonActions[_selectedIndex];
+            action?.Invoke();
         }
 
         public void SetTitleTexture(Texture2D texture)
@@ -347,10 +361,15 @@ namespace NightDash.Runtime
             // center keep layout predictable across CanvasScaler match modes
             // and Pixel Perfect Camera. First button at -150 below center,
             // each subsequent button 110px lower.
-            _menuButtons[0] = CreateMenuButton("StartButton", ButtonStartLabel, 0, OnStartClicked);
-            _menuButtons[1] = CreateMenuButton("ContinueButton", ButtonContinueLabel, 1, OnContinueClicked);
-            _menuButtons[2] = CreateMenuButton("SettingsButton", ButtonSettingsLabel, 2, OnSettingsClicked);
-            _menuButtons[3] = CreateMenuButton("QuitButton", ButtonQuitLabel, 3, OnQuitClicked);
+            _menuButtonActions[0] = OnStartClicked;
+            _menuButtonActions[1] = OnContinueClicked;
+            _menuButtonActions[2] = OnSettingsClicked;
+            _menuButtonActions[3] = OnQuitClicked;
+
+            _menuButtons[0] = CreateMenuButton("StartButton",    ButtonStartLabel,    0);
+            _menuButtons[1] = CreateMenuButton("ContinueButton", ButtonContinueLabel, 1);
+            _menuButtons[2] = CreateMenuButton("SettingsButton", ButtonSettingsLabel, 2);
+            _menuButtons[3] = CreateMenuButton("QuitButton",     ButtonQuitLabel,     3);
 
             _firstButton = _menuButtons[0];
             _selectedIndex = 0;
@@ -381,12 +400,19 @@ namespace NightDash.Runtime
         }
 
         // Returns the GameObject so the caller can populate _menuButtons.
-        private GameObject CreateMenuButton(string name, string label, int slotIndex, UnityEngine.Events.UnityAction onClick)
+        // Mirrors NightDashPauseMenuUI's pattern: 9-slice Image + plain Text
+        // child + direct sprite swap from SelectIndex (no Unity Button, no
+        // EventSystem highlight). Keyboard navigation goes through the Update
+        // polling loop above so it's not dependent on InputSystemUIInputModule.
+        private GameObject CreateMenuButton(string name, string label, int slotIndex)
         {
-            const float buttonWidth = 460f;
-            const float buttonHeight = 90f;
-            const float buttonSpacing = 20f;
-            const float topY = -150f; // first button below screen center
+            // Sized to ~2.5× the source sprite (128×56) for a prominent main
+            // menu read. 9-slice keeps the corners + rivets pixel-perfect at
+            // any scale, so width/height are free to retune.
+            const float buttonWidth = 320f;
+            const float buttonHeight = 140f;
+            const float buttonSpacing = 24f;
+            const float topY = 110f; // first button slightly above screen center
 
             var rect = CreateRect(name, gameObject.transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -395,32 +421,34 @@ namespace NightDash.Runtime
             rect.anchoredPosition = new Vector2(0f, topY - slotIndex * (buttonHeight + buttonSpacing));
 
             var image = rect.gameObject.AddComponent<Image>();
+            image.sprite = _buttonSpriteDefault;
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = 1f;
             image.color = Color.white;
-            image.type = Image.Type.Simple;
-            image.preserveAspect = false;
-            image.sprite = CreateSprite(buttonDefaultTexture);
-
-            var btn = rect.gameObject.AddComponent<Button>();
-            btn.targetGraphic = image;
-            btn.transition = Selectable.Transition.SpriteSwap;
-            btn.spriteState = new SpriteState
-            {
-                highlightedSprite = CreateSprite(buttonHoverTexture),
-                pressedSprite = CreateSprite(buttonPressedTexture),
-                disabledSprite = CreateSprite(buttonDisabledTexture)
-            };
-            btn.onClick.AddListener(onClick);
+            image.raycastTarget = false; // Keyboard-only menu.
 
             var textRect = CreateRect("Label", rect);
             StretchFull(textRect);
             var text = textRect.gameObject.AddComponent<Text>();
             text.text = label;
             text.alignment = TextAnchor.MiddleCenter;
-            text.fontSize = 38;
+            // Press Start 2P at 22pt fits the longest label ("Continue") inside
+            // a 320-wide button while staying sharp.
+            text.fontSize = 22;
+            text.fontStyle = FontStyle.Normal;
             text.color = Color.white;
+            text.raycastTarget = false;
             text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
 
+            _menuButtonLabels[slotIndex] = text;
             return rect.gameObject;
+        }
+
+        private void LoadButtonSprites()
+        {
+            _buttonSpriteDefault  = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_default");
+            _buttonSpriteHover    = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_hover");
+            _buttonSpriteDisabled = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
         }
 
         private void OnStartClicked()
@@ -510,30 +538,7 @@ namespace NightDash.Runtime
             return go.AddComponent<RectTransform>();
         }
 
-        private void LoadButtonFrameTextures()
-        {
-            NightDashButtonFrameStyle.LoadAndCropFrameTextures(
-                ref buttonDefaultTexture,
-                ref buttonHoverTexture,
-                ref buttonPressedTexture,
-                ref buttonDisabledTexture);
-        }
-
-        private static Sprite CreateSprite(Texture2D texture)
-        {
-            if (texture == null)
-            {
-                return null;
-            }
-
-            return Sprite.Create(
-                texture,
-                new Rect(0f, 0f, texture.width, texture.height),
-                new Vector2(0.5f, 0.5f),
-                100f);
-        }
-
-        private static void StretchFull(RectTransform rect)
+private static void StretchFull(RectTransform rect)
         {
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
