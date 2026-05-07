@@ -403,12 +403,12 @@ namespace NightDash.Runtime.UI
                 ButtonQuitLabel,
             };
 
-            // Sized to the button frame sprite ratio (128×56 → 2× scale =
-            // 256×112) so the bronze trim and rivets stay crisp under the
-            // arcade pixel font. Spacing matches Title menu rhythm.
-            const float buttonWidth = 256f;
-            const float buttonHeight = 112f;
-            const float buttonSpacing = 14f;
+            // 9-slice now scales corners independently (multiplier 0.25), so
+            // RectTransform size is free. Comfortable visual size for a 5-button
+            // pause stack on 1080p without spilling past the screen.
+            const float buttonWidth = 360f;
+            const float buttonHeight = 90f;
+            const float buttonSpacing = 18f;
             const float stackY = -20f;
 
             int n = labels.Length;
@@ -429,7 +429,11 @@ namespace NightDash.Runtime.UI
                 var bg = go.AddComponent<Image>();
                 bg.sprite = _buttonSpriteDefault;
                 bg.type = Image.Type.Sliced; // 9-slice — corners stay pixel-perfect.
-                bg.pixelsPerUnitMultiplier = 1f;
+                // Multiplier 0.25 = corners drawn at 4× sprite-pixel size in
+                // RectTransform space. Sprite is alpha-trimmed (101×37), so the
+                // 10/8/10/6 border becomes ~40px corners on screen — frame
+                // reads big enough without losing rivet sharpness.
+                bg.pixelsPerUnitMultiplier = 0.25f;
                 bg.color = Color.white;
                 bg.raycastTarget = false; // Keyboard-only menu.
 

@@ -423,7 +423,10 @@ namespace NightDash.Runtime
             var image = rect.gameObject.AddComponent<Image>();
             image.sprite = _buttonSpriteDefault;
             image.type = Image.Type.Sliced;
-            image.pixelsPerUnitMultiplier = 1f;
+            // Multiplier 0.25 → corners 4× their source-pixel size in
+            // RectTransform space. Source is alpha-trimmed 101×37 + border
+            // 10/8/10/6, so corners read at ~40px without padding shrinkage.
+            image.pixelsPerUnitMultiplier = 0.25f;
             image.color = Color.white;
             image.raycastTarget = false; // Keyboard-only menu.
 

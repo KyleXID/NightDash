@@ -54,12 +54,12 @@ namespace NightDash.Editor
             // the center across arbitrary RectTransform sizes while leaving the
             // bronze trim corners + rivets pixel-perfect. Border format is
             // Vector4(left, bottom, right, top) in source-pixel units.
-            // Tuned for 128×56 button sprites with frame body at (14,9)~(115,46)
-            // and rivet groups in each corner.
+            // Tuned for the alpha-trimmed 101×37 button sprites — corner
+            // covers the rivet cluster at each end.
             string fileName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
             if (fileName.StartsWith("nd_ui_frame_button_"))
             {
-                settings.spriteBorder = new Vector4(22f, 18f, 22f, 14f);
+                settings.spriteBorder = new Vector4(10f, 8f, 10f, 6f);
             }
 
             importer.SetTextureSettings(settings);
