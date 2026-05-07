@@ -37,6 +37,15 @@ namespace NightDash.Runtime
         private Sprite _buttonSpriteHover;
         private Sprite _buttonSpriteDisabled;
 
+        // Reveal animation: cascading fade + scale-up. Each button delays
+        // start by RevealStagger * its slot, then eases over RevealDuration.
+        // Driven by unscaledDeltaTime so the cinematic plays even with
+        // Time.timeScale=0.
+        private const float RevealDuration = 0.18f;
+        private const float RevealStagger = 0.08f;
+        private const float RevealStartScale = 0.85f;
+        private float _revealAnimTime;
+
         // Two-state title: initial (PRESS START prompt) -> menu (4-button stack).
         private GameObject _pressStartText;
         private Text _pressStartLabel;
@@ -194,6 +203,50 @@ namespace NightDash.Runtime
                 else if (down) SelectIndex(_selectedIndex + 1);
                 else if (confirm) ClickSelected();
                 else if (cancel) HideMenu();
+
+                // Cascade reveal animation runs AFTER SelectIndex so the
+                // animation's per-frame alpha/scale wins over SelectIndex's
+                // alpha=1 reset. Self-clamps once all buttons settle.
+                TickRevealAnimation();
+            }
+        }
+
+        // Drives the per-frame fade + scale cascade after RevealMenu().
+        // Each button's tween begins at slotIndex*Stagger seconds and finishes
+        // RevealDuration seconds later, eased with cubic ease-out.
+        private void TickRevealAnimation()
+        {
+            float total = RevealDuration + (_menuButtons.Length - 1) * RevealStagger;
+            if (_revealAnimTime > total + 0.01f) return; // Already settled.
+
+            _revealAnimTime += Time.unscaledDeltaTime;
+
+            for (int i = 0; i < _menuButtons.Length; i++)
+            {
+                var go = _menuButtons[i];
+                if (go == null) continue;
+
+                float delay = i * RevealStagger;
+                float t = Mathf.Clamp01((_revealAnimTime - delay) / RevealDuration);
+                // Ease-out cubic — quick start, soft landing.
+                float ease = 1f - (1f - t) * (1f - t) * (1f - t);
+
+                float scale = Mathf.Lerp(RevealStartScale, 1f, ease);
+                go.transform.localScale = new Vector3(scale, scale, 1f);
+
+                var img = go.GetComponent<Image>();
+                if (img != null)
+                {
+                    var c = img.color;
+                    c.a = ease;
+                    img.color = c;
+                }
+                if (_menuButtonLabels[i] != null)
+                {
+                    var lc = _menuButtonLabels[i].color;
+                    lc.a = ease;
+                    _menuButtonLabels[i].color = lc;
+                }
             }
         }
 
@@ -218,6 +271,20 @@ namespace NightDash.Runtime
             // navigation goes through Update polling + SelectIndex direct
             // sprite swap (mirrors NightDashPauseMenuUI).
             SelectIndex(0);
+
+            // Start the cascading fade+scale reveal. Pre-zero each button so
+            // the first frame doesn't pop at full opacity before TickReveal
+            // gets a chance to overwrite it.
+            _revealAnimTime = 0f;
+            for (int i = 0; i < _menuButtons.Length; i++)
+            {
+                var go = _menuButtons[i];
+                if (go == null) continue;
+                go.transform.localScale = new Vector3(RevealStartScale, RevealStartScale, 1f);
+                var img = go.GetComponent<Image>();
+                if (img != null) { var c = img.color; c.a = 0f; img.color = c; }
+                if (_menuButtonLabels[i] != null) { var lc = _menuButtonLabels[i].color; lc.a = 0f; _menuButtonLabels[i].color = lc; }
+            }
         }
 
         private void HideMenu()
@@ -226,6 +293,8 @@ namespace NightDash.Runtime
             SetMenuVisible(false);
             SetPressStartVisible(true);
             _pressStartPulseTime = 0f;
+            // Park the reveal animation so a re-reveal restarts cleanly.
+            _revealAnimTime = 0f;
         }
 
         private void SetMenuVisible(bool visible)
