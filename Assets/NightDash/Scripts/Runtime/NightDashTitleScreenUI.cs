@@ -400,17 +400,19 @@ namespace NightDash.Runtime
         }
 
         // Returns the GameObject so the caller can populate _menuButtons.
-        // Mirrors NightDashPauseMenuUI's pattern: 9-slice Image + plain Text
-        // child + direct sprite swap from SelectIndex (no Unity Button, no
-        // EventSystem highlight). Keyboard navigation goes through the Update
-        // polling loop above so it's not dependent on InputSystemUIInputModule.
+        // Mirrors NightDashPauseMenuUI: Image (Simple + preserveAspect) +
+        // direct sprite swap from SelectIndex (no Unity Button, no
+        // EventSystem highlight). Keyboard navigation goes through the
+        // Update polling loop above so it's not dependent on
+        // InputSystemUIInputModule.
         private GameObject CreateMenuButton(string name, string label, int slotIndex)
         {
-            // Sized to ~2.5× the source sprite (128×56) for a prominent main
-            // menu read. 9-slice keeps the corners + rivets pixel-perfect at
-            // any scale, so width/height are free to retune.
-            const float buttonWidth = 320f;
-            const float buttonHeight = 140f;
+            // Sprite native is alpha-trimmed 101×37. RectTransform is a
+            // uniform 4× scale so every source pixel maps to a 4×4 block —
+            // corners and center scale together, no 9-slice distortion.
+            //   404 × 148 = 101 × 37 × 4
+            const float buttonWidth = 404f;
+            const float buttonHeight = 148f;
             const float buttonSpacing = 24f;
             const float topY = 110f; // first button slightly above screen center
 
@@ -422,11 +424,8 @@ namespace NightDash.Runtime
 
             var image = rect.gameObject.AddComponent<Image>();
             image.sprite = _buttonSpriteDefault;
-            image.type = Image.Type.Sliced;
-            // Multiplier 0.25 → corners 4× their source-pixel size in
-            // RectTransform space. Source is alpha-trimmed 101×37 + border
-            // 10/8/10/6, so corners read at ~40px without padding shrinkage.
-            image.pixelsPerUnitMultiplier = 0.25f;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
             image.color = Color.white;
             image.raycastTarget = false; // Keyboard-only menu.
 

@@ -403,12 +403,14 @@ namespace NightDash.Runtime.UI
                 ButtonQuitLabel,
             };
 
-            // 9-slice now scales corners independently (multiplier 0.25), so
-            // RectTransform size is free. Comfortable visual size for a 5-button
-            // pause stack on 1080p without spilling past the screen.
-            const float buttonWidth = 360f;
-            const float buttonHeight = 90f;
-            const float buttonSpacing = 18f;
+            // Sprite native is alpha-trimmed 101×37. We use a uniform 4× scale
+            // so width/height stay in lockstep with the sprite's pixel grid:
+            //   404 × 148  =  101 × 37  ×  4
+            // Spacing 16 keeps a 5-button stack inside 1080p:
+            //   5 * 148 + 4 * 16 = 804 < 1080.
+            const float buttonWidth = 404f;
+            const float buttonHeight = 148f;
+            const float buttonSpacing = 16f;
             const float stackY = -20f;
 
             int n = labels.Length;
@@ -428,12 +430,13 @@ namespace NightDash.Runtime.UI
 
                 var bg = go.AddComponent<Image>();
                 bg.sprite = _buttonSpriteDefault;
-                bg.type = Image.Type.Sliced; // 9-slice — corners stay pixel-perfect.
-                // Multiplier 0.25 = corners drawn at 4× sprite-pixel size in
-                // RectTransform space. Sprite is alpha-trimmed (101×37), so the
-                // 10/8/10/6 border becomes ~40px corners on screen — frame
-                // reads big enough without losing rivet sharpness.
-                bg.pixelsPerUnitMultiplier = 0.25f;
+                // Simple + preserveAspect = uniform integer-scale of the
+                // sprite. RectTransform is set to an exact multiple of the
+                // sprite's native 101×37 so every source pixel maps to N
+                // RectTransform pixels — corners and center scale together,
+                // no warping, no blur.
+                bg.type = Image.Type.Simple;
+                bg.preserveAspect = true;
                 bg.color = Color.white;
                 bg.raycastTarget = false; // Keyboard-only menu.
 
