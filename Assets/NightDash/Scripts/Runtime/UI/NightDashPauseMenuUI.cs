@@ -376,10 +376,10 @@ namespace NightDash.Runtime.UI
             var go = new GameObject("PausedTitle");
             var rect = go.AddComponent<RectTransform>();
             rect.SetParent(transform, false);
-            // Anchored higher (0.88) so the 5-button stack below has room
-            // without the title overlapping the topmost button.
-            rect.anchorMin = new Vector2(0.5f, 0.88f);
-            rect.anchorMax = new Vector2(0.5f, 0.88f);
+            // Anchored at 0.85 so PAUSED breathes in the upper third while
+            // the 3×-scaled 5-button stack centers comfortably below.
+            rect.anchorMin = new Vector2(0.5f, 0.85f);
+            rect.anchorMax = new Vector2(0.5f, 0.85f);
             rect.pivot = new Vector2(0.5f, 0.5f);
             rect.sizeDelta = new Vector2(600f, 120f);
             rect.anchoredPosition = Vector2.zero;
@@ -405,17 +405,15 @@ namespace NightDash.Runtime.UI
                 ButtonQuitLabel,
             };
 
-            // Sprite native is alpha-trimmed 101×37. We use a uniform 4× scale
-            // so width/height stay in lockstep with the sprite's pixel grid:
-            //   404 × 148  =  101 × 37  ×  4
-            // Spacing 16 keeps a 5-button stack inside 1080p:
-            //   5 * 148 + 4 * 16 = 804 < 1080.
-            const float buttonWidth = 404f;
-            const float buttonHeight = 148f;
+            // Uniform 3× scale of the alpha-trimmed 101×37 sprite — keeps
+            // pixels sharp while leaving plenty of vertical room for the
+            // PAUSED title above and a comfortable 5-button stack overall:
+            //   303 × 111  =  101 × 37  ×  3
+            //   5 * 111 + 4 * 16 = 619 < 1080
+            const float buttonWidth = 303f;
+            const float buttonHeight = 111f;
             const float buttonSpacing = 16f;
-            // stackY pulls the whole stack downward so the topmost button
-            // (Resume) clears the PAUSED title at anchor 0.88.
-            const float stackY = -95f;
+            const float stackY = -50f; // shift down a touch to balance below PAUSED
 
             int n = labels.Length;
             float totalHeight = n * buttonHeight + (n - 1) * buttonSpacing;

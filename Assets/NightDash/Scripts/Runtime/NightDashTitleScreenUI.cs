@@ -407,14 +407,14 @@ namespace NightDash.Runtime
         // InputSystemUIInputModule.
         private GameObject CreateMenuButton(string name, string label, int slotIndex)
         {
-            // Sprite native is alpha-trimmed 101×37. RectTransform is a
-            // uniform 4× scale so every source pixel maps to a 4×4 block —
-            // corners and center scale together, no 9-slice distortion.
-            //   404 × 148 = 101 × 37 × 4
-            const float buttonWidth = 404f;
-            const float buttonHeight = 148f;
-            const float buttonSpacing = 24f;
-            const float topY = 110f; // first button slightly above screen center
+            // Sprite native is alpha-trimmed 101×37. Uniform 3× scale —
+            // every source pixel maps to a 3×3 block — keeps pixel art
+            // sharp without dominating the title screen.
+            //   303 × 111 = 101 × 37 × 3
+            const float buttonWidth = 303f;
+            const float buttonHeight = 111f;
+            const float buttonSpacing = 22f;
+            const float topY = 100f; // first button slightly above screen center
 
             var rect = CreateRect(name, gameObject.transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
