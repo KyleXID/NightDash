@@ -243,7 +243,7 @@ namespace NightDash.Runtime.UI
             t.fontSize = 40;
             t.fontStyle = FontStyle.Bold;
             t.color = Color.white;
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;
             _stageLabel = t;
         }
@@ -482,7 +482,7 @@ namespace NightDash.Runtime.UI
                 label.alignment = TextAnchor.UpperCenter;
                 label.fontSize = 22;
                 label.color = Color.white;
-                label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                label.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
                 label.raycastTarget = false;
 
                 _cards.Add(new CharacterCard
@@ -562,7 +562,7 @@ namespace NightDash.Runtime.UI
             t.alignment = TextAnchor.MiddleCenter;
             t.fontSize = 22;
             t.color = new Color(1f, 1f, 1f, 0.78f);
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;
         }
 

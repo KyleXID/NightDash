@@ -373,7 +373,7 @@ namespace NightDash.Runtime
             text.fontSize = 56;
             text.fontStyle = FontStyle.Bold;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             text.raycastTarget = false;
 
             _pressStartText = rect.gameObject;
@@ -418,7 +418,7 @@ namespace NightDash.Runtime
             text.alignment = TextAnchor.MiddleCenter;
             text.fontSize = 38;
             text.color = Color.white;
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
 
             return rect.gameObject;
         }

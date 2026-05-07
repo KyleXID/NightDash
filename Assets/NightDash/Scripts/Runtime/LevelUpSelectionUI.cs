@@ -335,7 +335,7 @@ namespace NightDash.Runtime
         {
             RectTransform rect = CreateRect("Text", parent);
             Text text = rect.gameObject.AddComponent<Text>();
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             text.text = value;
             text.fontSize = size;
             text.alignment = anchor;

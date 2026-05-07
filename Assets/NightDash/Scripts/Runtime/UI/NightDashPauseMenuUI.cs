@@ -66,6 +66,14 @@ namespace NightDash.Runtime.UI
         private bool _confirmActive;
         private System.Action _confirmAction;
 
+        // Button frame 4-state sprites loaded once at Awake. Selection state
+        // swaps Image.sprite (default → hover for selected, → disabled for
+        // ButtonEnabled=false). pressed sprite is unused right now since
+        // keyboard menus don't have a held-down state.
+        private Sprite _buttonSpriteDefault;
+        private Sprite _buttonSpriteHover;
+        private Sprite _buttonSpriteDisabled;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
@@ -80,7 +88,15 @@ namespace NightDash.Runtime.UI
         private void Awake()
         {
             EnsureEventSystem();
+            LoadButtonSprites();
             BuildCanvas();
+        }
+
+        private void LoadButtonSprites()
+        {
+            _buttonSpriteDefault  = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_default");
+            _buttonSpriteHover    = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_hover");
+            _buttonSpriteDisabled = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
         }
 
         private void OnEnable()
@@ -368,7 +384,7 @@ namespace NightDash.Runtime.UI
 
             var text = go.AddComponent<Text>();
             text.text = "PAUSED";
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             text.fontSize = 88;
             text.fontStyle = FontStyle.Bold;
             text.alignment = TextAnchor.MiddleCenter;
@@ -387,10 +403,13 @@ namespace NightDash.Runtime.UI
                 ButtonQuitLabel,
             };
 
-            const float buttonWidth = 360f;
-            const float buttonHeight = 60f;
-            const float buttonSpacing = 18f;
-            const float stackY = -20f; // Slightly below screen center.
+            // Sized to the button frame sprite ratio (128×56 → 2× scale =
+            // 256×112) so the bronze trim and rivets stay crisp under the
+            // arcade pixel font. Spacing matches Title menu rhythm.
+            const float buttonWidth = 256f;
+            const float buttonHeight = 112f;
+            const float buttonSpacing = 14f;
+            const float stackY = -20f;
 
             int n = labels.Length;
             float totalHeight = n * buttonHeight + (n - 1) * buttonSpacing;
@@ -408,7 +427,9 @@ namespace NightDash.Runtime.UI
                 rect.anchoredPosition = new Vector2(0f, startY - i * (buttonHeight + buttonSpacing));
 
                 var bg = go.AddComponent<Image>();
-                bg.color = new Color(0.10f, 0.08f, 0.12f, 0.85f);
+                bg.sprite = _buttonSpriteDefault;
+                bg.preserveAspect = true;
+                bg.color = Color.white;
                 bg.raycastTarget = false; // Keyboard-only menu.
 
                 var labelGo = new GameObject("Label");
@@ -421,9 +442,12 @@ namespace NightDash.Runtime.UI
 
                 var text = labelGo.AddComponent<Text>();
                 text.text = labels[i];
-                text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                text.fontSize = 32;
-                text.fontStyle = FontStyle.Bold;
+                text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
+                // Press Start 2P is a sharp 8×8 pixel font; 18pt fits the
+                // 256-wide button without bleeding for the longest label
+                // (Return to Lobby).
+                text.fontSize = 18;
+                text.fontStyle = FontStyle.Normal;
                 text.alignment = TextAnchor.MiddleCenter;
                 text.raycastTarget = false;
 
@@ -459,7 +483,7 @@ namespace NightDash.Runtime.UI
             msgRect.anchoredPosition = new Vector2(0f, 30f);
 
             var msgText = msgGo.AddComponent<Text>();
-            msgText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            msgText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             msgText.fontSize = 44;
             msgText.fontStyle = FontStyle.Bold;
             msgText.alignment = TextAnchor.MiddleCenter;
@@ -479,7 +503,7 @@ namespace NightDash.Runtime.UI
 
             var hintText = hintGo.AddComponent<Text>();
             hintText.text = "Enter: Yes        Esc: No";
-            hintText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            hintText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             hintText.fontSize = 26;
             hintText.alignment = TextAnchor.MiddleCenter;
             hintText.color = new Color(0.78f, 0.74f, 0.68f, 1f);
@@ -502,20 +526,16 @@ namespace NightDash.Runtime.UI
                 var bg = _buttonObjects[i].GetComponent<Image>();
                 if (bg != null)
                 {
-                    if (!enabled)
-                    {
-                        bg.color = new Color(0.05f, 0.05f, 0.06f, 0.55f);
-                    }
-                    else if (selected)
-                    {
-                        bg.color = new Color(0.32f, 0.16f, 0.06f, 0.95f); // warm bronze accent
-                    }
-                    else
-                    {
-                        bg.color = new Color(0.10f, 0.08f, 0.12f, 0.85f);
-                    }
+                    Sprite next;
+                    if (!enabled) next = _buttonSpriteDisabled;
+                    else if (selected) next = _buttonSpriteHover;
+                    else next = _buttonSpriteDefault;
+                    if (next != null) bg.sprite = next;
+                    bg.color = Color.white;
                 }
 
+                // Label color stays subtle — the frame sprite already
+                // communicates state. Selected gets warm parchment for legibility.
                 if (!enabled)
                 {
                     _buttonLabels[i].color = new Color(0.45f, 0.45f, 0.45f, 1f);
@@ -526,7 +546,7 @@ namespace NightDash.Runtime.UI
                 }
                 else
                 {
-                    _buttonLabels[i].color = new Color(0.78f, 0.74f, 0.68f, 1f);
+                    _buttonLabels[i].color = new Color(0.85f, 0.82f, 0.74f, 1f);
                 }
             }
         }
