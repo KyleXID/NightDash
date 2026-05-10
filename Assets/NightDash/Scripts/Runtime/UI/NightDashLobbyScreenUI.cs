@@ -240,7 +240,7 @@ namespace NightDash.Runtime.UI
 
             var t = rect.gameObject.AddComponent<Text>();
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 40;
+            t.fontSize = 48;
             t.fontStyle = FontStyle.Bold;
             t.color = Color.white;
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
@@ -480,7 +480,7 @@ namespace NightDash.Runtime.UI
                 var label = labelRect.gameObject.AddComponent<Text>();
                 label.text = string.IsNullOrEmpty(classData.displayName) ? classData.id : classData.displayName;
                 label.alignment = TextAnchor.UpperCenter;
-                label.fontSize = 22;
+                label.fontSize = 32;
                 label.color = Color.white;
                 label.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
                 label.raycastTarget = false;
@@ -560,7 +560,7 @@ namespace NightDash.Runtime.UI
             var t = rect.gameObject.AddComponent<Text>();
             t.text = "← →  CHARACTER     ↑ ↓  STAGE     ENTER  START     ESC  BACK";
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 22;
+            t.fontSize = 32;
             t.color = new Color(1f, 1f, 1f, 0.78f);
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;
