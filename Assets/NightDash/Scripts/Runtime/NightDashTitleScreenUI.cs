@@ -452,8 +452,10 @@ namespace NightDash.Runtime
             var rect = CreateRect("PressStart", gameObject.transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
-            rect.sizeDelta = new Vector2(800f, 90f);
-            rect.anchoredPosition = new Vector2(0f, 90f); // 90px above bottom
+            // Sized to comfortably hold 13-char "PRESS ANY KEY" at fontSize 96
+            // with the Silver pixel font (glyph height ≈ font size × 1.1).
+            rect.sizeDelta = new Vector2(1600f, 160f);
+            rect.anchoredPosition = new Vector2(0f, 120f);
 
             var text = rect.gameObject.AddComponent<Text>();
             text.text = "PRESS ANY KEY";
@@ -464,6 +466,8 @@ namespace NightDash.Runtime
             text.color = Color.white;
             text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             text.raycastTarget = false;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
 
             _pressStartText = rect.gameObject;
             _pressStartLabel = text;
