@@ -236,11 +236,11 @@ namespace NightDash.Runtime.UI
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
             rect.pivot = new Vector2(0.5f, 1f);
             rect.anchoredPosition = new Vector2(0f, -60f);
-            rect.sizeDelta = new Vector2(900f, 80f);
+            rect.sizeDelta = new Vector2(1100f, 110f);
 
             var t = rect.gameObject.AddComponent<Text>();
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 48;
+            t.fontSize = 64;
             t.fontStyle = FontStyle.Bold;
             t.color = Color.white;
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
@@ -475,12 +475,16 @@ namespace NightDash.Runtime.UI
                 labelRect.anchorMin = labelRect.anchorMax = new Vector2(0.5f, 0.5f);
                 labelRect.pivot = new Vector2(0.5f, 1f);
                 labelRect.anchoredPosition = new Vector2(cardX, cardY - CardHeight * 0.5f - 8f);
-                labelRect.sizeDelta = new Vector2(Mathf.Max(widths[i], 140f), 32f);
+                // Height bumped to 80 so the 48pt label has vertical room
+                // (Silver glyphs are tall — pixel ascent ≈ font size × 1.1).
+                labelRect.sizeDelta = new Vector2(Mathf.Max(widths[i], 200f), 80f);
 
                 var label = labelRect.gameObject.AddComponent<Text>();
                 label.text = string.IsNullOrEmpty(classData.displayName) ? classData.id : classData.displayName;
                 label.alignment = TextAnchor.UpperCenter;
-                label.fontSize = 32;
+                label.fontSize = 48;
+                label.horizontalOverflow = HorizontalWrapMode.Overflow;
+                label.verticalOverflow = VerticalWrapMode.Overflow;
                 label.color = Color.white;
                 label.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
                 label.raycastTarget = false;
@@ -555,12 +559,12 @@ namespace NightDash.Runtime.UI
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
             rect.pivot = new Vector2(0.5f, 0f);
             rect.anchoredPosition = new Vector2(0f, 40f);
-            rect.sizeDelta = new Vector2(900f, 36f);
+            rect.sizeDelta = new Vector2(1400f, 80f);
 
             var t = rect.gameObject.AddComponent<Text>();
             t.text = "← →  CHARACTER     ↑ ↓  STAGE     ENTER  START     ESC  BACK";
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 32;
+            t.fontSize = 40;
             t.color = new Color(1f, 1f, 1f, 0.78f);
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;

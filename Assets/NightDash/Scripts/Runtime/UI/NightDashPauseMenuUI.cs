@@ -388,8 +388,8 @@ namespace NightDash.Runtime.UI
             text.text = "PAUSED";
             text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             // Silver native is 16pt. Multiples of 16 stay pixel-perfect
-            // under Hinted Raster — 96 = 6× native for the title.
-            text.fontSize = 96;
+            // under Hinted Raster — 128 = 8× native for the title.
+            text.fontSize = 128;
             text.fontStyle = FontStyle.Bold;
             text.alignment = TextAnchor.MiddleCenter;
             text.color = new Color(1f, 0.92f, 0.78f, 1f); // Warm parchment tone.
@@ -455,9 +455,9 @@ namespace NightDash.Runtime.UI
                 var text = labelGo.AddComponent<Text>();
                 text.text = labels[i];
                 text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
-                // Silver native 16pt → 32 = 2× native for a readable button
-                // label that stays sharp under Hinted Raster.
-                text.fontSize = 32;
+                // Silver native 16pt → 48 = 3× native, comfortable read on
+                // the 303×111 button frame.
+                text.fontSize = 48;
                 text.fontStyle = FontStyle.Normal;
                 text.alignment = TextAnchor.MiddleCenter;
                 text.raycastTarget = false;
@@ -495,7 +495,7 @@ namespace NightDash.Runtime.UI
 
             var msgText = msgGo.AddComponent<Text>();
             msgText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
-            msgText.fontSize = 48;
+            msgText.fontSize = 64;
             msgText.fontStyle = FontStyle.Bold;
             msgText.alignment = TextAnchor.MiddleCenter;
             msgText.color = new Color(1f, 0.92f, 0.78f, 1f);
@@ -515,7 +515,7 @@ namespace NightDash.Runtime.UI
             var hintText = hintGo.AddComponent<Text>();
             hintText.text = "Enter: Yes        Esc: No";
             hintText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
-            hintText.fontSize = 32;
+            hintText.fontSize = 40;
             hintText.alignment = TextAnchor.MiddleCenter;
             hintText.color = new Color(0.78f, 0.74f, 0.68f, 1f);
             hintText.raycastTarget = false;
