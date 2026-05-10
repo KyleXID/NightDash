@@ -10,7 +10,9 @@ namespace NightDash.Runtime.UI
 {
     public static class NightDashUIFonts
     {
-        private const string ArcadeFontResourcePath = "NightDash/Fonts/PressStart2P-Regular";
+        // Silver (Poppy Works) — pixel-art display font with a fuller glyph
+        // coverage than Press Start 2P. Lives under Assets/Resources/NightDash/Fonts/.
+        private const string ArcadeFontResourcePath = "NightDash/Fonts/Silver";
         private static Font _arcade;
 
         public static Font Arcade
