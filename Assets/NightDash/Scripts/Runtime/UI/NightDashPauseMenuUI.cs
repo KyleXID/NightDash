@@ -450,7 +450,10 @@ namespace NightDash.Runtime.UI
                 labelRect.anchorMin = Vector2.zero;
                 labelRect.anchorMax = Vector2.one;
                 labelRect.offsetMin = Vector2.zero;
-                labelRect.offsetMax = Vector2.zero;
+                // Silver ascent > descent → MiddleCenter pulls glyphs upward.
+                // Trim the rect's top edge so labels sit on the frame's
+                // optical center, matching the Title menu treatment.
+                labelRect.offsetMax = new Vector2(0f, -10f);
 
                 var text = labelGo.AddComponent<Text>();
                 text.text = labels[i];

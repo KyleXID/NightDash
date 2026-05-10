@@ -455,7 +455,7 @@ namespace NightDash.Runtime
             // Sized to comfortably hold 13-char "PRESS ANY KEY" at fontSize 96
             // with the Silver pixel font (glyph height ≈ font size × 1.1).
             rect.sizeDelta = new Vector2(1600f, 160f);
-            rect.anchoredPosition = new Vector2(0f, 120f);
+            rect.anchoredPosition = new Vector2(0f, 60f);
 
             var text = rect.gameObject.AddComponent<Text>();
             text.text = "PRESS ANY KEY";
@@ -488,7 +488,7 @@ namespace NightDash.Runtime
             const float buttonWidth = 303f;
             const float buttonHeight = 111f;
             const float buttonSpacing = 22f;
-            const float topY = 100f; // first button slightly above screen center
+            const float topY = 50f; // first button slightly above screen center
 
             var rect = CreateRect(name, gameObject.transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -505,6 +505,10 @@ namespace NightDash.Runtime
 
             var textRect = CreateRect("Label", rect);
             StretchFull(textRect);
+            // Silver's ascent is taller than its descent, so MiddleCenter
+            // pulls the visual mass upward. Shrink the rect's top edge so the
+            // glyph cluster lands on the frame's optical center.
+            textRect.offsetMax = new Vector2(0f, -10f);
             var text = textRect.gameObject.AddComponent<Text>();
             text.text = label;
             text.alignment = TextAnchor.MiddleCenter;
