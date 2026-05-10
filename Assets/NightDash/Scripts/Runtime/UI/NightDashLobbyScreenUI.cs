@@ -482,7 +482,7 @@ namespace NightDash.Runtime.UI
                 var label = labelRect.gameObject.AddComponent<Text>();
                 label.text = string.IsNullOrEmpty(classData.displayName) ? classData.id : classData.displayName;
                 label.alignment = TextAnchor.UpperCenter;
-                label.fontSize = 48;
+                label.fontSize = 40;
                 label.horizontalOverflow = HorizontalWrapMode.Overflow;
                 label.verticalOverflow = VerticalWrapMode.Overflow;
                 label.color = Color.white;

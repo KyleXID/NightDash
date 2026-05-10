@@ -458,8 +458,8 @@ namespace NightDash.Runtime
             var text = rect.gameObject.AddComponent<Text>();
             text.text = "PRESS ANY KEY";
             text.alignment = TextAnchor.MiddleCenter;
-            // Silver native 16pt → 80 = 5× native for the PRESS ANY KEY prompt.
-            text.fontSize = 80;
+            // Silver native 16pt → 96 = 6× native for the PRESS ANY KEY prompt.
+            text.fontSize = 96;
             text.fontStyle = FontStyle.Bold;
             text.color = Color.white;
             text.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
