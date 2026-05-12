@@ -185,15 +185,17 @@ namespace NightDash.Runtime
             Image dimImage = dim.gameObject.AddComponent<Image>();
             dimImage.color = new Color(0f, 0f, 0f, 0.75f);
 
-            // Panel sized to comfortably fit header(96) + cards(464) +
-            // footer(96) + 2 spacings(48) + 2 padding(64) = 768, with
-            // breathing room for the ornate frame's corner ornament:
-            //   sizeDelta height 880 ≥ 768 + 112 buffer.
+            // Panel sized to fit header(96) + cards(520) + footer(96) +
+            // 2 spacings(48) + 2 padding(128) = 888, with a sliver of
+            // headroom for the ornate frame's corner ornament.
+            // Cards row height is intentionally larger than card height so
+            // the selected card's 1.08× scale (~+18px on each axis) has
+            // room before bleeding into the footer above/below.
             RectTransform panel = CreateRect("Panel", _levelRoot.transform);
             panel.anchorMin = new Vector2(0.5f, 0.5f);
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
-            panel.sizeDelta = new Vector2(1320f, 880f);
+            panel.sizeDelta = new Vector2(1320f, 940f);
 
             // Backdrop fills the inside of the ornate frame with a dark wash
             // so card text stays readable on top of the gameplay scene.
@@ -247,7 +249,9 @@ namespace NightDash.Runtime
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;
-            SetPreferredHeight(cards, 464f);
+            // 520 = card (464) + ~28px margin above/below so the selected
+            // card's 1.08× scale doesn't bleed into header/footer.
+            SetPreferredHeight(cards, 520f);
 
             // Source sprite is alpha-trimmed 84×116. Uniform 4× scale keeps
             // every source pixel mapped to a 4×4 block — pixel art stays
@@ -279,20 +283,20 @@ namespace NightDash.Runtime
                 _optionCardImages[i] = cardImage;
 
                 // Description text sits inside the card's lower description
-                // panel (~42% of card height; upper portion is the icon
-                // slot + gold/silver divider). BestFit auto-shrinks the
-                // font when the text is long, growing back up to the
-                // arcade-comfortable 40pt for short descriptions.
-                _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                // panel. Bumped the anchor range to 4%~50% (was 4%~42%) so
+                // long descriptions have noticeably more room. BestFit
+                // auto-shrinks the font when long; short descriptions grow
+                // back up to the arcade-comfortable 44pt.
+                _optionTexts[i] = CreateText(card, "-", 44, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Truncate;
                 optText.resizeTextForBestFit = true;
-                optText.resizeTextMinSize = 20;
-                optText.resizeTextMaxSize = 40;
+                optText.resizeTextMinSize = 22;
+                optText.resizeTextMaxSize = 44;
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.04f);
-                textRect.anchorMax = new Vector2(1f, 0.42f);
+                textRect.anchorMax = new Vector2(1f, 0.50f);
                 textRect.offsetMin = new Vector2(24f, 0f);
                 textRect.offsetMax = new Vector2(-24f, 0f);
             }
