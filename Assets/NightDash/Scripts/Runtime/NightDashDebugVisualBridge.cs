@@ -422,6 +422,13 @@ namespace NightDash.Runtime
             float speedSq = velocity.x * velocity.x + velocity.y * velocity.y;
             bool moving = speedSq > MoveDeadzoneSq;
 
+            // TEMP DIAGNOSTIC — strip after the walking-clip bug is resolved.
+            // Logs once per second if the entity is moving but stuck on Idle.
+            if (Time.frameCount % 60 == 0 && view.AnimSet != null)
+            {
+                NightDashLog.Info($"[Anim] e={entity.Index} v²={speedSq:F4} moving={moving} clip={view.CurrentClipName} t={view.ClipTime:F2}");
+            }
+
             // Flip horizontally based on movement direction (preserves last facing on idle).
             if (view.Renderer != null && math.abs(velocity.x) > 0.001f)
             {

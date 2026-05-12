@@ -79,19 +79,21 @@ namespace NightDash.ECS.Systems
                 float3 position = transform.ValueRO.Position;
 
                 // Caster teleport: on the frame the dash fires, snap the
-                // player a fixed distance in the input direction and skip
-                // the regular speed-burst movement. Trail bridge still sees
-                // DashTimer > 0 so the afterimage / teleport VFX kicks in.
+                // player a fixed distance in the input direction. Stash the
+                // start position so the trail bridge can drop a fan of
+                // afterimages along the teleport path.
                 if (isCaster && dashFiredThisFrame)
                 {
-                    position += new float3(inputDir.x, inputDir.y, 0f) * TeleportDistance;
+                    float3 startPos = position;
+                    float3 endPos = position + new float3(inputDir.x, inputDir.y, 0f) * TeleportDistance;
                     if (stage.UseBounds == 1)
                     {
-                        position.x = math.clamp(position.x, stage.BoundsMin.x, stage.BoundsMax.x);
-                        position.y = math.clamp(position.y, stage.BoundsMin.y, stage.BoundsMax.y);
+                        endPos.x = math.clamp(endPos.x, stage.BoundsMin.x, stage.BoundsMax.x);
+                        endPos.y = math.clamp(endPos.y, stage.BoundsMin.y, stage.BoundsMax.y);
                     }
-                    transform.ValueRW.Position = position;
+                    transform.ValueRW.Position = endPos;
                     stats.ValueRW = s;
+                    NightDashTeleportEvents.Fire(startPos, endPos);
                     continue;
                 }
 

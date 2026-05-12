@@ -41,6 +41,34 @@ namespace NightDash.Runtime
             DontDestroyOnLoad(go);
         }
 
+        private void OnEnable()
+        {
+            NightDashTeleportEvents.OnTeleport += HandleTeleport;
+        }
+
+        private void OnDisable()
+        {
+            NightDashTeleportEvents.OnTeleport -= HandleTeleport;
+        }
+
+        // Caster teleport: lay down a fan of 5 ghosts from the start position
+        // toward the end position so the move reads as a magical streak
+        // instead of an instant pop. Per-ghost alpha decays along the path
+        // so the trail visually "points" from start to end.
+        private void HandleTeleport(Vector3 start, Vector3 end)
+        {
+            const int GhostCount = 5;
+            for (int i = 0; i < GhostCount; i++)
+            {
+                float t = i / (float)(GhostCount - 1);
+                Vector3 pos = Vector3.Lerp(start, end, t);
+                // Older ghost (closer to start) = more transparent so the
+                // last ghost near the destination is the brightest cue.
+                float alpha = Mathf.Lerp(StartAlpha * 0.4f, StartAlpha, t);
+                SpawnGhost(pos, alpha);
+            }
+        }
+
         private void LateUpdate()
         {
             if (!EnsureInitialized()) return;
@@ -64,7 +92,9 @@ namespace NightDash.Runtime
             SpawnGhost(new Vector3(t.Position.x, t.Position.y, t.Position.z));
         }
 
-        private void SpawnGhost(Vector3 worldPos)
+        private void SpawnGhost(Vector3 worldPos) => SpawnGhost(worldPos, StartAlpha);
+
+        private void SpawnGhost(Vector3 worldPos, float alpha)
         {
             if (_visualBridge == null)
             {
@@ -85,11 +115,11 @@ namespace NightDash.Runtime
             sr.flipY = src.flipY;
             // Cool ghost tint so the afterimage reads as a magical streak,
             // not just a duplicate sprite. Tuned light blue-violet.
-            sr.color = new Color(0.55f, 0.72f, 1f, StartAlpha);
+            sr.color = new Color(0.55f, 0.72f, 1f, alpha);
             sr.sortingLayerID = src.sortingLayerID;
             sr.sortingOrder = src.sortingOrder - 1; // sit behind the live player
 
-            go.AddComponent<DashTrailGhost>().Init(GhostLifetime, StartAlpha);
+            go.AddComponent<DashTrailGhost>().Init(GhostLifetime, alpha);
         }
 
         private bool EnsureInitialized()
