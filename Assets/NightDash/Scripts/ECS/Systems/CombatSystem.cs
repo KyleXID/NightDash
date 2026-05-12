@@ -188,7 +188,7 @@ namespace NightDash.ECS.Systems
                     {
                         float projectileDamage = projectile.ValueRO.Damage;
                         CombatStats playerStats = playerStatsRef.ValueRO;
-                        playerStats.CurrentHealth = math.max(0f, playerStats.CurrentHealth - projectileDamage);
+                        ApplyDamageWithShield(ref playerStats, projectileDamage);
                         playerStatsRef.ValueRW = playerStats;
                         ecb.DestroyEntity(projectileEntity);
 
@@ -253,7 +253,7 @@ namespace NightDash.ECS.Systems
             if (hasPlayer && playerEntity != Entity.Null && contactDamage > 0f)
             {
                 CombatStats playerStats = playerStatsRef.ValueRO;
-                playerStats.CurrentHealth = math.max(0f, playerStats.CurrentHealth - contactDamage);
+                ApplyDamageWithShield(ref playerStats, contactDamage);
                 playerStatsRef.ValueRW = playerStats;
 
                 NightDashCombatEvents.FirePlayerDamaged(playerPosition, contactDamage);
@@ -318,6 +318,25 @@ namespace NightDash.ECS.Systems
             if (id == "elt_wastes_executor") return 3f;
             if (id == "ember_bat") return 0.5f;
             return 1f; // ghoul_scout, ash_caster, default
+        }
+
+        // Drains shield first, then bleeds the remainder into CurrentHealth.
+        // Resets the time-since-hit counter so ShieldSystem holds regen for
+        // a moment before ticking shield back up. Mutates `stats` in place.
+        private static void ApplyDamageWithShield(ref CombatStats stats, float damage)
+        {
+            if (damage <= 0f) return;
+            stats.TimeSinceLastHit = 0f;
+            if (stats.CurrentShield > 0f)
+            {
+                float absorbed = math.min(stats.CurrentShield, damage);
+                stats.CurrentShield -= absorbed;
+                damage -= absorbed;
+            }
+            if (damage > 0f)
+            {
+                stats.CurrentHealth = math.max(0f, stats.CurrentHealth - damage);
+            }
         }
     }
 }

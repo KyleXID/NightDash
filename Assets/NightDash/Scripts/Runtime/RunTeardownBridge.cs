@@ -119,6 +119,8 @@ namespace NightDash.Runtime
             Entity player = q.GetSingletonEntity();
             CombatStats stats = em.GetComponentData<CombatStats>(player);
             stats.CurrentHealth = stats.MaxHealth > 0f ? stats.MaxHealth : 100f;
+            stats.CurrentShield = stats.MaxShield;
+            stats.TimeSinceLastHit = 0f;
             em.SetComponentData(player, stats);
             em.SetComponentData(player, LocalTransform.FromPosition(new float3(0f, 0f, 0f)));
         }

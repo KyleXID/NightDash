@@ -39,6 +39,7 @@ namespace NightDash.Runtime
         private GameObject _resultRoot;
         private GameObject _rewardRoot;
         private GameObject _shieldRow;
+        private bool _shieldVisible;
 
         private RectTransform _hpFill;
         private RectTransform _shieldFill;
@@ -332,6 +333,8 @@ namespace NightDash.Runtime
             float nextLevelExperience = 1f;
             float hpCurrent = 0f;
             float hpMax = 1f;
+            float shieldCurrent = 0f;
+            float shieldMax = 0f;
             int currentWave = 1;
             int kills = 0;
             int gold = 0;
@@ -429,6 +432,8 @@ namespace NightDash.Runtime
                     {
                         hpCurrent = players[i].CurrentHealth;
                         hpMax = Mathf.Max(1f, players[i].MaxHealth);
+                        shieldCurrent = players[i].CurrentShield;
+                        shieldMax = players[i].MaxShield;
                     }
                     players.Dispose();
                 }
@@ -491,6 +496,19 @@ namespace NightDash.Runtime
 
             SetFill(_hpFill, hp01);
             SetFill(_xpFill, xp01);
+
+            // Shield ratio + text. Hidden via _shieldVisible when MaxShield
+            // is 0 (no shield buffer configured for this class yet).
+            _shieldVisible = shieldMax > 0f;
+            if (_shieldVisible)
+            {
+                float shield01 = Mathf.Clamp01(shieldCurrent / shieldMax);
+                SetFill(_shieldFill, shield01);
+                if (_shieldText != null)
+                {
+                    _shieldText.text = $"SHIELD {(int)shieldCurrent}/{(int)shieldMax}";
+                }
+            }
 
             _hpText.text = $"HP {(int)hpCurrent}/{(int)hpMax}";
             _xpText.text = $"Lv {level}  XP {(int)(xp01 * 100f)}%";
@@ -565,7 +583,10 @@ namespace NightDash.Runtime
 
             if (_shieldRow != null)
             {
-                _shieldRow.SetActive(false);
+                // Hide the shield row entirely when the player has no shield
+                // capacity (legacy classes, or before MetaProgression grants
+                // any). Otherwise show it alongside HP/XP.
+                _shieldRow.SetActive(showHud && _shieldVisible);
             }
 
             if (_rewardRoot != null)
@@ -633,12 +654,14 @@ namespace NightDash.Runtime
 
             fillRect = CreateRect($"{label}BarFill", barBg);
             // Inset the fill so it sits inside the bar empty's bronze trim
-            // (8px corners). The right anchorMax.x is what the runtime drives
+            // (8px corners) with a touch of breathing room — wider inset
+            // keeps the trim visibly framing the fill instead of being
+            // overwritten. The right anchorMax.x is what the runtime drives
             // to express progression (0..1).
             fillRect.anchorMin = new Vector2(0f, 0f);
             fillRect.anchorMax = new Vector2(0.8f, 1f);
-            fillRect.offsetMin = new Vector2(6f, 4f);
-            fillRect.offsetMax = new Vector2(-6f, -4f);
+            fillRect.offsetMin = new Vector2(10f, 8f);
+            fillRect.offsetMax = new Vector2(-10f, -8f);
             Image fill = fillRect.gameObject.AddComponent<Image>();
             // Bar fill sprite — same 9-slice border so the fill stays crisp
             // at any width. Tinted by the caller (red/cyan/steel-blue).

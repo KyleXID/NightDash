@@ -66,7 +66,10 @@ namespace NightDash.ECS.Systems
                 CurrentHealth = 100f,
                 MaxHealth = 100f,
                 Damage = 12f,
-                MoveSpeed = 5f
+                MoveSpeed = 5f,
+                CurrentShield = 30f,
+                MaxShield = 30f,
+                TimeSinceLastHit = 0f
             });
             state.EntityManager.SetComponentData(player, new WeaponRuntimeData
             {

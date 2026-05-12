@@ -136,6 +136,15 @@ namespace NightDash.ECS.Components
         public float MaxHealth;
         public float Damage;
         public float MoveSpeed;
+        // Shield acts as a temporary HP buffer that absorbs damage before
+        // CurrentHealth. Regenerates while the player is out of combat
+        // (see NightDash.ECS.Systems.ShieldSystem).
+        public float CurrentShield;
+        public float MaxShield;
+        // Seconds since the last hit. Drives shield regen — shield only
+        // ticks back up after the player has stayed clear for a grace
+        // window. Updated by ShieldSystem.
+        public float TimeSinceLastHit;
     }
 
     public struct PlayerProgressionState : IComponentData
