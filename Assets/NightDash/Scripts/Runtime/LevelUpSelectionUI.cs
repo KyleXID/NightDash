@@ -185,15 +185,15 @@ namespace NightDash.Runtime
             Image dimImage = dim.gameObject.AddComponent<Image>();
             dimImage.color = new Color(0f, 0f, 0f, 0.75f);
 
-            // Panel sized to the actual content: header (96) + card row
-            // (464) + footer (96) + 3 spacings (24) + top/bottom padding
-            // (24+24) = 752 height. 1320 width lets the card row breathe
-            // without crowding the panel edges.
+            // Panel sized to comfortably fit header(96) + cards(464) +
+            // footer(96) + 2 spacings(48) + 2 padding(64) = 768, with
+            // breathing room for the ornate frame's corner ornament:
+            //   sizeDelta height 880 ≥ 768 + 112 buffer.
             RectTransform panel = CreateRect("Panel", _levelRoot.transform);
             panel.anchorMin = new Vector2(0.5f, 0.5f);
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
-            panel.sizeDelta = new Vector2(1320f, 760f);
+            panel.sizeDelta = new Vector2(1320f, 880f);
 
             // Backdrop fills the inside of the ornate frame with a dark wash
             // so card text stays readable on top of the gameplay scene.
@@ -228,10 +228,15 @@ namespace NightDash.Runtime
             frameLayout.ignoreLayout = true;
 
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(56, 56, 56, 56);
+            // Sized so content sits inside the ornate frame but not so deep
+            // that the footer collides with the bottom row of cards. With
+            // panel height 880 and content 704, padding 56/64 leaves a
+            // ~56px buffer on each side and 64+64 vertical headroom.
+            layout.padding = new RectOffset(56, 56, 64, 64);
             layout.spacing = 24f;
             layout.childControlHeight = false;
             layout.childControlWidth = true;
+            layout.childAlignment = TextAnchor.MiddleCenter;
 
             _headerText = CreateText(panel, "LEVEL UP", 64, TextAnchor.MiddleCenter, Color.white);
             SetPreferredHeight(_headerText.rectTransform, 96f);
@@ -274,15 +279,17 @@ namespace NightDash.Runtime
                 _optionCardImages[i] = cardImage;
 
                 // Description text sits inside the card's lower description
-                // panel. The card sprite reserves the bottom ~42% of its
-                // height for text (the upper portion is the icon slot + the
-                // gold/silver divider). Anchor + insets land the text inside
-                // that region; Wrap+Overflow ensures long descriptions never
-                // get clipped.
+                // panel (~42% of card height; upper portion is the icon
+                // slot + gold/silver divider). BestFit auto-shrinks the
+                // font when the text is long, growing back up to the
+                // arcade-comfortable 40pt for short descriptions.
                 _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                optText.verticalOverflow = VerticalWrapMode.Overflow;
+                optText.verticalOverflow = VerticalWrapMode.Truncate;
+                optText.resizeTextForBestFit = true;
+                optText.resizeTextMinSize = 20;
+                optText.resizeTextMaxSize = 40;
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.04f);
                 textRect.anchorMax = new Vector2(1f, 0.42f);
