@@ -20,6 +20,7 @@ namespace NightDash.Runtime
         private Text _rerollText;
         private Button _rerollButton;
         private readonly Text[] _optionTexts = new Text[3];
+        private readonly Text[] _optionKindTexts = new Text[3];
         private readonly Button[] _optionButtons = new Button[3];
         private readonly RectTransform[] _optionCards = new RectTransform[3];
         private readonly Image[] _optionCardImages = new Image[3];
@@ -230,11 +231,11 @@ namespace NightDash.Runtime
             frameLayout.ignoreLayout = true;
 
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            // Top padding 24 (was 64) lifts "LEVEL UP" closer to the frame's
-            // upper trim — user request to nudge the title upward. Bottom
-            // padding 56 keeps the footer comfortably inside the ornate frame.
-            layout.padding = new RectOffset(56, 56, 24, 56);
-            layout.spacing = 24f;
+            // Tight top padding (8) so "LEVEL UP" sits near the frame's
+            // upper trim. Bottom padding 56 keeps the footer comfortably
+            // inside the ornate frame.
+            layout.padding = new RectOffset(56, 56, 8, 56);
+            layout.spacing = 16f;
             layout.childControlHeight = false;
             layout.childControlWidth = true;
             layout.childAlignment = TextAnchor.MiddleCenter;
@@ -281,18 +282,29 @@ namespace NightDash.Runtime
                 _optionCards[i] = card;
                 _optionCardImages[i] = cardImage;
 
+                // Kind label sits in the card's upper panel area (~62~92%)
+                // so "WEAPON" / "PASSIVE" reads clearly and never collides
+                // with the description below. Anchored above the divider
+                // line so the gold/silver trim doesn't slice the glyphs.
+                _optionKindTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter,
+                    new Color(1f, 0.92f, 0.74f, 1f));
+                _optionKindTexts[i].fontStyle = FontStyle.Bold;
+                var kindRect = _optionKindTexts[i].rectTransform;
+                kindRect.anchorMin = new Vector2(0f, 0.62f);
+                kindRect.anchorMax = new Vector2(1f, 0.92f);
+                kindRect.offsetMin = new Vector2(20f, 0f);
+                kindRect.offsetMax = new Vector2(-20f, 0f);
+
                 // Description text sits inside the card's lower description
-                // panel. Bumped the anchor range to 4%~50% (was 4%~42%) so
-                // long descriptions have noticeably more room. BestFit
-                // auto-shrinks the font when long; short descriptions grow
-                // back up to the arcade-comfortable 44pt.
-                _optionTexts[i] = CreateText(card, "-", 44, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                // panel (~4~50%). Kind label moved out, so this region now
+                // only holds the level line + optional flavor detail.
+                _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Truncate;
                 optText.resizeTextForBestFit = true;
                 optText.resizeTextMinSize = 22;
-                optText.resizeTextMaxSize = 44;
+                optText.resizeTextMaxSize = 40;
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.04f);
                 textRect.anchorMax = new Vector2(1f, 0.50f);
@@ -300,31 +312,50 @@ namespace NightDash.Runtime
                 textRect.offsetMax = new Vector2(-24f, 0f);
             }
 
+            // Footer = REROLL button centered + counter parked to its right.
+            // No HorizontalLayoutGroup; the two pieces are positioned via
+            // explicit anchors so the button stays exactly on the panel's
+            // vertical centerline.
             RectTransform footer = CreateRect("Footer", panel);
-            HorizontalLayoutGroup footerLayout = footer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            footerLayout.spacing = 40f;
-            footerLayout.childAlignment = TextAnchor.MiddleCenter;
-            footerLayout.childControlHeight = false;
-            footerLayout.childControlWidth = false;
-            SetPreferredHeight(footer, 96f);
+            SetPreferredHeight(footer, 120f);
 
+            // REROLL action button — centered on the footer.
             _rerollButton = CreateButton(footer, "REROLL", SubmitReroll);
+            RectTransform rerollRect = _rerollButton.GetComponent<RectTransform>();
+            rerollRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rerollRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rerollRect.pivot = new Vector2(0.5f, 0.5f);
+            rerollRect.sizeDelta = new Vector2(303f, 111f);
+            rerollRect.anchoredPosition = Vector2.zero;
+            var rerollLE = _rerollButton.GetComponent<LayoutElement>();
+            if (rerollLE != null)
+            {
+                rerollLE.preferredWidth = 303f;
+                rerollLE.preferredHeight = 111f;
+                rerollLE.ignoreLayout = true;
+            }
+            var rerollLabel = _rerollButton.GetComponentInChildren<Text>();
+            if (rerollLabel != null) rerollLabel.fontSize = 44;
 
-            // Counter group: reroll icon + "Rerolls Left: N" text. Mirrors
-            // the HUD's icon-counter pattern so the bottom panel reads as
-            // "[action button] [icon + count]" instead of "[button] [bare text]".
+            // Counter (reroll icon + "Rerolls Left: N") sits to the RIGHT
+            // of the centered button — its left edge anchors to the button's
+            // right edge, separated by a small gap.
             RectTransform counter = CreateRect("RerollCounter", footer);
+            counter.anchorMin = new Vector2(0.5f, 0.5f);
+            counter.anchorMax = new Vector2(0.5f, 0.5f);
+            counter.pivot = new Vector2(0f, 0.5f);
+            counter.sizeDelta = new Vector2(420f, 80f);
+            // Button half-width 151.5 + gap 24 ≈ 176 from center.
+            counter.anchoredPosition = new Vector2(176f, 0f);
             HorizontalLayoutGroup counterLayout = counter.gameObject.AddComponent<HorizontalLayoutGroup>();
-            counterLayout.spacing = 12f;
+            counterLayout.spacing = 14f;
             counterLayout.childAlignment = TextAnchor.MiddleLeft;
             counterLayout.childControlHeight = false;
             counterLayout.childControlWidth = false;
-            SetPreferredHeight(counter, 80f);
-            SetPreferredWidth(counter, 360f);
 
-            CreateIconImage(counter, "NightDash/UI/Icons/nd_ui_icon_reroll_default", 56f, 56f);
+            CreateIconImage(counter, "NightDash/UI/Icons/nd_ui_icon_reroll_default", 64f, 64f);
             _rerollText = CreateText(counter, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
-            SetPreferredWidth(_rerollText.rectTransform, 290f);
+            SetPreferredWidth(_rerollText.rectTransform, 340f);
         }
 
         // Loads a sprite from Resources and stamps it inside a layout-friendly
@@ -406,6 +437,10 @@ namespace NightDash.Runtime
                 UpgradeOptionElement option = options[i];
                 _optionButtons[i].interactable = true;
                 _optionTexts[i].text = BuildOptionText(option);
+                if (_optionKindTexts[i] != null)
+                {
+                    _optionKindTexts[i].text = BuildOptionKindLabel(option);
+                }
                 newVisible++;
             }
 
@@ -482,6 +517,17 @@ namespace NightDash.Runtime
             entityManager.SetComponentData(singleton, request);
         }
 
+        // Used by the card's TOP slot — just the upgrade category in upper
+        // case. Lives separately so long body text never pushes the label
+        // out of frame.
+        private static string BuildOptionKindLabel(UpgradeOptionElement option)
+        {
+            return option.Kind.ToString().ToUpperInvariant();
+        }
+
+        // Used by the card's BOTTOM description slot — title, level line,
+        // and optional flavor detail. Kind is intentionally NOT included
+        // anymore (rendered separately at the top of the card).
         private static string BuildOptionText(UpgradeOptionElement option)
         {
             string title = option.Id.ToString();
@@ -521,10 +567,10 @@ namespace NightDash.Runtime
 
             if (!string.IsNullOrWhiteSpace(detail))
             {
-                return $"{option.Kind}\n{levelLine}\n{detail}";
+                return $"{levelLine}\n{detail}";
             }
 
-            return $"{option.Kind}\n{levelLine}";
+            return levelLine;
         }
 
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
