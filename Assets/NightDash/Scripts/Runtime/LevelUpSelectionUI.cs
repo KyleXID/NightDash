@@ -185,38 +185,41 @@ namespace NightDash.Runtime
             Image dimImage = dim.gameObject.AddComponent<Image>();
             dimImage.color = new Color(0f, 0f, 0f, 0.75f);
 
+            // Panel sized to the actual content: header (96) + card row
+            // (464) + footer (96) + 3 spacings (24) + top/bottom padding
+            // (24+24) = 752 height. 1320 width lets the card row breathe
+            // without crowding the panel edges.
             RectTransform panel = CreateRect("Panel", _levelRoot.transform);
             panel.anchorMin = new Vector2(0.5f, 0.5f);
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
-            panel.sizeDelta = new Vector2(1180f, 460f);
+            panel.sizeDelta = new Vector2(1320f, 760f);
             Image panelImage = panel.gameObject.AddComponent<Image>();
             panelImage.color = new Color(0.1f, 0.07f, 0.16f, 0.94f);
 
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.padding = new RectOffset(24, 24, 24, 24);
-            layout.spacing = 18f;
+            layout.spacing = 24f;
             layout.childControlHeight = false;
             layout.childControlWidth = true;
 
-            _headerText = CreateText(panel, "LEVEL UP", 34, TextAnchor.MiddleCenter, Color.white);
-            SetPreferredHeight(_headerText.rectTransform, 44f);
+            _headerText = CreateText(panel, "LEVEL UP", 64, TextAnchor.MiddleCenter, Color.white);
+            SetPreferredHeight(_headerText.rectTransform, 96f);
 
             RectTransform cards = CreateRect("Cards", panel);
             HorizontalLayoutGroup cardsLayout = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardsLayout.spacing = 8f;
+            cardsLayout.spacing = 24f;
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;
-            SetPreferredHeight(cards, 580f);
+            SetPreferredHeight(cards, 464f);
 
-            // Source sprite is alpha-trimmed 84×116. Uniform 5× scale keeps
-            // every source pixel mapped to a 5×5 block — sharp pixel art at
-            // a comfortable read size, and the 3-card row sits inside the
-            // 1920-wide reference layout with room to breathe:
-            //   3 * 420 + 2 * 8 = 1276 < 1920.
-            const float cardWidth = 420f;
-            const float cardHeight = 580f;
+            // Source sprite is alpha-trimmed 84×116. Uniform 4× scale keeps
+            // every source pixel mapped to a 4×4 block — pixel art stays
+            // sharp at a comfortable read size:
+            //   3 * 336 + 2 * 24 = 1056 < 1320 panel width.
+            const float cardWidth = 336f;
+            const float cardHeight = 464f;
 
             for (int i = 0; i < 3; i++)
             {
@@ -240,32 +243,34 @@ namespace NightDash.Runtime
                 _optionCards[i] = card;
                 _optionCardImages[i] = cardImage;
 
-                // Description text sits in the lower half of the card so it
-                // doesn't fight the upper icon panel. Wrap mode handles long
-                // upgrade descriptions; vertical Overflow keeps the entire
-                // text visible even if it pushes past the half-anchor.
-                _optionTexts[i] = CreateText(card, "-", 32, TextAnchor.UpperCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                // Description text sits inside the card's lower description
+                // panel. The card sprite reserves the bottom ~42% of its
+                // height for text (the upper portion is the icon slot + the
+                // gold/silver divider). Anchor + insets land the text inside
+                // that region; Wrap+Overflow ensures long descriptions never
+                // get clipped.
+                _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Overflow;
                 var textRect = optText.rectTransform;
-                textRect.anchorMin = new Vector2(0f, 0f);
-                textRect.anchorMax = new Vector2(1f, 0.5f);
-                textRect.offsetMin = new Vector2(40f, 32f);
-                textRect.offsetMax = new Vector2(-40f, -12f);
+                textRect.anchorMin = new Vector2(0f, 0.04f);
+                textRect.anchorMax = new Vector2(1f, 0.42f);
+                textRect.offsetMin = new Vector2(24f, 0f);
+                textRect.offsetMax = new Vector2(-24f, 0f);
             }
 
             RectTransform footer = CreateRect("Footer", panel);
             HorizontalLayoutGroup footerLayout = footer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            footerLayout.spacing = 18f;
+            footerLayout.spacing = 32f;
             footerLayout.childAlignment = TextAnchor.MiddleCenter;
             footerLayout.childControlHeight = false;
             footerLayout.childControlWidth = false;
-            SetPreferredHeight(footer, 72f);
+            SetPreferredHeight(footer, 96f);
 
             _rerollButton = CreateButton(footer, "REROLL", SubmitReroll);
-            _rerollText = CreateText(footer, "Rerolls Left: 1", 20, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
-            SetPreferredWidth(_rerollText.rectTransform, 220f);
+            _rerollText = CreateText(footer, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
+            SetPreferredWidth(_rerollText.rectTransform, 360f);
         }
 
         private void RefreshState()
@@ -454,10 +459,10 @@ namespace NightDash.Runtime
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
         {
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(240f, 64f);
+            rect.sizeDelta = new Vector2(280f, 80f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 240f;
-            layout.preferredHeight = 64f;
+            layout.preferredWidth = 280f;
+            layout.preferredHeight = 80f;
 
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = new Color(0.26f, 0.18f, 0.34f, 1f);
@@ -466,7 +471,7 @@ namespace NightDash.Runtime
             button.targetGraphic = image;
             button.onClick.AddListener(onClick);
 
-            Text text = CreateText(rect, label, 24, TextAnchor.MiddleCenter, Color.white);
+            Text text = CreateText(rect, label, 32, TextAnchor.MiddleCenter, Color.white);
             StretchFull(text.rectTransform);
             return button;
         }
