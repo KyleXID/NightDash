@@ -29,6 +29,10 @@ namespace NightDash.Runtime
         // active. Mouse clicks still work via the Button.onClick handlers.
         private int _selectedIndex;
         private int _visibleOptionCount;
+        // When true, the keyboard focus is on the REROLL action button
+        // instead of one of the cards. Down arrow on a card moves focus
+        // here; up arrow returns focus to the last-selected card.
+        private bool _rerollFocused;
 
         // Card frame sprites loaded once at Awake. UpgradeOptionElement
         // doesn't carry a rarity field yet — until it does, the three
@@ -89,23 +93,52 @@ namespace NightDash.Runtime
         {
             if (_visibleOptionCount <= 0) return;
 
-            bool left, right, confirm;
+            bool left, right, up, down, confirm;
 #if ENABLE_INPUT_SYSTEM
             var kb = Keyboard.current;
             if (kb == null) return;
             left = kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame;
             right = kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame;
+            up = kb.upArrowKey.wasPressedThisFrame || kb.wKey.wasPressedThisFrame;
+            down = kb.downArrowKey.wasPressedThisFrame || kb.sKey.wasPressedThisFrame;
             confirm = kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame
                       || kb.numpadEnterKey.wasPressedThisFrame;
 #else
             left = Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
             right = Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
+            up = Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W);
+            down = Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S);
             confirm = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)
                       || Input.GetKeyDown(KeyCode.KeypadEnter);
 #endif
 
+            if (_rerollFocused)
+            {
+                // Up arrow returns focus to the cards (last selected slot).
+                if (up)
+                {
+                    _rerollFocused = false;
+                    ApplySelectionVisuals();
+                }
+                else if (confirm)
+                {
+                    if (_rerollButton != null && _rerollButton.interactable)
+                    {
+                        SubmitReroll();
+                    }
+                }
+                return;
+            }
+
+            // Card focus: left/right cycles cards, down hops to REROLL,
+            // confirm picks the card.
             if (left) SelectIndex(_selectedIndex - 1);
             else if (right) SelectIndex(_selectedIndex + 1);
+            else if (down && _rerollButton != null && _rerollButton.interactable)
+            {
+                _rerollFocused = true;
+                ApplySelectionVisuals();
+            }
             else if (confirm) SubmitSelection(_selectedIndex);
         }
 
@@ -114,6 +147,7 @@ namespace NightDash.Runtime
             int n = _visibleOptionCount;
             if (n <= 0) return;
             _selectedIndex = ((idx % n) + n) % n;
+            _rerollFocused = false;
             ApplySelectionVisuals();
         }
 
@@ -126,7 +160,7 @@ namespace NightDash.Runtime
             {
                 var rt = _optionCards[i];
                 if (rt == null) continue;
-                bool selected = i == _selectedIndex && i < _visibleOptionCount;
+                bool selected = !_rerollFocused && i == _selectedIndex && i < _visibleOptionCount;
                 rt.localScale = selected
                     ? new Vector3(1.08f, 1.08f, 1f)
                     : Vector3.one;
@@ -144,6 +178,25 @@ namespace NightDash.Runtime
                     _optionTexts[i].color = selected
                         ? new Color(1f, 0.95f, 0.78f, 1f)
                         : new Color(0.78f, 0.74f, 0.68f, 1f);
+                }
+            }
+
+            // Mirror the card focus treatment on the REROLL button — pop
+            // scale + bright tint when focused, otherwise default.
+            if (_rerollButton != null)
+            {
+                _rerollButton.transform.localScale = _rerollFocused
+                    ? new Vector3(1.08f, 1.08f, 1f)
+                    : Vector3.one;
+                var rerollImg = _rerollButton.GetComponent<Image>();
+                if (rerollImg != null && _rerollButton.interactable)
+                {
+                    // Match the button's existing sprite-swap states: hover
+                    // when focused, default otherwise.
+                    var hover = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_hover");
+                    var defaultSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_default");
+                    if (_rerollFocused && hover != null) rerollImg.sprite = hover;
+                    else if (defaultSprite != null) rerollImg.sprite = defaultSprite;
                 }
             }
         }
@@ -296,21 +349,19 @@ namespace NightDash.Runtime
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
                 // Description text sits inside the card's lower description
-                // panel (~4~58%). Kind label moved out, so this region now
+                // panel (~4~46%). Kind label moved out, so this region now
                 // only holds the level line + optional flavor detail.
-                // BestFit min 16 lets very long passive flavor text shrink
-                // far enough to stay inside the panel.
-                _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                // Font size is set per-frame in RefreshState based on the
+                // body's character count instead of BestFit, so long passives
+                // shrink predictably and short ones stay readable.
+                _optionTexts[i] = CreateText(card, "-", 36, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                optText.verticalOverflow = VerticalWrapMode.Truncate;
-                optText.resizeTextForBestFit = true;
-                optText.resizeTextMinSize = 16;
-                optText.resizeTextMaxSize = 40;
+                optText.verticalOverflow = VerticalWrapMode.Overflow;
                 AddTextOutline(optText);
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.04f);
-                textRect.anchorMax = new Vector2(1f, 0.58f);
+                textRect.anchorMax = new Vector2(1f, 0.46f);
                 textRect.offsetMin = new Vector2(24f, 0f);
                 textRect.offsetMax = new Vector2(-24f, 0f);
             }
@@ -446,7 +497,9 @@ namespace NightDash.Runtime
 
                 UpgradeOptionElement option = options[i];
                 _optionButtons[i].interactable = true;
-                _optionTexts[i].text = BuildOptionText(option);
+                string body = BuildOptionText(option);
+                _optionTexts[i].text = body;
+                _optionTexts[i].fontSize = FontSizeForBody(body);
                 if (_optionKindTexts[i] != null)
                 {
                     _optionKindTexts[i].text = BuildOptionKindLabel(option);
@@ -525,6 +578,23 @@ namespace NightDash.Runtime
             request.HasSelection = 0;
             request.RerollRequested = 1;
             entityManager.SetComponentData(singleton, request);
+        }
+
+        // Picks a font size that keeps the description body inside the
+        // card's lower panel even with longer flavor text. Tuned by character
+        // count rather than Unity's BestFit so the shrink steps are
+        // deterministic and predictable across the three cards.
+        private static int FontSizeForBody(string body)
+        {
+            int len = body?.Length ?? 0;
+            // The level line alone fits at 40pt. As detail text piles on,
+            // step the size down so a 3+ line layout still respects the
+            // panel's vertical bounds.
+            if (len > 110) return 22;
+            if (len > 80) return 26;
+            if (len > 55) return 30;
+            if (len > 35) return 34;
+            return 40;
         }
 
         // Used by the card's TOP slot — just the upgrade category in upper
