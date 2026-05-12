@@ -25,6 +25,8 @@ namespace NightDash.Runtime
         [SerializeField] private Texture2D waveIcon;
         [SerializeField] private Texture2D potionIcon;
         [SerializeField] private Texture2D dashIcon;
+        [SerializeField] private Texture2D hitIcon;
+        [SerializeField] private Texture2D critIcon;
         [SerializeField] private Texture2D interactIcon;
         [SerializeField] private Texture2D victoryIcon;
         [SerializeField] private Texture2D defeatIcon;
@@ -47,6 +49,8 @@ namespace NightDash.Runtime
         private Text _hpText;
         private Text _shieldText;
         private Text _xpText;
+        private Text _hitText;
+        private Text _critText;
         private Text _timerText;
         private Text _waveText;
         private Text _goldText;
@@ -106,6 +110,8 @@ namespace NightDash.Runtime
             waveIcon = waveIcon != null ? waveIcon : LoadIcon("nd_ui_icon_wave_skull_default");
             potionIcon = potionIcon != null ? potionIcon : LoadIcon("nd_ui_icon_potion_default");
             dashIcon = dashIcon != null ? dashIcon : LoadIcon("nd_ui_icon_dash_default");
+            hitIcon = hitIcon != null ? hitIcon : LoadIcon("nd_ui_icon_hit_default");
+            critIcon = critIcon != null ? critIcon : LoadIcon("nd_ui_icon_crit_default");
             interactIcon = interactIcon != null ? interactIcon : LoadIcon("nd_ui_icon_interact_key_default");
             victoryIcon = victoryIcon != null ? victoryIcon : LoadIcon("nd_ui_icon_victory_crown_default");
             defeatIcon = defeatIcon != null ? defeatIcon : LoadIcon("nd_ui_icon_defeat_skull_default");
@@ -204,16 +210,23 @@ namespace NightDash.Runtime
             _goldText = CreateIconCounter(topRight, goldIcon, "Gold 0000", 48f, 48f);
             _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 48f, 48f);
 
-            RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(270f, 84f));
+            RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(680f, 110f));
             HorizontalLayoutGroup leftBottomLayout = bottomLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
-            leftBottomLayout.spacing = 8f;
-            leftBottomLayout.padding = new RectOffset(10, 10, 10, 10);
+            leftBottomLayout.spacing = 14f;
+            leftBottomLayout.padding = new RectOffset(12, 12, 12, 12);
             leftBottomLayout.childAlignment = TextAnchor.MiddleLeft;
             leftBottomLayout.childControlHeight = false;
             leftBottomLayout.childControlWidth = false;
 
+            // Combat stat readouts: hit (damage) + crit (chance placeholder)
+            // + dash icon. Each grouping is icon + value text so the player
+            // can read the current build at a glance.
+            _hitText = CreateIconCounter(bottomLeft, hitIcon, "DMG 0", 56f, 56f);
+            SetPreferredWidth(_hitText.rectTransform, 130f);
+            _critText = CreateIconCounter(bottomLeft, critIcon, "CRIT 0%", 56f, 56f);
+            SetPreferredWidth(_critText.rectTransform, 140f);
+            CreateSimpleIcon(bottomLeft, dashIcon, 56f, 56f);
             CreateSimpleIcon(bottomLeft, potionIcon, 52f, 52f);
-            CreateSimpleIcon(bottomLeft, dashIcon, 52f, 52f);
             CreateSimpleIcon(bottomLeft, interactIcon, 52f, 52f);
 
             RectTransform bottomCenter = CreatePanel("BottomCenterPanel", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(250f, 70f));
@@ -335,6 +348,7 @@ namespace NightDash.Runtime
             float hpMax = 1f;
             float shieldCurrent = 0f;
             float shieldMax = 0f;
+            float playerDamage = 0f;
             int currentWave = 1;
             int kills = 0;
             int gold = 0;
@@ -434,6 +448,7 @@ namespace NightDash.Runtime
                         hpMax = Mathf.Max(1f, players[i].MaxHealth);
                         shieldCurrent = players[i].CurrentShield;
                         shieldMax = players[i].MaxShield;
+                        playerDamage = players[i].Damage;
                     }
                     players.Dispose();
                 }
@@ -512,6 +527,12 @@ namespace NightDash.Runtime
 
             _hpText.text = $"HP {(int)hpCurrent}/{(int)hpMax}";
             _xpText.text = $"Lv {level}  XP {(int)(xp01 * 100f)}%";
+            if (_hitText != null) _hitText.text = $"DMG {(int)playerDamage}";
+            // Crit chance isn't on CombatStats yet — show 0% placeholder so
+            // the icon group reads as "current build" without lying about
+            // unimplemented numbers. Hook this up once a CritChance field
+            // lands on CombatStats / PlayerProgressionState.
+            if (_critText != null) _critText.text = "CRIT 0%";
             _timerText.text = $"{min:00}:{remain:00}";
             _waveText.text = $"Wave {currentWave:00}";
             _goldText.text = $"Gold {gold}";
