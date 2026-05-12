@@ -238,7 +238,11 @@ namespace NightDash.Runtime
             SetPreferredWidth(_dashText.rectTransform, 150f);
             _potionText = CreateIconCounter(bottomLeft, potionIcon, "x3", 52f, 52f);
             SetPreferredWidth(_potionText.rectTransform, 90f);
-            CreateSimpleIcon(bottomLeft, interactIcon, 52f, 52f);
+            // interactIcon was rendered here as a key-hint placeholder, but
+            // no interactable entity system existed to drive it. Removed
+            // pending the Stage interactables feature (chests / altars / NPCs)
+            // — bring it back as a contextual "E to interact" prompt that
+            // only appears when the player is near an interactable.
 
             // BottomCenterPanel was a 3-icon placeholder (warning/defeat/
             // victory) from an earlier prototype with no gameplay binding.
