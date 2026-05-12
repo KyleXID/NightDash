@@ -84,6 +84,14 @@ namespace NightDash.Runtime
 
         private bool EnsureInitialized()
         {
+            // If the cached world was disposed (PlayMode reload, World swap),
+            // drop _initialized so the queries get rebuilt against the new
+            // EntityManager. Otherwise PushPlayer/PushEnemies will NRE on
+            // stale EntityQuery internals.
+            if (_initialized && (_world == null || !_world.IsCreated))
+            {
+                _initialized = false;
+            }
             if (_initialized) return true;
 
             _world = World.DefaultGameObjectInjectionWorld;
@@ -236,6 +244,14 @@ namespace NightDash.Runtime
 
         private void PushPlayer()
         {
+            // EntityQuery becomes invalid if the world it was created against
+            // is disposed (e.g. PlayMode reload). Touching IsEmptyIgnoreFilter
+            // in that state throws NRE — re-init guards against that.
+            if (_world == null || !_world.IsCreated)
+            {
+                _initialized = false;
+                return;
+            }
             if (_playerQuery.IsEmptyIgnoreFilter) return;
 
             var em = _world.EntityManager;
@@ -256,6 +272,11 @@ namespace NightDash.Runtime
 
         private void PushEnemies()
         {
+            if (_world == null || !_world.IsCreated)
+            {
+                _initialized = false;
+                return;
+            }
             if (_enemyQuery.IsEmptyIgnoreFilter) return;
 
             var em = _world.EntityManager;
