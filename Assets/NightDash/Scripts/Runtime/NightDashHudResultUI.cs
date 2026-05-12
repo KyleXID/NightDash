@@ -67,8 +67,8 @@ namespace NightDash.Runtime
         private Text _rewardBodyText;
         private Button _rewardConfirmButton;
         private Button _retryButton;
-        private Button _metaButton;
-        private Button _menuButton;
+        private Button _returnToLobbyButton;
+        private Button _returnToTitleButton;
 
         private bool _hudEnabled;
         private bool _resultEnabled;
@@ -307,9 +307,12 @@ namespace NightDash.Runtime
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
             SetPreferredHeight(actions, 62f);
 
+            // Three-action footer: Retry runs the same stage again, Lobby
+            // returns to character / stage select, Title goes all the way
+            // back to the main menu. (Quit lives on the Title screen.)
             _retryButton = CreateActionButton(actions, "Retry", RequestRetry);
-            _metaButton = CreateActionButton(actions, "Meta", () => SubmitNavigation(RunNavigationAction.ReturnToLobby));
-            _menuButton = CreateActionButton(actions, "Menu", () => SubmitNavigation(RunNavigationAction.ReturnToLobby));
+            _returnToLobbyButton = CreateActionButton(actions, "Lobby", RequestReturnToLobby);
+            _returnToTitleButton = CreateActionButton(actions, "Title", RequestReturnToTitle);
         }
 
         private void BuildReward(Transform parent)
@@ -589,14 +592,14 @@ namespace NightDash.Runtime
                 _retryButton.interactable = !navigationPending;
             }
 
-            if (_metaButton != null)
+            if (_returnToLobbyButton != null)
             {
-                _metaButton.interactable = !navigationPending;
+                _returnToLobbyButton.interactable = !navigationPending;
             }
 
-            if (_menuButton != null)
+            if (_returnToTitleButton != null)
             {
-                _menuButton.interactable = !navigationPending;
+                _returnToTitleButton.interactable = !navigationPending;
             }
 
             if (_rewardConfirmButton != null)
@@ -964,6 +967,41 @@ namespace NightDash.Runtime
         {
             RunTeardownBridge.DestroyCurrentRun(clearNavigation: false);
             SubmitNavigation(RunNavigationAction.Retry);
+        }
+
+        // Lobby return — directly activates NightDashLobbyScreenUI, mirroring
+        // the Pause-Menu Return-to-Lobby path. SubmitNavigation would only
+        // reset ECS state without surfacing the lobby UI, which is what made
+        // the old "Menu" button look like it did nothing.
+        private static void RequestReturnToLobby()
+        {
+            RunTeardownBridge.DestroyCurrentRun();
+            var lobby = Object.FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
+            if (lobby != null)
+            {
+                lobby.gameObject.SetActive(true);
+                NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
+            }
+            else
+            {
+                NightDashLog.Warn("[NightDash] Return to Lobby: NightDashLobbyScreenUI not found.");
+            }
+        }
+
+        // Title return — same teardown, but routes back to the main menu.
+        private static void RequestReturnToTitle()
+        {
+            RunTeardownBridge.DestroyCurrentRun();
+            var title = Object.FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
+            if (title != null)
+            {
+                title.gameObject.SetActive(true);
+                NightDashUIScreenRouter.GoTo(NightDashUIScreen.Title);
+            }
+            else
+            {
+                NightDashLog.Warn("[NightDash] Return to Title: NightDashTitleScreenUI not found.");
+            }
         }
 
         private static void DestroyGameplayEntities()
