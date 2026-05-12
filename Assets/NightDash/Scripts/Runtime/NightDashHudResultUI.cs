@@ -3,7 +3,7 @@ using NightDash.ECS.Components;
 using UnityEngine;
 using Unity.Entities;
 using UnityEngine.EventSystems;
-using UnityEngine.SceneManagement;
+// using UnityEngine.SceneManagement; — removed once Retry stopped reloading the scene.
 using UnityEngine.UI;
 
 namespace NightDash.Runtime
@@ -948,34 +948,22 @@ namespace NightDash.Runtime
             }
         }
 
-        // Retry flow:
-        // 1. Queue the Retry navigation request (preserves stage/class via RunSelection).
-        // 2. Destroy all gameplay entities (player, enemies, boss). Unity's DOTS World
-        //    is preserved across SceneManager.LoadScene, so without this step the dead
-        //    player entity (HP=0, frozen position) is reused on the next run.
-        // 3. Reload the active scene. RunSelectionLobbyUI picks up the pending Retry
-        //    on the fresh scene; if anything blocks auto-start the user can press Start
-        //    manually with a clean ECS state.
+        // Retry flow (post-S5-B-M3 simplification):
+        // 1. Sweep gameplay entities + reset Player in place + reset BossSpawnState.
+        //    PlayerTag stays (FallbackSystem self-disables after first run).
+        // 2. Queue the Retry navigation request. RunNavigationSystem picks it
+        //    up next frame, sets DataLoadState.HasLoaded=0 + Status=Loading +
+        //    consumes the request. DataBootstrapSystem then re-applies the
+        //    saved RunSelection on the *next* frame and flips Status=Playing.
+        //
+        // No SceneManager.LoadScene any more — reloading the scene tore down
+        // every RuntimeInitializeOnLoadMethod hook (Title / Lobby / HUD)
+        // which, combined with FallbackSystem.state.Enabled=false leftover
+        // state, produced ghost Title screens and missing UI on resume.
         private static void RequestRetry()
         {
+            RunTeardownBridge.DestroyCurrentRun(clearNavigation: false);
             SubmitNavigation(RunNavigationAction.Retry);
-            DestroyGameplayEntities();
-
-            Scene activeScene = SceneManager.GetActiveScene();
-            int buildIndex = activeScene.buildIndex;
-            if (buildIndex < 0 && !string.IsNullOrWhiteSpace(activeScene.path))
-            {
-                buildIndex = SceneUtility.GetBuildIndexByScenePath(activeScene.path);
-            }
-
-            if (buildIndex >= 0)
-            {
-                SceneManager.LoadScene(buildIndex);
-            }
-            else
-            {
-                SceneManager.LoadScene(activeScene.name);
-            }
         }
 
         private static void DestroyGameplayEntities()

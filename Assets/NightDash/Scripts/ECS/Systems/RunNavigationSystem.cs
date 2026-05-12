@@ -30,6 +30,12 @@ namespace NightDash.ECS.Systems
             {
                 case RunNavigationAction.Retry:
                     ApplyRetry(ref state, ref load, ref loop, ref snapshot);
+                    // Consume the request — without this, the Retry action
+                    // re-fires every frame and ping-pongs Status between
+                    // Loading (here) and Playing (DataBootstrapSystem) so
+                    // the HUD never settles into a stable Playing state.
+                    navigation.ValueRW.Action = RunNavigationAction.None;
+                    navigation.ValueRW.IsPending = 0;
                     break;
                 case RunNavigationAction.ReturnToLobby:
                     ApplyReturnToLobby(ref state, ref navigation, ref loop, ref snapshot);
