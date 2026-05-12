@@ -5,6 +5,9 @@ using Unity.Entities;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace NightDash.Runtime
 {
@@ -18,6 +21,13 @@ namespace NightDash.Runtime
         private Button _rerollButton;
         private readonly Text[] _optionTexts = new Text[3];
         private readonly Button[] _optionButtons = new Button[3];
+        private readonly RectTransform[] _optionCards = new RectTransform[3];
+        private readonly Image[] _optionCardImages = new Image[3];
+
+        // Keyboard navigation state — visible while the level-up panel is
+        // active. Mouse clicks still work via the Button.onClick handlers.
+        private int _selectedIndex;
+        private int _visibleOptionCount;
 
         // Card frame sprites loaded once at Awake. UpgradeOptionElement
         // doesn't carry a rarity field yet — until it does, the three
@@ -68,6 +78,73 @@ namespace NightDash.Runtime
         private void Update()
         {
             RefreshState();
+            if (_levelRoot != null && _levelRoot.activeSelf)
+            {
+                HandleKeyboardNav();
+            }
+        }
+
+        private void HandleKeyboardNav()
+        {
+            if (_visibleOptionCount <= 0) return;
+
+            bool left, right, confirm;
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            left = kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame;
+            right = kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame;
+            confirm = kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame
+                      || kb.numpadEnterKey.wasPressedThisFrame;
+#else
+            left = Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
+            right = Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
+            confirm = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)
+                      || Input.GetKeyDown(KeyCode.KeypadEnter);
+#endif
+
+            if (left) SelectIndex(_selectedIndex - 1);
+            else if (right) SelectIndex(_selectedIndex + 1);
+            else if (confirm) SubmitSelection(_selectedIndex);
+        }
+
+        private void SelectIndex(int idx)
+        {
+            int n = _visibleOptionCount;
+            if (n <= 0) return;
+            _selectedIndex = ((idx % n) + n) % n;
+            ApplySelectionVisuals();
+        }
+
+        // Selected card pops to 1.08× and stays at full brightness; the
+        // others sit at 1.0× with a slight desaturated tint so the pointer
+        // location is obvious without an extra overlay sprite.
+        private void ApplySelectionVisuals()
+        {
+            for (int i = 0; i < _optionCards.Length; i++)
+            {
+                var rt = _optionCards[i];
+                if (rt == null) continue;
+                bool selected = i == _selectedIndex && i < _visibleOptionCount;
+                rt.localScale = selected
+                    ? new Vector3(1.08f, 1.08f, 1f)
+                    : Vector3.one;
+
+                var img = _optionCardImages[i];
+                if (img != null)
+                {
+                    img.color = selected
+                        ? Color.white
+                        : new Color(0.70f, 0.70f, 0.74f, 1f);
+                }
+
+                if (_optionTexts[i] != null)
+                {
+                    _optionTexts[i].color = selected
+                        ? new Color(1f, 0.95f, 0.78f, 1f)
+                        : new Color(0.78f, 0.74f, 0.68f, 1f);
+                }
+            }
         }
 
         private void BuildCanvas()
@@ -127,18 +204,19 @@ namespace NightDash.Runtime
 
             RectTransform cards = CreateRect("Cards", panel);
             HorizontalLayoutGroup cardsLayout = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardsLayout.spacing = 16f;
+            cardsLayout.spacing = 8f;
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;
-            SetPreferredHeight(cards, 360f);
+            SetPreferredHeight(cards, 580f);
 
-            // Source sprite is 96×144 (2:3). RectTransform at 240×360 keeps
-            // the card a uniform 2.5× scale so the pixel art stays sharp,
-            // and the 3-card row fits inside the 1080p reference layout:
-            //   3 * 240 + 2 * 16 = 752 < 1080.
-            const float cardWidth = 240f;
-            const float cardHeight = 360f;
+            // Source sprite is alpha-trimmed 84×116. Uniform 5× scale keeps
+            // every source pixel mapped to a 5×5 block — sharp pixel art at
+            // a comfortable read size, and the 3-card row sits inside the
+            // 1920-wide reference layout with room to breathe:
+            //   3 * 420 + 2 * 8 = 1276 < 1920.
+            const float cardWidth = 420f;
+            const float cardHeight = 580f;
 
             for (int i = 0; i < 3; i++)
             {
@@ -159,16 +237,22 @@ namespace NightDash.Runtime
                 button.targetGraphic = cardImage;
                 button.onClick.AddListener(() => SubmitSelection(optionIndex));
                 _optionButtons[i] = button;
+                _optionCards[i] = card;
+                _optionCardImages[i] = cardImage;
 
                 // Description text sits in the lower half of the card so it
-                // doesn't fight the upper icon panel. Icon population waits
-                // for the gameplay UI pass.
-                _optionTexts[i] = CreateText(card, "-", 22, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
-                var textRect = _optionTexts[i].rectTransform;
+                // doesn't fight the upper icon panel. Wrap mode handles long
+                // upgrade descriptions; vertical Overflow keeps the entire
+                // text visible even if it pushes past the half-anchor.
+                _optionTexts[i] = CreateText(card, "-", 32, TextAnchor.UpperCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                var optText = _optionTexts[i];
+                optText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                optText.verticalOverflow = VerticalWrapMode.Overflow;
+                var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0f);
                 textRect.anchorMax = new Vector2(1f, 0.5f);
-                textRect.offsetMin = new Vector2(16f, 16f);
-                textRect.offsetMax = new Vector2(-16f, -8f);
+                textRect.offsetMin = new Vector2(40f, 32f);
+                textRect.offsetMax = new Vector2(-40f, -12f);
             }
 
             RectTransform footer = CreateRect("Footer", panel);
@@ -233,6 +317,7 @@ namespace NightDash.Runtime
                 _rerollButton.interactable = progression.RerollsRemaining > 0;
             }
 
+            int newVisible = 0;
             for (int i = 0; i < _optionButtons.Length; i++)
             {
                 bool hasOption = i < options.Length;
@@ -245,7 +330,17 @@ namespace NightDash.Runtime
                 UpgradeOptionElement option = options[i];
                 _optionButtons[i].interactable = true;
                 _optionTexts[i].text = BuildOptionText(option);
+                newVisible++;
             }
+
+            // When the panel first appears (or option count changes), pin
+            // the selection to the leftmost visible card and refresh visuals.
+            if (newVisible != _visibleOptionCount)
+            {
+                _visibleOptionCount = newVisible;
+                _selectedIndex = 0;
+            }
+            ApplySelectionVisuals();
         }
 
         private void SetVisible(bool visible)
