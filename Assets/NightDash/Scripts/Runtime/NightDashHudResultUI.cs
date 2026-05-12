@@ -347,7 +347,10 @@ namespace NightDash.Runtime
             RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120f, 1000f));
             AttachOrnatePanelFrame(panel);
             VerticalLayoutGroup panelLayout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(72, 72, 64, 56);
+            // Bottom padding 100 (vs 56 above) pushes the action row up so
+            // the Retry/Lobby/Title cluster sits closer to the stats panel
+            // instead of hugging the bottom trim.
+            panelLayout.padding = new RectOffset(72, 72, 64, 100);
             panelLayout.spacing = 10f;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
@@ -391,12 +394,15 @@ namespace NightDash.Runtime
 
             RectTransform actions = CreateRect("Actions", panel);
             HorizontalLayoutGroup actionLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actionLayout.spacing = 22f;
+            actionLayout.spacing = 36f;
             actionLayout.childControlWidth = false;
             actionLayout.childControlHeight = false;
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
-            // 124 ≥ button height 111 so the buttons sit fully inside.
-            SetPreferredHeight(actions, 124f);
+            // Buttons shrunk to 2.25× scale (227×83) so total row width
+            // matches the previous 124-height row's visual weight while
+            // freeing up vertical space. Same inter-button gap (~36px gives
+            // a visually identical separation to the 22px gap at 3× scale).
+            SetPreferredHeight(actions, 96f);
 
             // Three-action footer: Retry runs the same stage again, Lobby
             // returns to character / stage select, Title goes all the way
@@ -895,16 +901,15 @@ namespace NightDash.Runtime
 
         private Button CreateActionButton(RectTransform parent, string label, Action onClick)
         {
-            // Uniform 3× of the alpha-trimmed 101×37 button sprite (= 303×111)
-            // — matches Pause Menu / Title menu button weight so the result
-            // actions don't feel like a different (smaller) button style.
-            // Three buttons (3 × 303 + 2 × 22 = 953) fit inside the result
-            // panel's 1120 width minus 72×2 padding = 976.
+            // Uniform 2.25× of the alpha-trimmed 101×37 button sprite
+            // (= 227×83) — sized down from the original 3× so the action
+            // row leaves more vertical room above the panel bottom while
+            // keeping the same inter-button gap visually.
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(303f, 111f);
+            rect.sizeDelta = new Vector2(227f, 83f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 303f;
-            layout.preferredHeight = 111f;
+            layout.preferredWidth = 227f;
+            layout.preferredHeight = 83f;
 
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = Color.white;
@@ -923,7 +928,7 @@ namespace NightDash.Runtime
             };
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text text = CreateText(rect, label.ToUpperInvariant(), 44, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.82f, 1f));
+            Text text = CreateText(rect, label.ToUpperInvariant(), 32, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.82f, 1f));
             StretchFull(text.rectTransform);
             return button;
         }
