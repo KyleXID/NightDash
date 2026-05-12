@@ -282,51 +282,56 @@ namespace NightDash.Runtime
                 _optionCards[i] = card;
                 _optionCardImages[i] = cardImage;
 
-                // Kind label sits in the card's upper panel area (~62~92%)
-                // so "WEAPON" / "PASSIVE" reads clearly and never collides
-                // with the description below. Anchored above the divider
-                // line so the gold/silver trim doesn't slice the glyphs.
+                // Kind label sits in the card's TOP banner (~72~96%) so it
+                // never collides with the description below. Outline keeps
+                // it readable on the legendary card's gold center glow.
                 _optionKindTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter,
                     new Color(1f, 0.92f, 0.74f, 1f));
                 _optionKindTexts[i].fontStyle = FontStyle.Bold;
+                AddTextOutline(_optionKindTexts[i]);
                 var kindRect = _optionKindTexts[i].rectTransform;
-                kindRect.anchorMin = new Vector2(0f, 0.62f);
-                kindRect.anchorMax = new Vector2(1f, 0.92f);
+                kindRect.anchorMin = new Vector2(0f, 0.72f);
+                kindRect.anchorMax = new Vector2(1f, 0.96f);
                 kindRect.offsetMin = new Vector2(20f, 0f);
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
                 // Description text sits inside the card's lower description
-                // panel (~4~50%). Kind label moved out, so this region now
+                // panel (~4~58%). Kind label moved out, so this region now
                 // only holds the level line + optional flavor detail.
+                // BestFit min 16 lets very long passive flavor text shrink
+                // far enough to stay inside the panel.
                 _optionTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Truncate;
                 optText.resizeTextForBestFit = true;
-                optText.resizeTextMinSize = 22;
+                optText.resizeTextMinSize = 16;
                 optText.resizeTextMaxSize = 40;
+                AddTextOutline(optText);
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.04f);
-                textRect.anchorMax = new Vector2(1f, 0.50f);
+                textRect.anchorMax = new Vector2(1f, 0.58f);
                 textRect.offsetMin = new Vector2(24f, 0f);
                 textRect.offsetMax = new Vector2(-24f, 0f);
             }
 
-            // Footer = REROLL button centered + counter parked to its right.
-            // No HorizontalLayoutGroup; the two pieces are positioned via
-            // explicit anchors so the button stays exactly on the panel's
-            // vertical centerline.
+            // Footer hosts three explicitly-anchored siblings so each piece
+            // lands exactly where it should, no LayoutGroup interference:
+            //   - REROLL button: horizontally centered, slightly below mid.
+            //   - reroll icon:   to the right of the button, vertically aligned.
+            //   - "Rerolls Left" text: to the right of the icon.
             RectTransform footer = CreateRect("Footer", panel);
-            SetPreferredHeight(footer, 120f);
+            SetPreferredHeight(footer, 140f);
 
-            // REROLL action button — centered on the footer.
+            // REROLL action button — centered + nudged down 16 so it sits
+            // a touch lower than the counter (user request).
             _rerollButton = CreateButton(footer, "REROLL", SubmitReroll);
             RectTransform rerollRect = _rerollButton.GetComponent<RectTransform>();
             rerollRect.anchorMin = new Vector2(0.5f, 0.5f);
             rerollRect.anchorMax = new Vector2(0.5f, 0.5f);
             rerollRect.pivot = new Vector2(0.5f, 0.5f);
             rerollRect.sizeDelta = new Vector2(303f, 111f);
-            rerollRect.anchoredPosition = Vector2.zero;
+            rerollRect.anchoredPosition = new Vector2(0f, -16f);
             var rerollLE = _rerollButton.GetComponent<LayoutElement>();
             if (rerollLE != null)
             {
@@ -337,25 +342,30 @@ namespace NightDash.Runtime
             var rerollLabel = _rerollButton.GetComponentInChildren<Text>();
             if (rerollLabel != null) rerollLabel.fontSize = 44;
 
-            // Counter (reroll icon + "Rerolls Left: N") sits to the RIGHT
-            // of the centered button — its left edge anchors to the button's
-            // right edge, separated by a small gap.
-            RectTransform counter = CreateRect("RerollCounter", footer);
-            counter.anchorMin = new Vector2(0.5f, 0.5f);
-            counter.anchorMax = new Vector2(0.5f, 0.5f);
-            counter.pivot = new Vector2(0f, 0.5f);
-            counter.sizeDelta = new Vector2(420f, 80f);
-            // Button half-width 151.5 + gap 24 ≈ 176 from center.
-            counter.anchoredPosition = new Vector2(176f, 0f);
-            HorizontalLayoutGroup counterLayout = counter.gameObject.AddComponent<HorizontalLayoutGroup>();
-            counterLayout.spacing = 14f;
-            counterLayout.childAlignment = TextAnchor.MiddleLeft;
-            counterLayout.childControlHeight = false;
-            counterLayout.childControlWidth = false;
+            // Reroll icon — anchored just right of the button. Button is
+            // centered with half-width 151.5; gap 24 puts the icon at +176.
+            RectTransform iconRect = CreateRect("RerollIcon", footer);
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(0f, 0.5f);
+            iconRect.sizeDelta = new Vector2(64f, 64f);
+            iconRect.anchoredPosition = new Vector2(176f, -16f);
+            Image iconImg = iconRect.gameObject.AddComponent<Image>();
+            var iconSprite = Resources.Load<Sprite>("NightDash/UI/Icons/nd_ui_icon_reroll_default");
+            if (iconSprite != null) iconImg.sprite = iconSprite;
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
 
-            CreateIconImage(counter, "NightDash/UI/Icons/nd_ui_icon_reroll_default", 64f, 64f);
-            _rerollText = CreateText(counter, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
-            SetPreferredWidth(_rerollText.rectTransform, 340f);
+            // "Rerolls Left: N" text — sits to the right of the icon (icon
+            // width 64 + gap 14 = 78 → text starts at +254 from center).
+            _rerollText = CreateText(footer, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
+            RectTransform textRect = _rerollText.rectTransform;
+            textRect.anchorMin = new Vector2(0.5f, 0.5f);
+            textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.pivot = new Vector2(0f, 0.5f);
+            textRect.sizeDelta = new Vector2(340f, 60f);
+            textRect.anchoredPosition = new Vector2(254f, -16f);
+            _rerollText.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
         // Loads a sprite from Resources and stamps it inside a layout-friendly
@@ -632,6 +642,17 @@ namespace NightDash.Runtime
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             return text;
+        }
+
+        // Drops a dark Outline on a Text so the glyphs stay readable on top
+        // of bright card centers (the legendary card's gold glow in
+        // particular washes out white text without it).
+        private static void AddTextOutline(Text text)
+        {
+            if (text == null) return;
+            var outline = text.gameObject.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.88f);
+            outline.effectDistance = new Vector2(2f, -2f);
         }
 
         private static RectTransform CreateRect(string name, Transform parent)
