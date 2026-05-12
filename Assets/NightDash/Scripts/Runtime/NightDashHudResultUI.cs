@@ -6,6 +6,9 @@ using Unity.Entities;
 using UnityEngine.EventSystems;
 // using UnityEngine.SceneManagement; — removed once Retry stopped reloading the scene.
 using UnityEngine.UI;
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 namespace NightDash.Runtime
 {
@@ -76,6 +79,13 @@ namespace NightDash.Runtime
         private bool _rewardEnabled;
         private bool _resultVictory;
 
+        // Keyboard nav state for the Result screen action row (Retry / Lobby
+        // / Title). Mouse clicks still trigger the buttons via onClick.
+        private int _resultSelectedActionIndex;
+        // Tracks the previous frame's _resultEnabled so we can reset the
+        // selected index when the Result panel becomes visible.
+        private bool _resultWasEnabledLastFrame;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
@@ -100,6 +110,78 @@ namespace NightDash.Runtime
         {
             UpdateFromGameState();
             UpdateVisibility();
+            HandleResultKeyboardNav();
+        }
+
+        private void HandleResultKeyboardNav()
+        {
+            if (_resultRoot == null || !_resultRoot.activeSelf) return;
+
+            // Just-entered: pin the selection to Retry and refresh visuals.
+            if (!_resultWasEnabledLastFrame)
+            {
+                _resultSelectedActionIndex = 0;
+                ApplyResultActionVisuals();
+                _resultWasEnabledLastFrame = true;
+            }
+
+            bool left, right, confirm;
+#if ENABLE_INPUT_SYSTEM
+            var kb = Keyboard.current;
+            if (kb == null) return;
+            left = kb.leftArrowKey.wasPressedThisFrame || kb.aKey.wasPressedThisFrame;
+            right = kb.rightArrowKey.wasPressedThisFrame || kb.dKey.wasPressedThisFrame;
+            confirm = kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame
+                      || kb.numpadEnterKey.wasPressedThisFrame;
+#else
+            left = Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A);
+            right = Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D);
+            confirm = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space)
+                      || Input.GetKeyDown(KeyCode.KeypadEnter);
+#endif
+
+            if (left) StepResultAction(-1);
+            else if (right) StepResultAction(+1);
+            else if (confirm) ClickSelectedResultAction();
+        }
+
+        private void StepResultAction(int direction)
+        {
+            const int actionCount = 3; // Retry / Lobby / Title
+            _resultSelectedActionIndex = ((_resultSelectedActionIndex + direction) % actionCount + actionCount) % actionCount;
+            ApplyResultActionVisuals();
+        }
+
+        private void ApplyResultActionVisuals()
+        {
+            Button[] buttons = { _retryButton, _returnToLobbyButton, _returnToTitleButton };
+            var defaultSprite = buttonDefaultTexture != null ? CreateRuntimeSprite(buttonDefaultTexture) : null;
+            var hoverSprite = buttonHoverTexture != null ? CreateRuntimeSprite(buttonHoverTexture) : null;
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null) continue;
+                bool selected = i == _resultSelectedActionIndex;
+                buttons[i].transform.localScale = selected
+                    ? new Vector3(1.08f, 1.08f, 1f)
+                    : Vector3.one;
+
+                var img = buttons[i].GetComponent<Image>();
+                if (img != null && defaultSprite != null && hoverSprite != null)
+                {
+                    img.sprite = selected ? hoverSprite : defaultSprite;
+                }
+            }
+        }
+
+        private void ClickSelectedResultAction()
+        {
+            switch (_resultSelectedActionIndex)
+            {
+                case 0: if (_retryButton != null && _retryButton.interactable) RequestRetry(); break;
+                case 1: if (_returnToLobbyButton != null && _returnToLobbyButton.interactable) RequestReturnToLobby(); break;
+                case 2: if (_returnToTitleButton != null && _returnToTitleButton.interactable) RequestReturnToTitle(); break;
+            }
         }
 
         private void LoadFallbackIcons()
@@ -652,6 +734,10 @@ namespace NightDash.Runtime
             {
                 _resultRoot.SetActive(showResult);
             }
+
+            // Reset keyboard-nav re-entry flag whenever the result panel
+            // disappears, so the next show pins back to Retry.
+            if (!showResult) _resultWasEnabledLastFrame = false;
         }
 
         // Mirror of LevelUpSelectionUI's panel composition: a dark backdrop
