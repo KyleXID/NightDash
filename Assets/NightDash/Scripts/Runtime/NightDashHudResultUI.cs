@@ -257,8 +257,9 @@ namespace NightDash.Runtime
             dimImage.color = new Color(0f, 0f, 0f, 0.72f);
 
             RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(920f, 760f));
+            AttachOrnatePanelFrame(panel);
             VerticalLayoutGroup panelLayout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(24, 24, 20, 20);
+            panelLayout.padding = new RectOffset(56, 56, 56, 56);
             panelLayout.spacing = 2f;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
@@ -323,8 +324,9 @@ namespace NightDash.Runtime
             dimImage.color = new Color(0f, 0f, 0f, 0.7f);
 
             RectTransform panel = CreatePanel("RewardPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(760f, 380f));
+            AttachOrnatePanelFrame(panel);
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 24, 24, 24);
+            layout.padding = new RectOffset(48, 48, 40, 40);
             layout.spacing = 16f;
             layout.childControlWidth = true;
             layout.childControlHeight = false;
@@ -642,6 +644,46 @@ namespace NightDash.Runtime
             {
                 _resultRoot.SetActive(showResult);
             }
+        }
+
+        // Mirror of LevelUpSelectionUI's panel composition: a dark backdrop
+        // shrunk inside the ornate trim + a 9-slice frame sprite overlay,
+        // both ignored by the parent's VerticalLayoutGroup so the content
+        // children stay centered. Run BEFORE adding the VerticalLayoutGroup
+        // so the backdrop / frame become the first siblings (drawn behind).
+        private static void AttachOrnatePanelFrame(RectTransform panel)
+        {
+            // Inner dim backdrop — fills the area inside the ornate corners.
+            RectTransform backdrop = CreateRect("Backdrop", panel);
+            StretchFull(backdrop);
+            backdrop.offsetMin = new Vector2(28f, 28f);
+            backdrop.offsetMax = new Vector2(-28f, -28f);
+            Image backdropImage = backdrop.gameObject.AddComponent<Image>();
+            backdropImage.color = new Color(0.10f, 0.07f, 0.16f, 0.94f);
+            backdropImage.raycastTarget = false;
+            var backdropLayout = backdrop.gameObject.AddComponent<LayoutElement>();
+            backdropLayout.ignoreLayout = true;
+
+            // Ornate frame overlay — sprite Sliced (9-slice border was set on
+            // import: 40/40/40/36). raycastTarget=false so the frame doesn't
+            // eat clicks meant for the action buttons underneath.
+            RectTransform frame = CreateRect("Frame", panel);
+            StretchFull(frame);
+            Image frameImage = frame.gameObject.AddComponent<Image>();
+            var panelSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_panel_default");
+            if (panelSprite != null)
+            {
+                frameImage.sprite = panelSprite;
+                frameImage.type = Image.Type.Sliced;
+                frameImage.color = Color.white;
+            }
+            else
+            {
+                frameImage.color = new Color(0f, 0f, 0f, 0f);
+            }
+            frameImage.raycastTarget = false;
+            var frameLayout = frame.gameObject.AddComponent<LayoutElement>();
+            frameLayout.ignoreLayout = true;
         }
 
         private static RectTransform CreatePanel(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax, Vector2 anchoredPos, Vector2 size)
