@@ -61,12 +61,13 @@ namespace NightDash.Editor
             {
                 settings.spriteBorder = new Vector4(10f, 8f, 10f, 6f);
             }
-            // Large dialog panel — ornate corner ornament occupies the
-            // outermost ~40px of the 256×192 source. Border preserves it
-            // while letting Image.type=Sliced stretch the middle edges.
+            // Large dialog panel — ornate corner ornament (skull + gold
+            // filigree) occupies the outermost ~50px of the trimmed 256×188
+            // source. Border preserves the corner while letting Image.type=
+            // Sliced stretch the middle edges.
             else if (fileName == "nd_ui_frame_panel_default")
             {
-                settings.spriteBorder = new Vector4(40f, 40f, 40f, 36f);
+                settings.spriteBorder = new Vector4(50f, 48f, 50f, 48f);
             }
             // Horizontal bars — corners (rivets + trim) take the leftmost
             // and rightmost ~8px of the trimmed source. 9-slice lets the

@@ -256,8 +256,8 @@ namespace NightDash.Runtime
             // ignoreLayout so the VerticalLayoutGroup doesn't squish it.
             RectTransform backdrop = CreateRect("Backdrop", panel);
             StretchFull(backdrop);
-            backdrop.offsetMin = new Vector2(28f, 28f);
-            backdrop.offsetMax = new Vector2(-28f, -28f);
+            backdrop.offsetMin = new Vector2(40f, 40f);
+            backdrop.offsetMax = new Vector2(-40f, -40f);
             Image backdropImage = backdrop.gameObject.AddComponent<Image>();
             backdropImage.color = new Color(0.1f, 0.07f, 0.16f, 0.94f);
             var backdropLayout = backdrop.gameObject.AddComponent<LayoutElement>();
