@@ -230,11 +230,10 @@ namespace NightDash.Runtime
             frameLayout.ignoreLayout = true;
 
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            // Sized so content sits inside the ornate frame but not so deep
-            // that the footer collides with the bottom row of cards. With
-            // panel height 880 and content 704, padding 56/64 leaves a
-            // ~56px buffer on each side and 64+64 vertical headroom.
-            layout.padding = new RectOffset(56, 56, 64, 64);
+            // Top padding 24 (was 64) lifts "LEVEL UP" closer to the frame's
+            // upper trim — user request to nudge the title upward. Bottom
+            // padding 56 keeps the footer comfortably inside the ornate frame.
+            layout.padding = new RectOffset(56, 56, 24, 56);
             layout.spacing = 24f;
             layout.childControlHeight = false;
             layout.childControlWidth = true;
@@ -303,15 +302,46 @@ namespace NightDash.Runtime
 
             RectTransform footer = CreateRect("Footer", panel);
             HorizontalLayoutGroup footerLayout = footer.gameObject.AddComponent<HorizontalLayoutGroup>();
-            footerLayout.spacing = 32f;
+            footerLayout.spacing = 40f;
             footerLayout.childAlignment = TextAnchor.MiddleCenter;
             footerLayout.childControlHeight = false;
             footerLayout.childControlWidth = false;
             SetPreferredHeight(footer, 96f);
 
             _rerollButton = CreateButton(footer, "REROLL", SubmitReroll);
-            _rerollText = CreateText(footer, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
-            SetPreferredWidth(_rerollText.rectTransform, 360f);
+
+            // Counter group: reroll icon + "Rerolls Left: N" text. Mirrors
+            // the HUD's icon-counter pattern so the bottom panel reads as
+            // "[action button] [icon + count]" instead of "[button] [bare text]".
+            RectTransform counter = CreateRect("RerollCounter", footer);
+            HorizontalLayoutGroup counterLayout = counter.gameObject.AddComponent<HorizontalLayoutGroup>();
+            counterLayout.spacing = 12f;
+            counterLayout.childAlignment = TextAnchor.MiddleLeft;
+            counterLayout.childControlHeight = false;
+            counterLayout.childControlWidth = false;
+            SetPreferredHeight(counter, 80f);
+            SetPreferredWidth(counter.rectTransform, 360f);
+
+            CreateIconImage(counter, "NightDash/UI/Icons/nd_ui_icon_reroll_default", 56f, 56f);
+            _rerollText = CreateText(counter, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
+            SetPreferredWidth(_rerollText.rectTransform, 290f);
+        }
+
+        // Loads a sprite from Resources and stamps it inside a layout-friendly
+        // RectTransform. Used by the reroll counter to surface the reroll icon
+        // beside its remaining-count text.
+        private static void CreateIconImage(Transform parent, string spritePath, float width, float height)
+        {
+            RectTransform rect = CreateRect("Icon", parent);
+            rect.sizeDelta = new Vector2(width, height);
+            LayoutElement le = rect.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = width;
+            le.preferredHeight = height;
+            Image img = rect.gameObject.AddComponent<Image>();
+            var sprite = Resources.Load<Sprite>(spritePath);
+            if (sprite != null) img.sprite = sprite;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
         }
 
         private void RefreshState()
@@ -499,20 +529,47 @@ namespace NightDash.Runtime
 
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
         {
+            // Sized at uniform 2× of the alpha-trimmed 101×37 button sprite
+            // so footer buttons stay compact next to the reroll counter while
+            // still matching the bronze-trim style used everywhere else.
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(280f, 80f);
+            rect.sizeDelta = new Vector2(202f, 74f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 280f;
-            layout.preferredHeight = 80f;
+            layout.preferredWidth = 202f;
+            layout.preferredHeight = 74f;
 
             Image image = rect.gameObject.AddComponent<Image>();
-            image.color = new Color(0.26f, 0.18f, 0.34f, 1f);
+            image.color = Color.white;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = true;
+            var defSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_default");
+            var hovSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_hover");
+            var pressSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_pressed");
+            var disSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
+            if (defSprite != null)
+            {
+                image.sprite = defSprite;
+            }
+            else
+            {
+                image.color = new Color(0.26f, 0.18f, 0.34f, 1f);
+            }
 
             Button button = rect.gameObject.AddComponent<Button>();
             button.targetGraphic = image;
+            if (defSprite != null && hovSprite != null && pressSprite != null && disSprite != null)
+            {
+                button.transition = Selectable.Transition.SpriteSwap;
+                button.spriteState = new SpriteState
+                {
+                    highlightedSprite = hovSprite,
+                    pressedSprite = pressSprite,
+                    disabledSprite = disSprite
+                };
+            }
             button.onClick.AddListener(onClick);
 
-            Text text = CreateText(rect, label, 32, TextAnchor.MiddleCenter, Color.white);
+            Text text = CreateText(rect, label, 28, TextAnchor.MiddleCenter, new Color(0.96f, 0.94f, 0.78f, 1f));
             StretchFull(text.rectTransform);
             return button;
         }
