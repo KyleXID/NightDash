@@ -298,7 +298,7 @@ namespace NightDash.Runtime
 
             RectTransform cards = CreateRect("Cards", panel);
             HorizontalLayoutGroup cardsLayout = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardsLayout.spacing = 24f;
+            cardsLayout.spacing = 14f;
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;

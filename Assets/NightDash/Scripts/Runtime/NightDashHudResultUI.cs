@@ -257,26 +257,27 @@ namespace NightDash.Runtime
             Image dimImage = dim.gameObject.AddComponent<Image>();
             dimImage.color = new Color(0f, 0f, 0f, 0.72f);
 
-            RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120f, 800f));
+            // Panel height bumped to 1000 so the stack (icon + header +
+            // stats + actions) sits inside the ornate frame even with the
+            // larger stat text. Width stays at 1120 (matches the LevelUp
+            // panel ratio for a consistent dialog footprint).
+            RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120f, 1000f));
             AttachOrnatePanelFrame(panel);
             VerticalLayoutGroup panelLayout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
             panelLayout.padding = new RectOffset(72, 72, 64, 56);
-            panelLayout.spacing = 8f;
+            panelLayout.spacing = 10f;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
             panelLayout.childForceExpandHeight = false;
 
-            // Outcome icon shrunk from 260 → 160 so the result stats panel
-            // sits closer to the vertical center instead of getting shoved
-            // below the giant skull/crown.
             RectTransform iconRow = CreateRect("OutcomeIconRow", panel);
             HorizontalLayoutGroup iconLayout = iconRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             iconLayout.spacing = 0f;
             iconLayout.childAlignment = TextAnchor.MiddleCenter;
             iconLayout.childControlHeight = false;
             iconLayout.childControlWidth = false;
-            SetPreferredHeight(iconRow, 170f);
-            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 160f, 160f);
+            SetPreferredHeight(iconRow, 150f);
+            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 140f, 140f);
 
             RectTransform headerRow = CreateRect("OutcomeHeaderRow", panel);
             SetPreferredHeight(headerRow, 96f);
@@ -286,13 +287,14 @@ namespace NightDash.Runtime
             _resultHeaderText = CreateText(headerRow, "YOU DIED", 96, TextAnchor.MiddleCenter, new Color(0.72f, 0.12f, 0.2f, 1f));
             StretchFull(_resultHeaderText.rectTransform);
 
-            RectTransform stats = CreatePanel("Stats", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960f, 220f));
+            RectTransform stats = CreatePanel("Stats", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960f, 400f));
             VerticalLayoutGroup statsLayout = stats.gameObject.AddComponent<VerticalLayoutGroup>();
-            statsLayout.spacing = 0f;
-            statsLayout.padding = new RectOffset(14, 14, 4, 4);
-            statsLayout.childControlHeight = true;
+            statsLayout.spacing = 6f;
+            statsLayout.padding = new RectOffset(20, 20, 12, 12);
+            statsLayout.childControlHeight = false;
             statsLayout.childControlWidth = true;
-            SetPreferredHeight(stats, 208f);
+            // 4 rows × 88 + 3 × spacing 6 = 370 + 24 padding = 394 ≤ 400.
+            SetPreferredHeight(stats, 400f);
 
             _resultTimeText = CreateStatRow(stats, timerIcon, "Time Survived", "00:00");
             _resultKillText = CreateStatRow(stats, waveIcon, "Kills", "0");
@@ -790,16 +792,17 @@ namespace NightDash.Runtime
         {
             RectTransform row = CreateRect($"{label}Row", parent);
             HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12f;
+            layout.spacing = 16f;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
             layout.childAlignment = TextAnchor.MiddleCenter;
-            SetPreferredHeight(row, 72f);
+            SetPreferredHeight(row, 88f);
 
-            CreateSimpleIcon(row, icon, 64f, 64f);
-            Text labelText = CreateText(row, label, 32, TextAnchor.MiddleLeft, new Color(0.68f, 0.62f, 0.73f, 1f));
-            SetPreferredWidth(labelText.rectTransform, 360f);
-            Text valueText = CreateText(row, value, 32, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.97f, 1f));
+            CreateSimpleIcon(row, icon, 72f, 72f);
+            Text labelText = CreateText(row, label, 40, TextAnchor.MiddleLeft, new Color(0.78f, 0.72f, 0.86f, 1f));
+            SetPreferredWidth(labelText.rectTransform, 440f);
+            Text valueText = CreateText(row, value, 40, TextAnchor.MiddleLeft, new Color(1f, 0.95f, 0.82f, 1f));
+            SetPreferredWidth(valueText.rectTransform, 280f);
             return valueText;
         }
 
