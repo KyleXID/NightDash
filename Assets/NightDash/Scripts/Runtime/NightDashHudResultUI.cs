@@ -303,11 +303,13 @@ namespace NightDash.Runtime
 
             RectTransform actions = CreateRect("Actions", panel);
             HorizontalLayoutGroup actionLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actionLayout.spacing = 14f;
+            actionLayout.spacing = 18f;
             actionLayout.childControlWidth = false;
             actionLayout.childControlHeight = false;
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
-            SetPreferredHeight(actions, 62f);
+            // 90 ≥ button height 74 so the buttons sit fully inside the row
+            // (otherwise they bleed past the panel's bottom trim).
+            SetPreferredHeight(actions, 90f);
 
             // Three-action footer: Retry runs the same stage again, Lobby
             // returns to character / stage select, Title goes all the way
@@ -801,16 +803,17 @@ namespace NightDash.Runtime
 
         private Button CreateActionButton(RectTransform parent, string label, Action onClick)
         {
+            // Uniform 2× of the alpha-trimmed 101×37 button sprite (= 202×74)
+            // — sized so 3 actions fit comfortably inside the Result panel's
+            // 920×760 frame without overflowing the ornate trim.
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(303f, 111f);
+            rect.sizeDelta = new Vector2(202f, 74f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 303f;
-            layout.preferredHeight = 111f;
+            layout.preferredWidth = 202f;
+            layout.preferredHeight = 74f;
 
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = Color.white;
-            // Uniform 3× scale of the alpha-trimmed 101×37 button sprite,
-            // matching the PauseMenu / Title menu button treatment.
             image.type = Image.Type.Simple;
             image.preserveAspect = true;
             image.sprite = CreateRuntimeSprite(buttonDefaultTexture);
@@ -826,7 +829,7 @@ namespace NightDash.Runtime
             };
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text text = CreateText(rect, label.ToUpperInvariant(), 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.91f, 0.98f, 1f));
+            Text text = CreateText(rect, label.ToUpperInvariant(), 28, TextAnchor.MiddleCenter, new Color(0.95f, 0.91f, 0.98f, 1f));
             StretchFull(text.rectTransform);
             return button;
         }
@@ -1012,12 +1015,26 @@ namespace NightDash.Runtime
             SubmitNavigation(RunNavigationAction.Retry);
         }
 
-        // Lobby return — directly activates NightDashLobbyScreenUI, mirroring
-        // the Pause-Menu Return-to-Lobby path. SubmitNavigation would only
-        // reset ECS state without surfacing the lobby UI, which is what made
-        // the old "Menu" button look like it did nothing.
-        private static void RequestReturnToLobby()
+        // Hides the result root + flips the cached flags so UpdateVisibility
+        // doesn't re-enable it on the next frame before the gameplay state
+        // catches up. Used by the Lobby / Title return paths to prevent a
+        // frame-long flash of the result panel during the transition.
+        private void HideResultImmediately()
         {
+            _resultEnabled = false;
+            _rewardEnabled = false;
+            if (_resultRoot != null) _resultRoot.SetActive(false);
+            if (_rewardRoot != null) _rewardRoot.SetActive(false);
+        }
+
+        // Lobby return — directly activates NightDashLobbyScreenUI, mirroring
+        // the Pause-Menu Return-to-Lobby path. Instance (not static) so we
+        // can hide _resultRoot immediately; otherwise the result panel
+        // lingers for the one frame before UpdateFromGameState picks up
+        // the new ECS state and flips _resultEnabled off.
+        private void RequestReturnToLobby()
+        {
+            HideResultImmediately();
             RunTeardownBridge.DestroyCurrentRun();
             var lobby = UnityEngine.Object.FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
             if (lobby != null)
@@ -1032,8 +1049,9 @@ namespace NightDash.Runtime
         }
 
         // Title return — same teardown, but routes back to the main menu.
-        private static void RequestReturnToTitle()
+        private void RequestReturnToTitle()
         {
+            HideResultImmediately();
             RunTeardownBridge.DestroyCurrentRun();
             var title = UnityEngine.Object.FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
             if (title != null)
