@@ -257,23 +257,26 @@ namespace NightDash.Runtime
             Image dimImage = dim.gameObject.AddComponent<Image>();
             dimImage.color = new Color(0f, 0f, 0f, 0.72f);
 
-            RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(920f, 760f));
+            RectTransform panel = CreatePanel("ResultPanel", parent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1120f, 800f));
             AttachOrnatePanelFrame(panel);
             VerticalLayoutGroup panelLayout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(56, 56, 56, 56);
-            panelLayout.spacing = 2f;
+            panelLayout.padding = new RectOffset(72, 72, 64, 56);
+            panelLayout.spacing = 8f;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
             panelLayout.childForceExpandHeight = false;
 
+            // Outcome icon shrunk from 260 → 160 so the result stats panel
+            // sits closer to the vertical center instead of getting shoved
+            // below the giant skull/crown.
             RectTransform iconRow = CreateRect("OutcomeIconRow", panel);
             HorizontalLayoutGroup iconLayout = iconRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             iconLayout.spacing = 0f;
             iconLayout.childAlignment = TextAnchor.MiddleCenter;
             iconLayout.childControlHeight = false;
             iconLayout.childControlWidth = false;
-            SetPreferredHeight(iconRow, 268f);
-            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 260f, 260f);
+            SetPreferredHeight(iconRow, 170f);
+            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 160f, 160f);
 
             RectTransform headerRow = CreateRect("OutcomeHeaderRow", panel);
             SetPreferredHeight(headerRow, 96f);
@@ -283,7 +286,7 @@ namespace NightDash.Runtime
             _resultHeaderText = CreateText(headerRow, "YOU DIED", 96, TextAnchor.MiddleCenter, new Color(0.72f, 0.12f, 0.2f, 1f));
             StretchFull(_resultHeaderText.rectTransform);
 
-            RectTransform stats = CreatePanel("Stats", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 208f));
+            RectTransform stats = CreatePanel("Stats", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(960f, 220f));
             VerticalLayoutGroup statsLayout = stats.gameObject.AddComponent<VerticalLayoutGroup>();
             statsLayout.spacing = 0f;
             statsLayout.padding = new RectOffset(14, 14, 4, 4);
@@ -303,13 +306,12 @@ namespace NightDash.Runtime
 
             RectTransform actions = CreateRect("Actions", panel);
             HorizontalLayoutGroup actionLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actionLayout.spacing = 18f;
+            actionLayout.spacing = 22f;
             actionLayout.childControlWidth = false;
             actionLayout.childControlHeight = false;
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
-            // 90 ≥ button height 74 so the buttons sit fully inside the row
-            // (otherwise they bleed past the panel's bottom trim).
-            SetPreferredHeight(actions, 90f);
+            // 124 ≥ button height 111 so the buttons sit fully inside.
+            SetPreferredHeight(actions, 124f);
 
             // Three-action footer: Retry runs the same stage again, Lobby
             // returns to character / stage select, Title goes all the way
@@ -803,14 +805,16 @@ namespace NightDash.Runtime
 
         private Button CreateActionButton(RectTransform parent, string label, Action onClick)
         {
-            // Uniform 2× of the alpha-trimmed 101×37 button sprite (= 202×74)
-            // — sized so 3 actions fit comfortably inside the Result panel's
-            // 920×760 frame without overflowing the ornate trim.
+            // Uniform 3× of the alpha-trimmed 101×37 button sprite (= 303×111)
+            // — matches Pause Menu / Title menu button weight so the result
+            // actions don't feel like a different (smaller) button style.
+            // Three buttons (3 × 303 + 2 × 22 = 953) fit inside the result
+            // panel's 1120 width minus 72×2 padding = 976.
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(202f, 74f);
+            rect.sizeDelta = new Vector2(303f, 111f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 202f;
-            layout.preferredHeight = 74f;
+            layout.preferredWidth = 303f;
+            layout.preferredHeight = 111f;
 
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = Color.white;
@@ -829,7 +833,7 @@ namespace NightDash.Runtime
             };
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text text = CreateText(rect, label.ToUpperInvariant(), 28, TextAnchor.MiddleCenter, new Color(0.95f, 0.91f, 0.98f, 1f));
+            Text text = CreateText(rect, label.ToUpperInvariant(), 44, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.82f, 1f));
             StretchFull(text.rectTransform);
             return button;
         }
