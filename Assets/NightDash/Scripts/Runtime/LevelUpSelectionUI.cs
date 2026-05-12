@@ -359,12 +359,12 @@ namespace NightDash.Runtime
             // "Rerolls Left: N" text — sits to the right of the icon (icon
             // width 64 + gap 14 = 78 → text starts at +254 from center).
             _rerollText = CreateText(footer, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
-            RectTransform textRect = _rerollText.rectTransform;
-            textRect.anchorMin = new Vector2(0.5f, 0.5f);
-            textRect.anchorMax = new Vector2(0.5f, 0.5f);
-            textRect.pivot = new Vector2(0f, 0.5f);
-            textRect.sizeDelta = new Vector2(340f, 60f);
-            textRect.anchoredPosition = new Vector2(254f, -16f);
+            RectTransform rerollTextRect = _rerollText.rectTransform;
+            rerollTextRect.anchorMin = new Vector2(0.5f, 0.5f);
+            rerollTextRect.anchorMax = new Vector2(0.5f, 0.5f);
+            rerollTextRect.pivot = new Vector2(0f, 0.5f);
+            rerollTextRect.sizeDelta = new Vector2(340f, 60f);
+            rerollTextRect.anchoredPosition = new Vector2(254f, -16f);
             _rerollText.horizontalOverflow = HorizontalWrapMode.Overflow;
         }
 
