@@ -61,6 +61,13 @@ namespace NightDash.Editor
             {
                 settings.spriteBorder = new Vector4(10f, 8f, 10f, 6f);
             }
+            // Large dialog panel — ornate corner ornament occupies the
+            // outermost ~40px of the 256×192 source. Border preserves it
+            // while letting Image.type=Sliced stretch the middle edges.
+            else if (fileName == "nd_ui_frame_panel_default")
+            {
+                settings.spriteBorder = new Vector4(40f, 40f, 40f, 36f);
+            }
 
             importer.SetTextureSettings(settings);
         }

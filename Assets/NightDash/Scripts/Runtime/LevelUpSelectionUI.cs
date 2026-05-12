@@ -194,11 +194,41 @@ namespace NightDash.Runtime
             panel.anchorMax = new Vector2(0.5f, 0.5f);
             panel.pivot = new Vector2(0.5f, 0.5f);
             panel.sizeDelta = new Vector2(1320f, 760f);
-            Image panelImage = panel.gameObject.AddComponent<Image>();
-            panelImage.color = new Color(0.1f, 0.07f, 0.16f, 0.94f);
+
+            // Backdrop fills the inside of the ornate frame with a dark wash
+            // so card text stays readable on top of the gameplay scene.
+            // ignoreLayout so the VerticalLayoutGroup doesn't squish it.
+            RectTransform backdrop = CreateRect("Backdrop", panel);
+            StretchFull(backdrop);
+            backdrop.offsetMin = new Vector2(28f, 28f);
+            backdrop.offsetMax = new Vector2(-28f, -28f);
+            Image backdropImage = backdrop.gameObject.AddComponent<Image>();
+            backdropImage.color = new Color(0.1f, 0.07f, 0.16f, 0.94f);
+            var backdropLayout = backdrop.gameObject.AddComponent<LayoutElement>();
+            backdropLayout.ignoreLayout = true;
+
+            // Ornate frame overlay — sprite Sliced so the corner ornament
+            // stays pixel-perfect at 1320×760 (5× the 256×192 source).
+            RectTransform frame = CreateRect("Frame", panel);
+            StretchFull(frame);
+            Image frameImage = frame.gameObject.AddComponent<Image>();
+            var panelSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_frame_panel_default");
+            if (panelSprite != null)
+            {
+                frameImage.sprite = panelSprite;
+                frameImage.type = Image.Type.Sliced;
+                frameImage.color = Color.white;
+            }
+            else
+            {
+                frameImage.color = new Color(0f, 0f, 0f, 0f);
+            }
+            frameImage.raycastTarget = false;
+            var frameLayout = frame.gameObject.AddComponent<LayoutElement>();
+            frameLayout.ignoreLayout = true;
 
             VerticalLayoutGroup layout = panel.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(24, 24, 24, 24);
+            layout.padding = new RectOffset(56, 56, 56, 56);
             layout.spacing = 24f;
             layout.childControlHeight = false;
             layout.childControlWidth = true;
