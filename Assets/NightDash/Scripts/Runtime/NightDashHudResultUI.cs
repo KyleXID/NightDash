@@ -321,7 +321,6 @@ namespace NightDash.Runtime
         private void UpdateFromGameState()
         {
             RunStatus status = RunStatus.Loading;
-            bool hasLoop = false;
             bool runActive = false;
             bool snapshotValid = false;
             bool navigationPending = false;
@@ -348,7 +347,6 @@ namespace NightDash.Runtime
                 if (!loopQuery.IsEmptyIgnoreFilter)
                 {
                     GameLoopState loop = loopQuery.GetSingleton<GameLoopState>();
-                    hasLoop = true;
                     status = loop.Status;
                     runActive = loop.IsRunActive == 1 && loop.Status == RunStatus.Playing;
                     elapsedTime = loop.ElapsedTime;

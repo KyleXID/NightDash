@@ -320,7 +320,7 @@ namespace NightDash.Runtime
             counterLayout.childControlHeight = false;
             counterLayout.childControlWidth = false;
             SetPreferredHeight(counter, 80f);
-            SetPreferredWidth(counter.rectTransform, 360f);
+            SetPreferredWidth(counter, 360f);
 
             CreateIconImage(counter, "NightDash/UI/Icons/nd_ui_icon_reroll_default", 56f, 56f);
             _rerollText = CreateText(counter, "Rerolls Left: 1", 32, TextAnchor.MiddleLeft, new Color(0.88f, 0.83f, 0.94f, 1f));
