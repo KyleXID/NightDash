@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System;
+using NightDash.ECS.Components;
 using NightDash.Runtime.UI;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
