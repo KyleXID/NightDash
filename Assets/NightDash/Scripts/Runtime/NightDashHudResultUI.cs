@@ -616,14 +616,38 @@ namespace NightDash.Runtime
             barLayout.preferredWidth = 360f;
             barLayout.preferredHeight = 36f;
             Image bg = barBg.gameObject.AddComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 0.55f);
+            // Bar empty sprite — 9-slice (8/0/8/0) keeps the rivet ends sharp
+            // while the middle stretches. Falls back to a flat dark plate if
+            // the sprite is missing.
+            var barEmptySprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_bar_empty");
+            if (barEmptySprite != null)
+            {
+                bg.sprite = barEmptySprite;
+                bg.type = Image.Type.Sliced;
+                bg.color = Color.white;
+            }
+            else
+            {
+                bg.color = new Color(0f, 0f, 0f, 0.55f);
+            }
 
             fillRect = CreateRect($"{label}BarFill", barBg);
-            fillRect.anchorMin = Vector2.zero;
+            // Inset the fill so it sits inside the bar empty's bronze trim
+            // (8px corners). The right anchorMax.x is what the runtime drives
+            // to express progression (0..1).
+            fillRect.anchorMin = new Vector2(0f, 0f);
             fillRect.anchorMax = new Vector2(0.8f, 1f);
-            fillRect.offsetMin = Vector2.zero;
-            fillRect.offsetMax = Vector2.zero;
+            fillRect.offsetMin = new Vector2(6f, 4f);
+            fillRect.offsetMax = new Vector2(-6f, -4f);
             Image fill = fillRect.gameObject.AddComponent<Image>();
+            // Bar fill sprite — same 9-slice border so the fill stays crisp
+            // at any width. Tinted by the caller (red/cyan/steel-blue).
+            var barFillSprite = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_bar_fill");
+            if (barFillSprite != null)
+            {
+                fill.sprite = barFillSprite;
+                fill.type = Image.Type.Sliced;
+            }
             fill.color = fillColor;
 
             Text value = CreateText(row, $"{label} 0", 32, TextAnchor.MiddleLeft, new Color(0.92f, 0.9f, 0.96f, 1f));

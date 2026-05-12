@@ -68,6 +68,14 @@ namespace NightDash.Editor
             {
                 settings.spriteBorder = new Vector4(40f, 40f, 40f, 36f);
             }
+            // Horizontal bars — corners (rivets + trim) take the leftmost
+            // and rightmost ~8px of the trimmed source. 9-slice lets the
+            // bar stretch horizontally while keeping pixel-perfect ends.
+            // Vertical border 0 (no top/bottom stretch needed for a strip).
+            else if (fileName == "nd_ui_bar_empty" || fileName == "nd_ui_bar_fill")
+            {
+                settings.spriteBorder = new Vector4(8f, 0f, 8f, 0f);
+            }
 
             importer.SetTextureSettings(settings);
         }
