@@ -124,10 +124,11 @@ namespace NightDash.Runtime
             buttonPressedTexture = buttonPressedTexture != null ? buttonPressedTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_pressed");
             buttonDisabledTexture = buttonDisabledTexture != null ? buttonDisabledTexture : Resources.Load<Texture2D>("NightDash/UI/Frames/nd_ui_frame_button_disabled");
 
-            buttonDefaultTexture = CropButtonFrameTexture(buttonDefaultTexture);
-            buttonHoverTexture = CropButtonFrameTexture(buttonHoverTexture);
-            buttonPressedTexture = CropButtonFrameTexture(buttonPressedTexture);
-            buttonDisabledTexture = CropButtonFrameTexture(buttonDisabledTexture);
+            // CropButtonFrameTexture used to chop the 7%/29%/86%/42% region
+            // out of the legacy 128×56 padded frame. The current sprites are
+            // already alpha-trimmed to 101×37 so cropping again destroys the
+            // frame body and produces the "temporary" look the user kept
+            // reporting. Use the textures as-is.
         }
 
         private static Texture2D LoadIcon(string iconName)
