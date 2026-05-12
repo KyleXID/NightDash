@@ -360,8 +360,8 @@ namespace NightDash.Runtime
                 optText.verticalOverflow = VerticalWrapMode.Overflow;
                 AddTextOutline(optText);
                 var textRect = optText.rectTransform;
-                textRect.anchorMin = new Vector2(0f, 0.04f);
-                textRect.anchorMax = new Vector2(1f, 0.46f);
+                textRect.anchorMin = new Vector2(0f, 0.02f);
+                textRect.anchorMax = new Vector2(1f, 0.40f);
                 textRect.offsetMin = new Vector2(24f, 0f);
                 textRect.offsetMax = new Vector2(-24f, 0f);
             }
