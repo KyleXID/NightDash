@@ -39,6 +39,14 @@ namespace NightDash.Runtime
 
         private void Awake()
         {
+            // Sprint B M2 replaced this OnGUI lobby with NightDashLobbyScreenUI.
+            // Keep this script disabled on entry so it cannot draw or take
+            // input. NightDashTitleScreenUI / NightDashLobbyScreenUI also
+            // hard-disable it on enable, but doing it here as well makes the
+            // legacy path inert even when those Canvas screens are absent
+            // (e.g. during preview scenes or partial setups).
+            enabled = false;
+
             if (titleImage == null)
             {
                 titleImage = Resources.Load<Texture2D>("NightDash/UI/Title/nightdash_title");

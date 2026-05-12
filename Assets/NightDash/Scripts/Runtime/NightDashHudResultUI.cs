@@ -240,16 +240,11 @@ namespace NightDash.Runtime
             SetPreferredWidth(_potionText.rectTransform, 90f);
             CreateSimpleIcon(bottomLeft, interactIcon, 52f, 52f);
 
-            RectTransform bottomCenter = CreatePanel("BottomCenterPanel", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(250f, 70f));
-            HorizontalLayoutGroup bottomCenterLayout = bottomCenter.gameObject.AddComponent<HorizontalLayoutGroup>();
-            bottomCenterLayout.spacing = 10f;
-            bottomCenterLayout.padding = new RectOffset(10, 10, 10, 10);
-            bottomCenterLayout.childAlignment = TextAnchor.MiddleCenter;
-            bottomCenterLayout.childControlHeight = false;
-            bottomCenterLayout.childControlWidth = false;
-            CreateSimpleIcon(bottomCenter, warningIcon, 48f, 48f);
-            CreateSimpleIcon(bottomCenter, defeatIcon, 48f, 48f);
-            CreateSimpleIcon(bottomCenter, victoryIcon, 48f, 48f);
+            // BottomCenterPanel was a 3-icon placeholder (warning/defeat/
+            // victory) from an earlier prototype with no gameplay binding.
+            // Removed pending a real bottom-center widget design. Restore
+            // here once we have purposeful content (e.g. boss alert,
+            // objective marker, mini-event prompt).
         }
 
         private void BuildResult(Transform parent)

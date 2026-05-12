@@ -534,21 +534,29 @@ namespace NightDash.Runtime
         {
             // Hand off to NightDashLobbyScreenUI (M2). The legacy
             // RunSelectionLobbyUI stays disabled — it draws via OnGUI and
-            // would otherwise overlay the new Canvas lobby.
+            // would otherwise overlay the new Canvas lobby. If the canvas
+            // lobby is missing (e.g. AutoCreate hook didn't fire after a
+            // scene reload), force-create it instead of falling back to
+            // the legacy OnGUI lobby.
             NightDashUIScreenRouter.GoTo(NightDashUIScreen.Lobby);
             var lobby = FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
-            if (lobby != null)
+            if (lobby == null)
             {
-                lobby.gameObject.SetActive(true);
+                NightDashLog.Warn("[NightDash] NightDashLobbyScreenUI not found at Start. Force-creating.");
+                var go = new GameObject("NightDashLobbyScreenUI");
+                lobby = go.AddComponent<NightDashLobbyScreenUI>();
+                lobby.gameObject.SetActive(false);
             }
-            else if (_lobbyUi != null)
+
+            // Belt-and-suspenders: keep the legacy OnGUI lobby disabled so
+            // it cannot draw over the Canvas lobby.
+            if (_lobbyUi != null)
             {
-                // Fallback: legacy lobby if Canvas one is missing.
-                _lobbyUi.enabled = true;
-                _lobbyUi.SetLobbyVisible(true);
-                Time.timeScale = 1f;
-                RestoreGameplayViews();
+                _lobbyUi.SetLobbyVisible(false);
+                _lobbyUi.enabled = false;
             }
+
+            lobby.gameObject.SetActive(true);
             gameObject.SetActive(false);
             NightDashLog.Info("[NightDash] Title Start clicked (Canvas UI).");
         }
