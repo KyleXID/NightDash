@@ -212,27 +212,32 @@ namespace NightDash.Runtime
             _goldText = CreateIconCounter(topRight, goldIcon, "Gold 0000", 48f, 48f);
             _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 48f, 48f);
 
-            RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(680f, 110f));
+            RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(820f, 124f));
+            // Darken the panel a touch so the icon+text pairs pop against
+            // the gameplay scene underneath.
+            Image bottomLeftBg = bottomLeft.GetComponent<Image>();
+            if (bottomLeftBg != null) bottomLeftBg.color = new Color(0.05f, 0.04f, 0.10f, 0.92f);
+
             HorizontalLayoutGroup leftBottomLayout = bottomLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
-            leftBottomLayout.spacing = 14f;
-            leftBottomLayout.padding = new RectOffset(12, 12, 12, 12);
+            // 28px between each stat group reads as "separate" pairs instead
+            // of one long crowded strip.
+            leftBottomLayout.spacing = 28f;
+            leftBottomLayout.padding = new RectOffset(20, 20, 14, 14);
             leftBottomLayout.childAlignment = TextAnchor.MiddleLeft;
             leftBottomLayout.childControlHeight = false;
             leftBottomLayout.childControlWidth = false;
 
-            // Combat stat readouts: hit (damage) + crit (chance placeholder)
-            // + dash icon. Each grouping is icon + value text so the player
-            // can read the current build at a glance.
+            // Combat stat readouts: each is an icon + value pair laid out
+            // by CreateIconCounter (HorizontalLayoutGroup inside). The
+            // outer spacing keeps the pairs visually grouped.
             _hitText = CreateIconCounter(bottomLeft, hitIcon, "DMG 0", 56f, 56f);
-            SetPreferredWidth(_hitText.rectTransform, 130f);
+            SetPreferredWidth(_hitText.rectTransform, 140f);
             _critText = CreateIconCounter(bottomLeft, critIcon, "CRIT 0%", 56f, 56f);
-            SetPreferredWidth(_critText.rectTransform, 140f);
-            // Dash icon + "READY" / "Ns" cooldown text.
+            SetPreferredWidth(_critText.rectTransform, 160f);
             _dashText = CreateIconCounter(bottomLeft, dashIcon, "READY", 56f, 56f);
-            SetPreferredWidth(_dashText.rectTransform, 130f);
-            // Potion icon + remaining-count badge.
+            SetPreferredWidth(_dashText.rectTransform, 150f);
             _potionText = CreateIconCounter(bottomLeft, potionIcon, "x3", 52f, 52f);
-            SetPreferredWidth(_potionText.rectTransform, 70f);
+            SetPreferredWidth(_potionText.rectTransform, 90f);
             CreateSimpleIcon(bottomLeft, interactIcon, 52f, 52f);
 
             RectTransform bottomCenter = CreatePanel("BottomCenterPanel", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(250f, 70f));
@@ -573,6 +578,11 @@ namespace NightDash.Runtime
                         new Rect(0f, 0f, resultTexture.width, resultTexture.height),
                         new Vector2(0.5f, 0.5f),
                         100f);
+                    // The two outcome sprites have very different aspect
+                    // ratios (defeat_skull 36×55 vs victory_crown 55×52).
+                    // preserveAspect prevents the 260×260 result frame from
+                    // squashing them into the wrong shape.
+                    _resultOutcomeIcon.preserveAspect = true;
                     _resultOutcomeIcon.color = Color.white;
                 }
             }
@@ -716,14 +726,16 @@ namespace NightDash.Runtime
         {
             RectTransform row = CreateRect("CounterRow", parent);
             HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 12f;
+            layout.spacing = 8f;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
             layout.childAlignment = TextAnchor.MiddleLeft;
             SetPreferredHeight(row, iconH + 2f);
 
             CreateSimpleIcon(row, icon, iconW, iconH);
-            Text text = CreateText(row, value, 40, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.96f, 1f));
+            // Warm parchment color reads cleanly on the dark HUD panel and
+            // matches the menu label palette used elsewhere.
+            Text text = CreateText(row, value, 38, TextAnchor.MiddleLeft, new Color(1f, 0.95f, 0.82f, 1f));
             return text;
         }
 
@@ -788,6 +800,11 @@ namespace NightDash.Runtime
             if (texture != null)
             {
                 image.sprite = Sprite.Create(texture, new Rect(0f, 0f, texture.width, texture.height), new Vector2(0.5f, 0.5f), 100f);
+                // Source PNGs are alpha-trimmed and arrive at arbitrary
+                // aspect ratios (defeat_skull 36×55, victory_crown 55×52,
+                // etc). Without preserveAspect Unity stretches them into
+                // the RectTransform's box and the sprite reads warped.
+                image.preserveAspect = true;
             }
             else
             {
