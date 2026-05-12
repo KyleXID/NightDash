@@ -190,8 +190,8 @@ namespace NightDash.Runtime
             centerLayout.childControlHeight = false;
             centerLayout.childControlWidth = false;
 
-            _waveText = CreateIconCounter(topCenter, waveIcon, "Wave 01", 48f, 48f);
-            _timerText = CreateIconCounter(topCenter, timerIcon, "00:00", 48f, 48f);
+            _waveText = CreateIconCounter(topCenter, waveIcon, "Wave 01", 64f, 64f);
+            _timerText = CreateIconCounter(topCenter, timerIcon, "00:00", 64f, 64f);
 
             RectTransform topRight = CreatePanel("TopRightPanel", parent, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -18f), new Vector2(260f, 102f));
             VerticalLayoutGroup rightLayout = topRight.gameObject.AddComponent<VerticalLayoutGroup>();
@@ -200,8 +200,8 @@ namespace NightDash.Runtime
             rightLayout.childControlHeight = true;
             rightLayout.childControlWidth = true;
 
-            _goldText = CreateIconCounter(topRight, goldIcon, "Gold 0000", 32f, 32f);
-            _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 32f, 32f);
+            _goldText = CreateIconCounter(topRight, goldIcon, "Gold 0000", 48f, 48f);
+            _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 48f, 48f);
 
             RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(270f, 84f));
             HorizontalLayoutGroup leftBottomLayout = bottomLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -256,7 +256,7 @@ namespace NightDash.Runtime
             LayoutElement headerRowLayout = headerRow.gameObject.AddComponent<LayoutElement>();
             headerRowLayout.preferredHeight = 96f;
 
-            _resultHeaderText = CreateText(headerRow, "YOU DIED", 56, TextAnchor.MiddleCenter, new Color(0.72f, 0.12f, 0.2f, 1f));
+            _resultHeaderText = CreateText(headerRow, "YOU DIED", 96, TextAnchor.MiddleCenter, new Color(0.72f, 0.12f, 0.2f, 1f));
             StretchFull(_resultHeaderText.rectTransform);
 
             RectTransform stats = CreatePanel("Stats", panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(820f, 208f));
@@ -304,10 +304,10 @@ namespace NightDash.Runtime
             layout.childControlWidth = true;
             layout.childControlHeight = false;
 
-            _rewardHeaderText = CreateText(panel, "BOSS REWARD", 34, TextAnchor.MiddleCenter, Color.white);
+            _rewardHeaderText = CreateText(panel, "BOSS REWARD", 48, TextAnchor.MiddleCenter, Color.white);
             SetPreferredHeight(_rewardHeaderText.rectTransform, 48f);
 
-            _rewardBodyText = CreateText(panel, "Evolution check pending.", 22, TextAnchor.UpperLeft, new Color(0.92f, 0.88f, 0.97f, 1f));
+            _rewardBodyText = CreateText(panel, "Evolution check pending.", 32, TextAnchor.UpperLeft, new Color(0.92f, 0.88f, 0.97f, 1f));
             SetPreferredHeight(_rewardBodyText.rectTransform, 180f);
 
             RectTransform actions = CreateRect("RewardActions", panel);
@@ -602,21 +602,21 @@ namespace NightDash.Runtime
         private Text CreateIconBarRow(RectTransform parent, string label, Texture2D icon, Color fillColor, out RectTransform fillRect)
         {
             RectTransform row = CreateRect($"{label}Row", parent);
-            SetPreferredHeight(row, 33f);
+            SetPreferredHeight(row, 60f);
 
             HorizontalLayoutGroup rowLayout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            rowLayout.spacing = 8f;
+            rowLayout.spacing = 14f;
             rowLayout.childControlWidth = false;
             rowLayout.childControlHeight = false;
             rowLayout.childAlignment = TextAnchor.MiddleLeft;
 
-            CreateSimpleIcon(row, icon, 30f, 30f);
+            CreateSimpleIcon(row, icon, 56f, 56f);
 
             RectTransform barBg = CreateRect($"{label}BarBg", row);
-            barBg.sizeDelta = new Vector2(240f, 20f);
+            barBg.sizeDelta = new Vector2(360f, 36f);
             LayoutElement barLayout = barBg.gameObject.AddComponent<LayoutElement>();
-            barLayout.preferredWidth = 240f;
-            barLayout.preferredHeight = 20f;
+            barLayout.preferredWidth = 360f;
+            barLayout.preferredHeight = 36f;
             Image bg = barBg.gameObject.AddComponent<Image>();
             bg.color = new Color(0f, 0f, 0f, 0.55f);
 
@@ -628,8 +628,8 @@ namespace NightDash.Runtime
             Image fill = fillRect.gameObject.AddComponent<Image>();
             fill.color = fillColor;
 
-            Text value = CreateText(row, $"{label} 0", 15, TextAnchor.MiddleLeft, new Color(0.92f, 0.9f, 0.96f, 1f));
-            SetPreferredWidth(value.rectTransform, 124f);
+            Text value = CreateText(row, $"{label} 0", 32, TextAnchor.MiddleLeft, new Color(0.92f, 0.9f, 0.96f, 1f));
+            SetPreferredWidth(value.rectTransform, 220f);
             return value;
         }
 
@@ -637,14 +637,14 @@ namespace NightDash.Runtime
         {
             RectTransform row = CreateRect("CounterRow", parent);
             HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8f;
+            layout.spacing = 12f;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
             layout.childAlignment = TextAnchor.MiddleLeft;
             SetPreferredHeight(row, iconH + 2f);
 
             CreateSimpleIcon(row, icon, iconW, iconH);
-            Text text = CreateText(row, value, 20, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.96f, 1f));
+            Text text = CreateText(row, value, 40, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.96f, 1f));
             return text;
         }
 
@@ -652,31 +652,33 @@ namespace NightDash.Runtime
         {
             RectTransform row = CreateRect($"{label}Row", parent);
             HorizontalLayoutGroup layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 1f;
+            layout.spacing = 12f;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
             layout.childAlignment = TextAnchor.MiddleCenter;
-            SetPreferredHeight(row, 44f);
+            SetPreferredHeight(row, 72f);
 
-            CreateSimpleIcon(row, icon, 46f, 46f);
-            Text labelText = CreateText(row, label, 16, TextAnchor.MiddleLeft, new Color(0.68f, 0.62f, 0.73f, 1f));
-            SetPreferredWidth(labelText.rectTransform, 220f);
-            Text valueText = CreateText(row, value, 16, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.97f, 1f));
+            CreateSimpleIcon(row, icon, 64f, 64f);
+            Text labelText = CreateText(row, label, 32, TextAnchor.MiddleLeft, new Color(0.68f, 0.62f, 0.73f, 1f));
+            SetPreferredWidth(labelText.rectTransform, 360f);
+            Text valueText = CreateText(row, value, 32, TextAnchor.MiddleLeft, new Color(0.93f, 0.88f, 0.97f, 1f));
             return valueText;
         }
 
         private Button CreateActionButton(RectTransform parent, string label, Action onClick)
         {
             RectTransform rect = CreateRect($"{label}Button", parent);
-            rect.sizeDelta = new Vector2(240f, 72f);
+            rect.sizeDelta = new Vector2(303f, 111f);
             LayoutElement layout = rect.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 240f;
-            layout.preferredHeight = 72f;
+            layout.preferredWidth = 303f;
+            layout.preferredHeight = 111f;
 
             Image image = rect.gameObject.AddComponent<Image>();
             image.color = Color.white;
+            // Uniform 3× scale of the alpha-trimmed 101×37 button sprite,
+            // matching the PauseMenu / Title menu button treatment.
             image.type = Image.Type.Simple;
-            image.preserveAspect = false;
+            image.preserveAspect = true;
             image.sprite = CreateRuntimeSprite(buttonDefaultTexture);
 
             Button button = rect.gameObject.AddComponent<Button>();
@@ -690,7 +692,7 @@ namespace NightDash.Runtime
             };
             button.onClick.AddListener(() => onClick?.Invoke());
 
-            Text text = CreateText(rect, label.ToUpperInvariant(), 24, TextAnchor.MiddleCenter, new Color(0.95f, 0.91f, 0.98f, 1f));
+            Text text = CreateText(rect, label.ToUpperInvariant(), 40, TextAnchor.MiddleCenter, new Color(0.95f, 0.91f, 0.98f, 1f));
             StretchFull(text.rectTransform);
             return button;
         }
