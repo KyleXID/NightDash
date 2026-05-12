@@ -51,6 +51,8 @@ namespace NightDash.Runtime
         private Text _xpText;
         private Text _hitText;
         private Text _critText;
+        private Text _dashText;
+        private Text _potionText;
         private Text _timerText;
         private Text _waveText;
         private Text _goldText;
@@ -225,8 +227,12 @@ namespace NightDash.Runtime
             SetPreferredWidth(_hitText.rectTransform, 130f);
             _critText = CreateIconCounter(bottomLeft, critIcon, "CRIT 0%", 56f, 56f);
             SetPreferredWidth(_critText.rectTransform, 140f);
-            CreateSimpleIcon(bottomLeft, dashIcon, 56f, 56f);
-            CreateSimpleIcon(bottomLeft, potionIcon, 52f, 52f);
+            // Dash icon + "READY" / "Ns" cooldown text.
+            _dashText = CreateIconCounter(bottomLeft, dashIcon, "READY", 56f, 56f);
+            SetPreferredWidth(_dashText.rectTransform, 130f);
+            // Potion icon + remaining-count badge.
+            _potionText = CreateIconCounter(bottomLeft, potionIcon, "x3", 52f, 52f);
+            SetPreferredWidth(_potionText.rectTransform, 70f);
             CreateSimpleIcon(bottomLeft, interactIcon, 52f, 52f);
 
             RectTransform bottomCenter = CreatePanel("BottomCenterPanel", parent, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 18f), new Vector2(250f, 70f));
@@ -349,6 +355,9 @@ namespace NightDash.Runtime
             float shieldCurrent = 0f;
             float shieldMax = 0f;
             float playerDamage = 0f;
+            float critChance = 0f;
+            float dashCooldown = 0f;
+            int potionCount = 0;
             int currentWave = 1;
             int kills = 0;
             int gold = 0;
@@ -449,6 +458,9 @@ namespace NightDash.Runtime
                         shieldCurrent = players[i].CurrentShield;
                         shieldMax = players[i].MaxShield;
                         playerDamage = players[i].Damage;
+                        critChance = players[i].CritChance;
+                        dashCooldown = players[i].DashCooldownRemaining;
+                        potionCount = players[i].PotionCount;
                     }
                     players.Dispose();
                 }
@@ -528,11 +540,12 @@ namespace NightDash.Runtime
             _hpText.text = $"HP {(int)hpCurrent}/{(int)hpMax}";
             _xpText.text = $"Lv {level}  XP {(int)(xp01 * 100f)}%";
             if (_hitText != null) _hitText.text = $"DMG {(int)playerDamage}";
-            // Crit chance isn't on CombatStats yet — show 0% placeholder so
-            // the icon group reads as "current build" without lying about
-            // unimplemented numbers. Hook this up once a CritChance field
-            // lands on CombatStats / PlayerProgressionState.
-            if (_critText != null) _critText.text = "CRIT 0%";
+            if (_critText != null) _critText.text = $"CRIT {(int)(critChance * 100)}%";
+            if (_dashText != null)
+            {
+                _dashText.text = dashCooldown <= 0.01f ? "READY" : $"{dashCooldown:0.0}s";
+            }
+            if (_potionText != null) _potionText.text = $"x{potionCount}";
             _timerText.text = $"{min:00}:{remain:00}";
             _waveText.text = $"Wave {currentWave:00}";
             _goldText.text = $"Gold {gold}";

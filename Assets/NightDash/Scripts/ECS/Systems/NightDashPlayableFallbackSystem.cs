@@ -69,7 +69,13 @@ namespace NightDash.ECS.Systems
                 MoveSpeed = 5f,
                 CurrentShield = 30f,
                 MaxShield = 30f,
-                TimeSinceLastHit = 0f
+                TimeSinceLastHit = 0f,
+                CritChance = 0.10f,
+                CritMultiplier = 1.5f,
+                DashTimer = 0f,
+                DashCooldownRemaining = 0f,
+                PotionCount = 3,
+                MaxPotionCount = 3
             });
             state.EntityManager.SetComponentData(player, new WeaponRuntimeData
             {

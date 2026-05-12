@@ -24,6 +24,11 @@ namespace NightDash.ECS.Systems
         private const float BossAttackWindow = 0.18f;
         private const float BossAttackRange = 5.5f;
 
+        // Seeded so debug runs are repeatable but not all-identical. The
+        // PRNG drives player → enemy crit rolls; state advances across
+        // hits so consecutive rolls diverge.
+        private static Unity.Mathematics.Random _critRng = Unity.Mathematics.Random.CreateFromIndex(0xC817_3144u);
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<CombatStats>();
@@ -224,6 +229,18 @@ namespace NightDash.ECS.Systems
 
                     CombatStats updatedEnemy = enemyStats.ValueRO;
                     float damageDealt = projectile.ValueRO.Damage;
+                    // Crit roll — reads player CritChance/Multiplier off
+                    // the cached playerStatsRef. Falls through to base
+                    // damage when no player is present or crit is unset.
+                    if (hasPlayer)
+                    {
+                        CombatStats playerForCrit = playerStatsRef.ValueRO;
+                        if (playerForCrit.CritChance > 0f && playerForCrit.CritMultiplier > 1f &&
+                            _critRng.NextFloat() < playerForCrit.CritChance)
+                        {
+                            damageDealt *= playerForCrit.CritMultiplier;
+                        }
+                    }
                     updatedEnemy.CurrentHealth = math.max(0f, updatedEnemy.CurrentHealth - damageDealt);
                     enemyStats.ValueRW = updatedEnemy;
                     consumed = true;

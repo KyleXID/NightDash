@@ -145,6 +145,19 @@ namespace NightDash.ECS.Components
         // ticks back up after the player has stayed clear for a grace
         // window. Updated by ShieldSystem.
         public float TimeSinceLastHit;
+        // Crit roll: chance is 0..1, multiplier scales the damage on a
+        // successful roll. Applied to player → enemy damage in CombatSystem.
+        public float CritChance;
+        public float CritMultiplier;
+        // Dash: short-burst speed boost. Speed multiplier is active while
+        // DashTimer > 0, after which DashCooldownRemaining ticks back to 0
+        // before the next dash can fire. Triggered by Space.
+        public float DashTimer;
+        public float DashCooldownRemaining;
+        // Potion stock: discrete charges that the player can spend to
+        // restore HP via Q. Refills on run reset.
+        public int PotionCount;
+        public int MaxPotionCount;
     }
 
     public struct PlayerProgressionState : IComponentData

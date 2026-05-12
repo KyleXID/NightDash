@@ -121,6 +121,9 @@ namespace NightDash.Runtime
             stats.CurrentHealth = stats.MaxHealth > 0f ? stats.MaxHealth : 100f;
             stats.CurrentShield = stats.MaxShield;
             stats.TimeSinceLastHit = 0f;
+            stats.DashTimer = 0f;
+            stats.DashCooldownRemaining = 0f;
+            stats.PotionCount = stats.MaxPotionCount > 0 ? stats.MaxPotionCount : 3;
             em.SetComponentData(player, stats);
             em.SetComponentData(player, LocalTransform.FromPosition(new float3(0f, 0f, 0f)));
         }

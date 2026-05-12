@@ -6,6 +6,24 @@ namespace NightDash.Runtime
     public sealed class NightDashPlayerInputRuntime : MonoBehaviour
     {
         public static Vector2 MoveAxis { get; private set; }
+        // Edge-triggered action requests. Set true for one frame each time
+        // the bound key fires; ECS systems poll + clear via Consume*.
+        public static bool DashRequested { get; private set; }
+        public static bool PotionRequested { get; private set; }
+
+        public static bool ConsumeDashRequest()
+        {
+            bool b = DashRequested;
+            DashRequested = false;
+            return b;
+        }
+
+        public static bool ConsumePotionRequest()
+        {
+            bool b = PotionRequested;
+            PotionRequested = false;
+            return b;
+        }
 
         private static Type _keyboardType;
         private static object _currentKeyboard;
@@ -28,6 +46,12 @@ namespace NightDash.Runtime
         private void Update()
         {
             MoveAxis = ReadMoveAxis();
+
+            // Edge-trigger: only set true the frame the key transitions
+            // from up→down. Consumed (cleared) by the gameplay system that
+            // reads it so we don't fire twice in a single hold.
+            if (WasKeyPressedThisFrame("spaceKey")) DashRequested = true;
+            if (WasKeyPressedThisFrame("qKey")) PotionRequested = true;
         }
 
         private static Vector2 ReadMoveAxis()
@@ -110,6 +134,34 @@ namespace NightDash.Runtime
             }
 
             object value = pressedProp.GetValue(keyControl);
+            return value is bool b && b;
+        }
+
+        // Edge-trigger detector used by Dash / Potion. Tries legacy Input
+        // first, then falls back to the Input System reflection path so
+        // both input backends behave identically.
+        private static bool WasKeyPressedThisFrame(string propertyName)
+        {
+            try
+            {
+                if (propertyName == "spaceKey") return Input.GetKeyDown(KeyCode.Space);
+                if (propertyName == "qKey") return Input.GetKeyDown(KeyCode.Q);
+            }
+            catch (InvalidOperationException)
+            {
+                // legacy disabled — fall through to reflection.
+            }
+
+            EnsureReflectionReady();
+            if (!_reflectionReady || _currentKeyboard == null) return false;
+
+            var keyProp = _keyboardType.GetProperty(propertyName);
+            if (keyProp == null) return false;
+            object keyControl = keyProp.GetValue(_currentKeyboard);
+            if (keyControl == null) return false;
+            var wasPressedProp = keyControl.GetType().GetProperty("wasPressedThisFrame");
+            if (wasPressedProp == null) return false;
+            object value = wasPressedProp.GetValue(keyControl);
             return value is bool b && b;
         }
     }
