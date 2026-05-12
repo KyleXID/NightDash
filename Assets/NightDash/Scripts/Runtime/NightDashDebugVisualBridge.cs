@@ -63,6 +63,18 @@ namespace NightDash.Runtime
                 { "weapon_void_starfall",         ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           1.0f) },
             };
 
+        // Exposed for the dash-trail bridge so it can pull the player's
+        // current sprite + flip state and clone an afterimage. Returns null
+        // when the player view hasn't been spawned yet.
+        public SpriteRenderer GetAnyPlayerRenderer()
+        {
+            foreach (var kv in _playerViews)
+            {
+                if (kv.Value.Renderer != null) return kv.Value.Renderer;
+            }
+            return null;
+        }
+
         // ------------------------------------------------------------------ view dictionaries
         private readonly Dictionary<Entity, ViewState> _playerViews     = new();
         private readonly Dictionary<Entity, ViewState> _enemyViews      = new();
