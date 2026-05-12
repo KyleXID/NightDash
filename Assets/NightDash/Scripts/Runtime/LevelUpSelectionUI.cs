@@ -341,7 +341,7 @@ namespace NightDash.Runtime
                 _optionKindTexts[i] = CreateText(card, "-", 40, TextAnchor.MiddleCenter,
                     new Color(1f, 0.92f, 0.74f, 1f));
                 _optionKindTexts[i].fontStyle = FontStyle.Bold;
-                AddTextOutline(_optionKindTexts[i]);
+                // Outline already added by CreateText.
                 var kindRect = _optionKindTexts[i].rectTransform;
                 kindRect.anchorMin = new Vector2(0f, 0.72f);
                 kindRect.anchorMax = new Vector2(1f, 0.96f);
@@ -358,7 +358,7 @@ namespace NightDash.Runtime
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Overflow;
-                AddTextOutline(optText);
+                // Outline already added by CreateText.
                 var textRect = optText.rectTransform;
                 textRect.anchorMin = new Vector2(0f, 0.02f);
                 textRect.anchorMax = new Vector2(1f, 0.40f);
@@ -711,6 +711,9 @@ namespace NightDash.Runtime
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
+            // Outline on every level-up text so the glyphs stay readable on
+            // top of the card frame's interior + the gameplay backdrop.
+            AddTextOutline(text);
             return text;
         }
 

@@ -18,7 +18,10 @@ namespace NightDash.Runtime
 {
     public static class RunTeardownBridge
     {
-        public static void DestroyCurrentRun()
+        // clearNavigation=false on Retry, where the caller queues a Retry
+        // RunNavigationRequest just before teardown; clearing here would
+        // wipe that flag and the next-scene boot couldn't detect Retry.
+        public static void DestroyCurrentRun(bool clearNavigation = true)
         {
             World world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated)
@@ -57,8 +60,29 @@ namespace NightDash.Runtime
             RunSelectionLobbyWorldBridge.SetRunActiveInCurrentWorld(false);
 
             // 3) Clear any pending navigation request so the next StartRun
-            //    isn't shadowed by stale routing state.
-            ClearRunNavigationRequest(em);
+            //    isn't shadowed by stale routing state. Retry callers opt
+            //    out so their just-queued Retry action survives this sweep.
+            if (clearNavigation)
+            {
+                ClearRunNavigationRequest(em);
+            }
+
+            // 4) Reset boss-spawn singleton so the next run gets enemies.
+            //    EnemySpawnSystem early-outs when HasSpawnedBoss == 1.
+            using (var bossStateQuery = em.CreateEntityQuery(ComponentType.ReadWrite<BossSpawnState>()))
+            {
+                if (!bossStateQuery.IsEmptyIgnoreFilter)
+                {
+                    Entity bossEntity = bossStateQuery.GetSingletonEntity();
+                    em.SetComponentData(bossEntity, new BossSpawnState
+                    {
+                        HasSpawnedBoss = 0,
+                        BossKilled = 0,
+                        ChestPending = 0,
+                        ChestOpened = 0
+                    });
+                }
+            }
 
             // 4) Drop the pause tag defensively. The Pause Menu's OnDisable
             //    also removes it, but ordering between OnDisable and this

@@ -213,10 +213,8 @@ namespace NightDash.Runtime
             _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 48f, 48f);
 
             RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(820f, 124f));
-            // Darken the panel a touch so the icon+text pairs pop against
-            // the gameplay scene underneath.
-            Image bottomLeftBg = bottomLeft.GetComponent<Image>();
-            if (bottomLeftBg != null) bottomLeftBg.color = new Color(0.05f, 0.04f, 0.10f, 0.92f);
+            // No backdrop here — text outlines carry legibility against the
+            // gameplay scene below.
 
             HorizontalLayoutGroup leftBottomLayout = bottomLeft.gameObject.AddComponent<HorizontalLayoutGroup>();
             // 28px between each stat group reads as "separate" pairs instead
@@ -655,9 +653,9 @@ namespace NightDash.Runtime
             }
             rect.anchoredPosition = anchoredPos;
             rect.sizeDelta = size;
-
-            Image bg = rect.gameObject.AddComponent<Image>();
-            bg.color = new Color(0.11f, 0.07f, 0.16f, 0.76f);
+            // Layout container only — no temporary dark background. Result /
+            // Reward panels add their own opaque backdrop separately when
+            // they need to dim the gameplay scene behind them.
             return rect;
         }
 
@@ -873,6 +871,12 @@ namespace NightDash.Runtime
             text.color = color;
             text.horizontalOverflow = HorizontalWrapMode.Overflow;
             text.verticalOverflow = VerticalWrapMode.Overflow;
+            // Drop a dark outline on every HUD/result label so glyphs stay
+            // readable on top of arbitrary gameplay backgrounds (no temp
+            // dark panels behind them anymore).
+            var outline = text.gameObject.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.92f);
+            outline.effectDistance = new Vector2(2f, -2f);
             return text;
         }
 
@@ -976,22 +980,15 @@ namespace NightDash.Runtime
 
         private static void DestroyGameplayEntities()
         {
-            World world = World.DefaultGameObjectInjectionWorld;
-            if (world == null || !world.IsCreated) return;
-
-            EntityManager em = world.EntityManager;
-            DestroyByTag<PlayerTag>(em);
-            DestroyByTag<EnemyTag>(em);
-            DestroyByTag<BossTag>(em);
-
-            // BossSpawnState.HasSpawnedBoss permanently blocks regular enemy spawning
-            // (EnemySpawnSystem.cs:60). Reset it on retry so the next run gets enemies.
-            using var bossStateQuery = em.CreateEntityQuery(ComponentType.ReadWrite<BossSpawnState>());
-            if (!bossStateQuery.IsEmptyIgnoreFilter)
-            {
-                Entity singleton = bossStateQuery.GetSingletonEntity();
-                em.SetComponentData(singleton, new BossSpawnState { HasSpawnedBoss = 0 });
-            }
+            // Route through RunTeardownBridge so the cleanup matches the
+            // Pause-Menu Return-to-Lobby path: Player entity stays in place
+            // (FallbackSystem self-disables after first run; destroying
+            // PlayerTag would leave the next run with no Player). Enemies,
+            // bosses, projectiles, pickups, and pooled views are all swept,
+            // and BossSpawnState is reset so EnemySpawnSystem will spawn
+            // again. clearNavigation=false keeps the just-queued Retry
+            // request alive for the next-scene Title.OnEnable to pick up.
+            RunTeardownBridge.DestroyCurrentRun(clearNavigation: false);
         }
 
         private static void DestroyByTag<T>(EntityManager em) where T : unmanaged, IComponentData

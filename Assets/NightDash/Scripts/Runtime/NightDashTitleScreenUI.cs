@@ -130,6 +130,23 @@ namespace NightDash.Runtime
             // Hide gameplay sprites entirely so PNG transparency areas don't
             // bleed game content through the title illustration.
             HideGameplayViews();
+
+            // Retry handoff: if the player chose Retry on the Result screen,
+            // the scene reloaded with a pending Retry navigation request.
+            // Skip the Title (and the Lobby selection step) and dive
+            // straight back into gameplay on the same stage/class.
+            if (RunSelectionLobbyWorldBridge.TryGetPendingNavigation(out RunNavigationAction action, out string stageId, out string classId)
+                && action == RunNavigationAction.Retry)
+            {
+                NightDashLog.Info($"[NightDash] Pending Retry detected — auto-starting stage='{stageId}', class='{classId}'.");
+                RunSelectionLobbyWorldBridge.TryApplySelectionToCurrentWorld(stageId, classId);
+                Time.timeScale = 1f;
+                RestoreGameplayViews();
+                NightDashInputContextStack.Pop(NightDashInputContext.Title);
+                NightDashInputContextStack.Push(NightDashInputContext.Playing);
+                NightDashUIScreenRouter.GoTo(NightDashUIScreen.Playing);
+                gameObject.SetActive(false);
+            }
         }
 
         private void OnDisable()
