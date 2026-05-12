@@ -1,5 +1,6 @@
 using System;
 using NightDash.ECS.Components;
+using NightDash.Runtime.UI;
 using UnityEngine;
 using Unity.Entities;
 using UnityEngine.EventSystems;
@@ -1018,7 +1019,7 @@ namespace NightDash.Runtime
         private static void RequestReturnToLobby()
         {
             RunTeardownBridge.DestroyCurrentRun();
-            var lobby = Object.FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
+            var lobby = UnityEngine.Object.FindFirstObjectByType<NightDashLobbyScreenUI>(FindObjectsInactive.Include);
             if (lobby != null)
             {
                 lobby.gameObject.SetActive(true);
@@ -1034,7 +1035,7 @@ namespace NightDash.Runtime
         private static void RequestReturnToTitle()
         {
             RunTeardownBridge.DestroyCurrentRun();
-            var title = Object.FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
+            var title = UnityEngine.Object.FindFirstObjectByType<NightDashTitleScreenUI>(FindObjectsInactive.Include);
             if (title != null)
             {
                 title.gameObject.SetActive(true);
