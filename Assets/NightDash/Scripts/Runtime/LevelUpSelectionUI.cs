@@ -19,6 +19,14 @@ namespace NightDash.Runtime
         private readonly Text[] _optionTexts = new Text[3];
         private readonly Button[] _optionButtons = new Button[3];
 
+        // Card frame sprites loaded once at Awake. UpgradeOptionElement
+        // doesn't carry a rarity field yet — until it does, the three
+        // options visually map to common / rare / legendary in slot order
+        // so the rare tiers actually show up in playtests.
+        private Sprite _cardSpriteCommon;
+        private Sprite _cardSpriteRare;
+        private Sprite _cardSpriteLegendary;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoCreateIfMissing()
         {
@@ -34,7 +42,27 @@ namespace NightDash.Runtime
         private void Awake()
         {
             EnsureEventSystem();
+            LoadCardSprites();
             BuildCanvas();
+        }
+
+        private void LoadCardSprites()
+        {
+            _cardSpriteCommon    = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_card_common");
+            _cardSpriteRare      = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_card_rare");
+            _cardSpriteLegendary = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_card_legendary");
+        }
+
+        private Sprite ResolveCardSprite(int slotIndex)
+        {
+            // Temporary mapping until UpgradeOptionElement gains a Rarity field.
+            switch (slotIndex)
+            {
+                case 0: return _cardSpriteCommon;
+                case 1: return _cardSpriteRare;
+                case 2: return _cardSpriteLegendary;
+                default: return _cardSpriteCommon;
+            }
         }
 
         private void Update()
@@ -103,27 +131,44 @@ namespace NightDash.Runtime
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;
-            SetPreferredHeight(cards, 250f);
+            SetPreferredHeight(cards, 360f);
+
+            // Source sprite is 96×144 (2:3). RectTransform at 240×360 keeps
+            // the card a uniform 2.5× scale so the pixel art stays sharp,
+            // and the 3-card row fits inside the 1080p reference layout:
+            //   3 * 240 + 2 * 16 = 752 < 1080.
+            const float cardWidth = 240f;
+            const float cardHeight = 360f;
 
             for (int i = 0; i < 3; i++)
             {
                 int optionIndex = i;
                 RectTransform card = CreateRect($"Option{optionIndex}", cards);
-                card.sizeDelta = new Vector2(340f, 250f);
+                card.sizeDelta = new Vector2(cardWidth, cardHeight);
                 LayoutElement cardLayout = card.gameObject.AddComponent<LayoutElement>();
-                cardLayout.preferredWidth = 340f;
-                cardLayout.preferredHeight = 250f;
+                cardLayout.preferredWidth = cardWidth;
+                cardLayout.preferredHeight = cardHeight;
 
                 Image cardImage = card.gameObject.AddComponent<Image>();
-                cardImage.color = new Color(0.17f, 0.11f, 0.24f, 1f);
+                cardImage.sprite = ResolveCardSprite(i);
+                cardImage.type = Image.Type.Simple;
+                cardImage.preserveAspect = true;
+                cardImage.color = Color.white;
 
                 Button button = card.gameObject.AddComponent<Button>();
                 button.targetGraphic = cardImage;
                 button.onClick.AddListener(() => SubmitSelection(optionIndex));
                 _optionButtons[i] = button;
 
+                // Description text sits in the lower half of the card so it
+                // doesn't fight the upper icon panel. Icon population waits
+                // for the gameplay UI pass.
                 _optionTexts[i] = CreateText(card, "-", 22, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
-                StretchFull(_optionTexts[i].rectTransform);
+                var textRect = _optionTexts[i].rectTransform;
+                textRect.anchorMin = new Vector2(0f, 0f);
+                textRect.anchorMax = new Vector2(1f, 0.5f);
+                textRect.offsetMin = new Vector2(16f, 16f);
+                textRect.offsetMax = new Vector2(-16f, -8f);
             }
 
             RectTransform footer = CreateRect("Footer", panel);
