@@ -105,10 +105,13 @@ namespace NightDash.ECS.Systems
                 PoisonDuration      = 8.0f,
                 FreezeDuration      = 2.5f,
                 StunDuration        = 1.2f,
-                BurnApplyChance     = 0.08f,
-                PoisonApplyChance   = 0.08f,
-                FreezeApplyChance   = 0.05f,
-                StunApplyChance     = 0.05f,
+                // Base chance is 0 — status effects only trigger when the
+                // player owns a *_mastery passive. PassiveStatusMasterySystem
+                // patches these values each frame from OwnedPassiveElement.
+                BurnApplyChance     = 0f,
+                PoisonApplyChance   = 0f,
+                FreezeApplyChance   = 0f,
+                StunApplyChance     = 0f,
                 BossImmunityMask    = (byte)(StatusEffectBits.Freeze | StatusEffectBits.Stun),
             });
 

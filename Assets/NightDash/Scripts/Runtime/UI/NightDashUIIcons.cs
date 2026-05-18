@@ -84,6 +84,14 @@ namespace NightDash.Runtime.UI
             {
                 sprite = Resources.Load<Sprite>(PassiveSharedPrefix + body + ResourceSuffix);
             }
+            // Mastery passives (burn_mastery, freeze_mastery, etc.) reuse
+            // the matching status-effect glyph until dedicated art ships.
+            if (sprite == null && body.EndsWith("_mastery"))
+            {
+                string statusKind = body.Substring(0, body.Length - "_mastery".Length);
+                sprite = Resources.Load<Sprite>(
+                    "NightDash/UI/Icons/Status/nd_ui_icon_status_" + statusKind + ResourceSuffix);
+            }
             s_Cache[cacheKey] = sprite;
             return sprite;
         }
