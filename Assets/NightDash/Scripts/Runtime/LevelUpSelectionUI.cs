@@ -133,12 +133,12 @@ namespace NightDash.Runtime
                 RectTransform tr = text.rectTransform;
 
                 float overshoot = tr.rect.height - host.rect.height;
-                // Allow up to one font-size worth of overshoot before we
-                // start panning. A 4-line block at 32pt computes a few px
-                // past 32×4 because of ascent/descent, but visually the
-                // text still reads as "fits the box" — the player only
-                // needs scrolling once an entire extra line falls below.
-                float tolerance = text.fontSize;
+                // Tolerate up to half a font-size of overshoot — that
+                // absorbs the ascent/descent slop on a "just barely fits"
+                // 4-line block but still lets a real 5th line trip the
+                // auto-pan. (Earlier tolerance = 1 × fontSize swallowed
+                // 5-line cases too.)
+                float tolerance = text.fontSize * 0.5f;
                 if (overshoot <= tolerance)
                 {
                     tr.anchoredPosition = Vector2.zero;

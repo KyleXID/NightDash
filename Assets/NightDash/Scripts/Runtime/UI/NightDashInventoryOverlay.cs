@@ -224,9 +224,50 @@ namespace NightDash.Runtime.UI
             viewportGo.transform.SetParent(sr, false);
             var vr = (RectTransform)viewportGo.transform;
             vr.anchorMin = Vector2.zero; vr.anchorMax = Vector2.one;
-            vr.offsetMin = new Vector2(10f, 10f); vr.offsetMax = new Vector2(-10f, -10f);
+            // Right inset = 10 (margin) + 16 (scrollbar) + 4 (gap) = 30 so
+            // the rows don't slide under the vertical scrollbar.
+            vr.offsetMin = new Vector2(10f, 10f); vr.offsetMax = new Vector2(-30f, -10f);
             viewportGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.4f);
             viewportGo.GetComponent<Mask>().showMaskGraphic = true;
+
+            // Vertical scrollbar — pinned to the right edge of the
+            // ScrollRect. AutoHide so it disappears when content fits.
+            var scrollbarGo = new GameObject("Scrollbar",
+                typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            scrollbarGo.transform.SetParent(sr, false);
+            var sbr = (RectTransform)scrollbarGo.transform;
+            sbr.anchorMin = new Vector2(1f, 0f);
+            sbr.anchorMax = new Vector2(1f, 1f);
+            sbr.pivot = new Vector2(1f, 0.5f);
+            sbr.anchoredPosition = new Vector2(-10f, 0f);
+            sbr.sizeDelta = new Vector2(16f, -20f); // height = parent - 20
+            scrollbarGo.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.55f);
+
+            var slidingGo = new GameObject("SlidingArea", typeof(RectTransform));
+            slidingGo.transform.SetParent(scrollbarGo.transform, false);
+            var slr = (RectTransform)slidingGo.transform;
+            slr.anchorMin = Vector2.zero;
+            slr.anchorMax = Vector2.one;
+            slr.offsetMin = new Vector2(2f, 2f);
+            slr.offsetMax = new Vector2(-2f, -2f);
+
+            var handleGo = new GameObject("Handle",
+                typeof(RectTransform), typeof(Image));
+            handleGo.transform.SetParent(slidingGo.transform, false);
+            var hr = (RectTransform)handleGo.transform;
+            hr.anchorMin = Vector2.zero;
+            hr.anchorMax = Vector2.one;
+            hr.offsetMin = Vector2.zero;
+            hr.offsetMax = Vector2.zero;
+            var handleImg = handleGo.GetComponent<Image>();
+            handleImg.color = new Color(0.95f, 0.55f, 0.50f, 0.85f);
+
+            var sb = scrollbarGo.GetComponent<Scrollbar>();
+            sb.direction = Scrollbar.Direction.BottomToTop;
+            sb.handleRect = hr;
+            sb.targetGraphic = handleImg;
+            scroll.verticalScrollbar = sb;
+            scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
 
             var contentGo = new GameObject("Content",
                 typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ContentSizeFitter));
