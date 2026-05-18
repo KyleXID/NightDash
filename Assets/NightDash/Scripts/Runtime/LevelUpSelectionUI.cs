@@ -448,18 +448,16 @@ namespace NightDash.Runtime
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
                 // Description host — pinned to the card's lower band with
-                // a FIXED pixel height that fits exactly 4 lines at the
-                // body font (32 × 4 = 128 + 12 padding = 140px). Raised
-                // 60px up from the card bottom so the block sits well
-                // under the icon zone without crowding the bottom frame.
-                // Pixel-fixed height keeps "4 lines visible, line 5 scrolls"
-                // deterministic across every description.
+                // a FIXED pixel height of 130px (fits 4 lines of 32pt with
+                // tighter padding). Raised 60px up from the card bottom so
+                // the block sits well under the icon zone without crowding
+                // the bottom frame. Line 5 overflows and engages auto-scroll.
                 RectTransform descHost = CreateRect("DescHost", card);
                 descHost.anchorMin = new Vector2(0f, 0f);
                 descHost.anchorMax = new Vector2(1f, 0f);
                 descHost.pivot = new Vector2(0.5f, 0f);
                 descHost.offsetMin = new Vector2(40f, 60f);
-                descHost.offsetMax = new Vector2(-40f, 200f);
+                descHost.offsetMax = new Vector2(-40f, 190f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
 
