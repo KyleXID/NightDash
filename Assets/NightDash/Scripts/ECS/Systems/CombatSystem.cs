@@ -443,22 +443,17 @@ namespace NightDash.ECS.Systems
         // after via FlushStatusQueue → main-thread EntityManager writes so
         // the component is visible on the SAME frame.
         //
-        // List<> is initialised lazily (C# 9 struct field initializers
-        // require a matching explicit constructor — easier to skip that).
-        private Unity.Mathematics.Random _statusRng;
-        private System.Collections.Generic.List<(Entity target, byte mask, bool isBoss)>
-            _statusQueueScratch;
+        // Must be static: ISystem requires an unmanaged struct, and a
+        // managed List<> instance field breaks the source generator (the
+        // World then tries to register CombatSystem as ComponentSystemBase
+        // and throws). Same reason _critRng is static.
+        private static Unity.Mathematics.Random _statusRng =
+            Unity.Mathematics.Random.CreateFromIndex(0xA17F_3911u);
+        private static readonly System.Collections.Generic.List<(Entity target, byte mask, bool isBoss)>
+            _statusQueueScratch = new();
 
         private void QueueStatusOnHit(Entity target, bool isBoss)
         {
-            if (_statusRng.state == 0)
-            {
-                _statusRng = Unity.Mathematics.Random.CreateFromIndex(0xA17F_3911u);
-            }
-            if (_statusQueueScratch == null)
-            {
-                _statusQueueScratch = new System.Collections.Generic.List<(Entity, byte, bool)>();
-            }
             StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
             byte mask = 0;
             if (_statusRng.NextFloat() < cfg.BurnApplyChance)   mask |= StatusEffectBits.Burn;
