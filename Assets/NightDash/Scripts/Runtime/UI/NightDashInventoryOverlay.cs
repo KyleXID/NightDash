@@ -46,6 +46,14 @@ namespace NightDash.Runtime.UI
         private RectTransform _detailHost;
         private ScrollRect _descScroll;
         private RectTransform _descScrollRect;
+        // Auto-pan state for long descriptions. Reset on every focus change
+        // and ticked in Update so a 3+ line blurb scrolls itself top→bottom
+        // without the player needing the mouse wheel.
+        private float _descPanT;
+        private float _descPanOverflowPx;
+        private const float DescPanPxPerSec  = 28f;
+        private const float DescPanHoldTopS  = 1.4f;
+        private const float DescPanHoldBotS  = 0.9f;
         private Text _columnTitleWeapons;
         private Text _columnTitlePassives;
         private bool _open;
@@ -430,6 +438,7 @@ namespace NightDash.Runtime.UI
             if (EscPressedThisFrame()) { Close(); return; }
 
             HandleNavigation();
+            TickDescAutoPan();
         }
 
         private void HandleNavigation()
@@ -518,10 +527,71 @@ namespace NightDash.Runtime.UI
             // the description scroll so a newly-focused entry starts at the
             // top of its blurb instead of mid-paragraph.
             EnsureFocusedRowVisible();
-            if (_descScroll != null && _descScroll.content != null)
+            ResetDescAutoPan();
+        }
+
+        // Recomputes how much description text actually overflows the
+        // viewport, and rewinds the auto-pan cycle to the top. Called on
+        // every focus change so each entry starts reading from line 1.
+        private void ResetDescAutoPan()
+        {
+            _descPanT = 0f;
+            _descPanOverflowPx = 0f;
+            if (_descScroll == null || _descScroll.content == null || _descScroll.viewport == null) return;
+
+            // ContentSizeFitter recomputes on the next layout pass; force it
+            // now so we can read the true overflow this frame.
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_descScroll.content);
+
+            float contentH = _descScroll.content.rect.height;
+            float viewportH = _descScroll.viewport.rect.height;
+            _descPanOverflowPx = Mathf.Max(0f, contentH - viewportH);
+
+            // Park at the top regardless — if there's no overflow this is a
+            // no-op; if there is, the pan tick will progress from here.
+            var ap = _descScroll.content.anchoredPosition;
+            ap.y = 0f;
+            _descScroll.content.anchoredPosition = ap;
+            _descScroll.velocity = Vector2.zero;
+        }
+
+        // Ticked from Update while the overlay is open. Cycle:
+        //   hold-top → pan-down (linear) → hold-bottom → snap back to top.
+        // Uses unscaledDeltaTime because gameplay is paused (Time.timeScale=0)
+        // while the inventory is up.
+        private void TickDescAutoPan()
+        {
+            if (_descScroll == null || _descScroll.content == null) return;
+            if (_descPanOverflowPx <= 0.5f) return;
+
+            _descPanT += Time.unscaledDeltaTime;
+
+            float panSec = _descPanOverflowPx / DescPanPxPerSec;
+            float cycleSec = DescPanHoldTopS + panSec + DescPanHoldBotS;
+            if (cycleSec <= 0f) return;
+            float t = _descPanT % cycleSec;
+
+            float scrollPx;
+            if (t < DescPanHoldTopS)
             {
-                _descScroll.verticalNormalizedPosition = 1f;
+                scrollPx = 0f;
             }
+            else if (t < DescPanHoldTopS + panSec)
+            {
+                scrollPx = (t - DescPanHoldTopS) * DescPanPxPerSec;
+            }
+            else
+            {
+                scrollPx = _descPanOverflowPx;
+            }
+
+            var ap = _descScroll.content.anchoredPosition;
+            ap.y = scrollPx;
+            _descScroll.content.anchoredPosition = ap;
+            // Suppress any drag-velocity carry-over so the next frame doesn't
+            // fight our anchored write.
+            _descScroll.velocity = Vector2.zero;
         }
 
         // Adjusts the active column's ScrollRect so the focused row is fully
