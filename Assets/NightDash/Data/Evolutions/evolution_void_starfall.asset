@@ -18,7 +18,8 @@ MonoBehaviour:
   requiredWeaponLevel: 8
   requiredPassiveIds:
   - passive_astrologer_reroll_free
-  - passive_swiftness
+  - passive_meteor_study
+  - passive_dark_boost
   requiredRiskScoreMin: 0
   requiredModifiers: []
   isAbyss: 0

@@ -17,8 +17,9 @@ MonoBehaviour:
   requiredWeaponId: weapon_hellflame_slash
   requiredWeaponLevel: 8
   requiredPassiveIds:
-  - passive_strength
   - passive_warrior_guard_stack
+  - passive_blood_awakening
+  - passive_holy_boost
   requiredRiskScoreMin: 0
   requiredModifiers: []
   isAbyss: 0
