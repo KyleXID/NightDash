@@ -198,7 +198,7 @@ namespace NightDash.Runtime.UI
             titleText = titleGo.GetComponent<Text>();
             titleText.text = title;
             titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.fontSize = 32;
+            titleText.fontSize = 24;
             titleText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             titleText.font = NightDashUIFonts.Arcade;
             titleText.raycastTarget = false;
@@ -268,7 +268,9 @@ namespace NightDash.Runtime.UI
             _detailHost.anchorMax = new Vector2(1f, 0f);
             _detailHost.pivot = new Vector2(0.5f, 0f);
             _detailHost.anchoredPosition = new Vector2(0f, 70f);
-            _detailHost.sizeDelta = new Vector2(-80f, 160f);
+            // Height = name row (~40) + description viewport (80 = 3 lines of
+            // 24px + small padding) + outer padding.
+            _detailHost.sizeDelta = new Vector2(-80f, 150f);
             go.GetComponent<Image>().color = new Color(0.12f, 0.08f, 0.10f, 0.95f);
 
             var iconGo = new GameObject("Icon",
@@ -283,18 +285,22 @@ namespace NightDash.Runtime.UI
             _detailIcon.preserveAspect = true;
             _detailIcon.raycastTarget = false;
 
-            // Name pinned to the TOP 40% of the strip. Leaves the bottom 60%
-            // for the scrollable description area.
+            // Name pinned to the TOP of the strip at a fixed height. The
+            // description scroll below claims the rest with a fixed 80px
+            // viewport — keeping these as explicit pixel boxes (instead of
+            // percent splits) is what makes "exactly 3 lines visible" hold
+            // regardless of font line-metrics quirks.
             var nameGo = new GameObject("Name",
                 typeof(RectTransform), typeof(Text), typeof(Outline));
             nameGo.transform.SetParent(_detailHost, false);
             var nr = (RectTransform)nameGo.transform;
-            nr.anchorMin = new Vector2(0f, 0.6f); nr.anchorMax = new Vector2(1f, 1f);
-            nr.offsetMin = new Vector2(112f, 0f);
-            nr.offsetMax = new Vector2(-20f, -6f);
+            nr.anchorMin = new Vector2(0f, 1f); nr.anchorMax = new Vector2(1f, 1f);
+            nr.pivot = new Vector2(0.5f, 1f);
+            nr.offsetMin = new Vector2(112f, -50f);
+            nr.offsetMax = new Vector2(-20f, -8f);
             _detailNameText = nameGo.GetComponent<Text>();
             _detailNameText.alignment = TextAnchor.MiddleLeft;
-            _detailNameText.fontSize = 28;
+            _detailNameText.fontSize = 24;
             _detailNameText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             _detailNameText.font = NightDashUIFonts.Arcade;
             _detailNameText.raycastTarget = false;
@@ -303,17 +309,19 @@ namespace NightDash.Runtime.UI
             no.effectColor = new Color(0f, 0f, 0f, 0.95f);
             no.effectDistance = new Vector2(2f, -2f);
 
-            // Description ScrollRect — bottom 60% of the strip, masked so
-            // anything past 3 lines stays inside and is reachable via mouse
-            // wheel / drag.
+            // Description ScrollRect — anchored to the BOTTOM of the strip
+            // with a FIXED 80px height so it always shows exactly 3 lines
+            // at fontSize 24 (24×3 = 72, plus 8px breathing room). Anything
+            // beyond line 3 overflows and the auto-pan tick scrolls it.
             var dscrollGo = new GameObject("DescScroll",
                 typeof(RectTransform), typeof(ScrollRect));
             dscrollGo.transform.SetParent(_detailHost, false);
             _descScrollRect = (RectTransform)dscrollGo.transform;
             _descScrollRect.anchorMin = new Vector2(0f, 0f);
-            _descScrollRect.anchorMax = new Vector2(1f, 0.6f);
+            _descScrollRect.anchorMax = new Vector2(1f, 0f);
+            _descScrollRect.pivot = new Vector2(0.5f, 0f);
             _descScrollRect.offsetMin = new Vector2(112f, 8f);
-            _descScrollRect.offsetMax = new Vector2(-20f, -2f);
+            _descScrollRect.offsetMax = new Vector2(-20f, 88f);
             var dscroll = dscrollGo.GetComponent<ScrollRect>();
             dscroll.horizontal = false;
             dscroll.vertical = true;
@@ -351,7 +359,11 @@ namespace NightDash.Runtime.UI
             descGo.transform.SetParent(dcontR, false);
             _detailDescriptionText = descGo.GetComponent<Text>();
             _detailDescriptionText.alignment = TextAnchor.UpperLeft;
-            _detailDescriptionText.fontSize = 22;
+            _detailDescriptionText.fontSize = 24;
+            // Pin lineSpacing so the viewport-height math (24 × 3 = 72) is
+            // independent of the font's intrinsic line metrics.
+            _detailDescriptionText.lineSpacing = 1f;
+            _detailDescriptionText.supportRichText = false;
             _detailDescriptionText.color = new Color(0.90f, 0.86f, 0.76f, 1f);
             _detailDescriptionText.font = NightDashUIFonts.Arcade;
             _detailDescriptionText.raycastTarget = false;
@@ -378,7 +390,7 @@ namespace NightDash.Runtime.UI
             var t = go.GetComponent<Text>();
             t.text = "←/→  COLUMN     ↑/↓  SELECT     [TAB] / [ESC]  CLOSE";
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 22;
+            t.fontSize = 24;
             t.color = new Color(0.80f, 0.74f, 0.62f, 1f);
             t.font = NightDashUIFonts.Arcade;
             t.raycastTarget = false;
@@ -796,8 +808,8 @@ namespace NightDash.Runtime.UI
             bg.color = new Color(0.14f, 0.10f, 0.12f, 0.88f);
             bg.raycastTarget = false;
             var le = rowGo.GetComponent<LayoutElement>();
-            le.preferredHeight = 78f;
-            le.minHeight = 78f;
+            le.preferredHeight = 86f;
+            le.minHeight = 86f;
 
             var iconGo = new GameObject("Icon",
                 typeof(RectTransform), typeof(Image));
@@ -812,19 +824,24 @@ namespace NightDash.Runtime.UI
             iconImg.preserveAspect = true;
             iconImg.raycastTarget = false;
 
+            // Row body split into two lines so long Korean names don't get
+            // truncated by the level chip on the same baseline:
+            //   top half  →  display name (full width minus icon)
+            //   bot half  →  "Lv.X/Y"
             var nameGo = new GameObject("Name",
                 typeof(RectTransform), typeof(Text), typeof(Outline));
             nameGo.transform.SetParent(rowGo.transform, false);
             var nr = (RectTransform)nameGo.transform;
-            nr.anchorMin = new Vector2(0f, 0f); nr.anchorMax = new Vector2(1f, 1f);
+            nr.anchorMin = new Vector2(0f, 0.5f); nr.anchorMax = new Vector2(1f, 1f);
             nr.offsetMin = new Vector2(80f, 0f);
-            nr.offsetMax = new Vector2(-140f, -2f);
+            nr.offsetMax = new Vector2(-14f, -2f);
             var nameText = nameGo.GetComponent<Text>();
-            nameText.alignment = TextAnchor.MiddleLeft;
-            nameText.fontSize = 28;
+            nameText.alignment = TextAnchor.LowerLeft;
+            nameText.fontSize = 24;
             nameText.color = new Color(0.95f, 0.92f, 0.86f, 1f);
             nameText.font = NightDashUIFonts.Arcade;
             nameText.raycastTarget = false;
+            nameText.horizontalOverflow = HorizontalWrapMode.Overflow;
             var no = nameGo.GetComponent<Outline>();
             no.effectColor = new Color(0f, 0f, 0f, 0.9f);
             no.effectDistance = new Vector2(1.5f, -1.5f);
@@ -833,13 +850,13 @@ namespace NightDash.Runtime.UI
                 typeof(RectTransform), typeof(Text), typeof(Outline));
             lvGo.transform.SetParent(rowGo.transform, false);
             var lr = (RectTransform)lvGo.transform;
-            lr.anchorMin = new Vector2(1f, 0f); lr.anchorMax = new Vector2(1f, 1f);
-            lr.pivot = new Vector2(1f, 0.5f);
-            lr.anchoredPosition = new Vector2(-14f, 0f);
-            lr.sizeDelta = new Vector2(130f, 0f);
+            lr.anchorMin = new Vector2(0f, 0f); lr.anchorMax = new Vector2(1f, 0.5f);
+            lr.pivot = new Vector2(0.5f, 0.5f);
+            lr.offsetMin = new Vector2(80f, 2f);
+            lr.offsetMax = new Vector2(-14f, 0f);
             var lvText = lvGo.GetComponent<Text>();
-            lvText.alignment = TextAnchor.MiddleRight;
-            lvText.fontSize = 26;
+            lvText.alignment = TextAnchor.UpperLeft;
+            lvText.fontSize = 24;
             lvText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             lvText.font = NightDashUIFonts.Arcade;
             lvText.raycastTarget = false;
