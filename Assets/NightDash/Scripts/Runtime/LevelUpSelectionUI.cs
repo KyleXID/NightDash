@@ -458,8 +458,8 @@ namespace NightDash.Runtime
                 descHost.anchorMin = new Vector2(0f, 0f);
                 descHost.anchorMax = new Vector2(1f, 0f);
                 descHost.pivot = new Vector2(0.5f, 0f);
-                descHost.offsetMin = new Vector2(24f, 30f);
-                descHost.offsetMax = new Vector2(-24f, 138f);
+                descHost.offsetMin = new Vector2(40f, 30f);
+                descHost.offsetMax = new Vector2(-40f, 138f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
 
@@ -834,26 +834,31 @@ namespace NightDash.Runtime
             }
 
             // Layout:
-            //   line 1 → display name (title)
-            //   line 2 → "Lv X -> Lv Y" or "Unlock" / "Gain" for first pickup
-            //   line 3+ → flavor / description (passives only)
-            // Splitting the title out onto its own line keeps long Korean
-            // names from getting elbowed by the level chip on the same row.
-            string levelLine;
+            //   first pickup (Lv 0):  "Unlock 연속 사격" or "Gain 연속 사격"
+            //                         on a single line — the kind label is
+            //                         short enough to ride alongside the
+            //                         title, so a forced break felt empty.
+            //   level up:             line 1 → display name (title)
+            //                         line 2 → "Lv X -> Lv Y"
+            //                         line 3+ → flavor / description
+            //   Splitting the title out for the level-up case keeps long
+            //   Korean names from getting elbowed by the level chip.
+            string headerLine;
             if (option.CurrentLevel == 0)
             {
-                levelLine = option.Kind == UpgradeKind.Weapon ? "Unlock" : "Gain";
+                string prefix = option.Kind == UpgradeKind.Weapon ? "Unlock" : "Gain";
+                headerLine = $"{prefix} {title}";
             }
             else
             {
-                levelLine = $"Lv {option.CurrentLevel} -> Lv {option.NextLevel}";
+                headerLine = $"{title}\nLv {option.CurrentLevel} -> Lv {option.NextLevel}";
             }
 
             if (!string.IsNullOrWhiteSpace(detail))
             {
-                return $"{title}\n{levelLine}\n{detail}";
+                return $"{headerLine}\n{detail}";
             }
-            return $"{title}\n{levelLine}";
+            return headerLine;
         }
 
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
