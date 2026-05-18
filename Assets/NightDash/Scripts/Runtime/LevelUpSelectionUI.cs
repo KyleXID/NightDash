@@ -463,7 +463,7 @@ namespace NightDash.Runtime
                 descHost.anchorMin = new Vector2(0f, 0f);
                 descHost.anchorMax = new Vector2(1f, 0f);
                 descHost.pivot = new Vector2(0.5f, 0f);
-                descHost.offsetMin = new Vector2(40f, 60f);
+                descHost.offsetMin = new Vector2(40f, 30f);
                 descHost.offsetMax = new Vector2(-40f, 170f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
