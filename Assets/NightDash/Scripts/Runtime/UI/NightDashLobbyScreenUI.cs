@@ -960,17 +960,24 @@ namespace NightDash.Runtime.UI
 
         // Canonical class display order for the lobby cards. DataCatalog
         // sorts by GUID under the hood, which means adding any asset can
-        // re-shuffle the roster — pinning the sequence here keeps Warrior
-        // in slot 0 etc. regardless of catalog state.
+        // re-shuffle the roster — pinning the sequence here keeps each
+        // class in its intended CardOffsets slot regardless of catalog state.
+        //
+        // MUST match the CardOffsets index legend at the top of this file:
+        //   0 Astrologer, 1 Mage, 2 Warrior, 3 Paladin,
+        //   4 Priest,     5 Archer, 6 Gunslinger
+        // Re-ordering this array desyncs each class from its hand-tuned
+        // around-the-campfire position. If you change the visual layout,
+        // update CardOffsets AND this array together.
         private static readonly string[] ClassOrder =
         {
-            "class_warrior",
-            "class_priest",
-            "class_mage",
-            "class_archer",
-            "class_astrologer",
-            "class_gunslinger",
-            "class_paladin",
+            "class_astrologer", // 0 back-row left, low
+            "class_mage",       // 1 inner-left, top
+            "class_warrior",    // 2 mid-left
+            "class_paladin",    // 3 outer-left, low
+            "class_priest",     // 4 inner-right, top
+            "class_archer",     // 5 mid-right
+            "class_gunslinger", // 6 back-row right, low
         };
 
         private static System.Collections.Generic.List<NightDash.Data.ClassData> SortClassesByCanonicalOrder(
