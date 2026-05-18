@@ -80,6 +80,29 @@ namespace NightDash.Runtime
             return null;
         }
 
+        // Generic Entity → SpriteRenderer accessor used by the status-effect
+        // tint bridge. Searches player → enemy → boss views in order.
+        public bool TryGetRenderer(Entity entity, out SpriteRenderer renderer)
+        {
+            if (_playerViews.TryGetValue(entity, out var pv) && pv.Renderer != null)
+            {
+                renderer = pv.Renderer;
+                return true;
+            }
+            if (_enemyViews.TryGetValue(entity, out var ev) && ev.Renderer != null)
+            {
+                renderer = ev.Renderer;
+                return true;
+            }
+            if (_bossViews.TryGetValue(entity, out var bv) && bv.Renderer != null)
+            {
+                renderer = bv.Renderer;
+                return true;
+            }
+            renderer = null;
+            return false;
+        }
+
         // ------------------------------------------------------------------ view dictionaries
         private readonly Dictionary<Entity, ViewState> _playerViews     = new();
         private readonly Dictionary<Entity, ViewState> _enemyViews      = new();
