@@ -109,12 +109,13 @@ namespace NightDash.Runtime
         // player tabs over to them.
         private void TickAutoScroll()
         {
-            // Hold at the top for a beat, then crawl to the bottom, hold, and
-            // crawl back. Tuned so a 4-line description has time to read.
-            const float HoldTopSec    = 1.2f;
-            const float ScrollDownSec = 3.0f;
-            const float HoldBotSec    = 1.0f;
-            const float ScrollUpSec   = 2.0f;
+            // Hold at the top for a beat, then sweep to the bottom, hold,
+            // and sweep back. Faster cadence than before — a 4-line block
+            // shouldn't take 6+ seconds to fully reveal.
+            const float HoldTopSec    = 0.7f;
+            const float ScrollDownSec = 1.2f;
+            const float HoldBotSec    = 0.5f;
+            const float ScrollUpSec   = 0.8f;
             float period = HoldTopSec + ScrollDownSec + HoldBotSec + ScrollUpSec;
 
             if (_selectedIndex != _lastScrollFocusIndex)
@@ -446,24 +447,23 @@ namespace NightDash.Runtime
                 kindRect.offsetMin = new Vector2(20f, 0f);
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
-                // Description host — a clipped window pinned to the BOTTOM
-                // of the card with a FIXED pixel height that fits exactly
-                // 3 lines of 28pt (28 × 3 = 84 + 12 padding ≈ 96px). Using
-                // a percentage anchor here (the old 0.02..0.34 setup) made
-                // the host ~148px which silently absorbed 4-5 lines and
-                // suppressed the auto-scroll trigger. Pixel-fixed height
-                // makes "3 lines visible, line 4 scrolls" reliable across
-                // every description regardless of length.
+                // Description host — pinned to the card's lower band with
+                // a FIXED pixel height that fits exactly 3 lines at the
+                // body font (32 × 3 = 96 + 12 padding ≈ 108px). Anchored
+                // 30px up from the card bottom so the block sits a little
+                // higher under the icon zone instead of hugging the frame
+                // edge. Pixel-fixed height keeps "3 lines visible, line 4
+                // scrolls" deterministic across every description.
                 RectTransform descHost = CreateRect("DescHost", card);
                 descHost.anchorMin = new Vector2(0f, 0f);
                 descHost.anchorMax = new Vector2(1f, 0f);
                 descHost.pivot = new Vector2(0.5f, 0f);
-                descHost.offsetMin = new Vector2(24f, 12f);
-                descHost.offsetMax = new Vector2(-24f, 108f);
+                descHost.offsetMin = new Vector2(24f, 30f);
+                descHost.offsetMax = new Vector2(-24f, 138f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
 
-                _optionTexts[i] = CreateText(descHost, "-", OptionBodyFontSize, TextAnchor.UpperCenter,
+                _optionTexts[i] = CreateText(descHost, "-", OptionBodyFontSize, TextAnchor.UpperLeft,
                     new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -715,7 +715,7 @@ namespace NightDash.Runtime
         // silently downscaled until it fit the host. With a fixed 28pt the
         // descHost (sized for exactly 3 lines) will overflow on line 4+
         // and the auto-scroll tick will engage.
-        private const int OptionBodyFontSize = 28;
+        private const int OptionBodyFontSize = 32;
         private static int FontSizeForBody(string body) => OptionBodyFontSize;
 
         // Used by the card's TOP slot — just the upgrade category in upper
@@ -833,26 +833,27 @@ namespace NightDash.Runtime
                 }
             }
 
+            // Layout:
+            //   line 1 → display name (title)
+            //   line 2 → "Lv X -> Lv Y" or "Unlock" / "Gain" for first pickup
+            //   line 3+ → flavor / description (passives only)
+            // Splitting the title out onto its own line keeps long Korean
+            // names from getting elbowed by the level chip on the same row.
             string levelLine;
-            if (option.Kind == UpgradeKind.Weapon)
+            if (option.CurrentLevel == 0)
             {
-                levelLine = option.CurrentLevel == 0
-                    ? $"Unlock {title}"
-                    : $"{title} Lv {option.CurrentLevel} -> Lv {option.NextLevel}";
+                levelLine = option.Kind == UpgradeKind.Weapon ? "Unlock" : "Gain";
             }
             else
             {
-                levelLine = option.CurrentLevel == 0
-                    ? $"Gain {title}"
-                    : $"{title} Lv {option.CurrentLevel} -> Lv {option.NextLevel}";
+                levelLine = $"Lv {option.CurrentLevel} -> Lv {option.NextLevel}";
             }
 
             if (!string.IsNullOrWhiteSpace(detail))
             {
-                return $"{levelLine}\n{detail}";
+                return $"{title}\n{levelLine}\n{detail}";
             }
-
-            return levelLine;
+            return $"{title}\n{levelLine}";
         }
 
         private static Button CreateButton(Transform parent, string label, UnityEngine.Events.UnityAction onClick)
