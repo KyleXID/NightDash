@@ -44,6 +44,8 @@ namespace NightDash.Runtime.UI
         private Text _detailNameText;
         private Image _detailIcon;
         private RectTransform _detailHost;
+        private ScrollRect _descScroll;
+        private RectTransform _descScrollRect;
         private Text _columnTitleWeapons;
         private Text _columnTitlePassives;
         private bool _open;
@@ -188,7 +190,7 @@ namespace NightDash.Runtime.UI
             titleText = titleGo.GetComponent<Text>();
             titleText.text = title;
             titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.fontSize = 36;
+            titleText.fontSize = 32;
             titleText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             titleText.font = NightDashUIFonts.Arcade;
             titleText.raycastTarget = false;
@@ -243,6 +245,11 @@ namespace NightDash.Runtime.UI
 
         // Bottom-of-panel detail strip — icon + name + description. Updates
         // every time the highlighted row changes.
+        //
+        // Strip is sized so the description region fits ~3 lines at font 22;
+        // if the text exceeds that, the ScrollRect lets the player wheel
+        // through it. Without the ScrollRect a long description used to spill
+        // out of the strip with VerticalWrapMode.Overflow.
         private void BuildDetailStrip()
         {
             var go = new GameObject("Detail",
@@ -253,7 +260,7 @@ namespace NightDash.Runtime.UI
             _detailHost.anchorMax = new Vector2(1f, 0f);
             _detailHost.pivot = new Vector2(0.5f, 0f);
             _detailHost.anchoredPosition = new Vector2(0f, 70f);
-            _detailHost.sizeDelta = new Vector2(-80f, 120f);
+            _detailHost.sizeDelta = new Vector2(-80f, 160f);
             go.GetComponent<Image>().color = new Color(0.12f, 0.08f, 0.10f, 0.95f);
 
             var iconGo = new GameObject("Icon",
@@ -268,16 +275,18 @@ namespace NightDash.Runtime.UI
             _detailIcon.preserveAspect = true;
             _detailIcon.raycastTarget = false;
 
+            // Name pinned to the TOP 40% of the strip. Leaves the bottom 60%
+            // for the scrollable description area.
             var nameGo = new GameObject("Name",
                 typeof(RectTransform), typeof(Text), typeof(Outline));
             nameGo.transform.SetParent(_detailHost, false);
             var nr = (RectTransform)nameGo.transform;
-            nr.anchorMin = new Vector2(0f, 0.5f); nr.anchorMax = new Vector2(1f, 1f);
+            nr.anchorMin = new Vector2(0f, 0.6f); nr.anchorMax = new Vector2(1f, 1f);
             nr.offsetMin = new Vector2(112f, 0f);
-            nr.offsetMax = new Vector2(-20f, -8f);
+            nr.offsetMax = new Vector2(-20f, -6f);
             _detailNameText = nameGo.GetComponent<Text>();
-            _detailNameText.alignment = TextAnchor.LowerLeft;
-            _detailNameText.fontSize = 32;
+            _detailNameText.alignment = TextAnchor.MiddleLeft;
+            _detailNameText.fontSize = 28;
             _detailNameText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             _detailNameText.font = NightDashUIFonts.Arcade;
             _detailNameText.raycastTarget = false;
@@ -286,16 +295,55 @@ namespace NightDash.Runtime.UI
             no.effectColor = new Color(0f, 0f, 0f, 0.95f);
             no.effectDistance = new Vector2(2f, -2f);
 
+            // Description ScrollRect — bottom 60% of the strip, masked so
+            // anything past 3 lines stays inside and is reachable via mouse
+            // wheel / drag.
+            var dscrollGo = new GameObject("DescScroll",
+                typeof(RectTransform), typeof(ScrollRect));
+            dscrollGo.transform.SetParent(_detailHost, false);
+            _descScrollRect = (RectTransform)dscrollGo.transform;
+            _descScrollRect.anchorMin = new Vector2(0f, 0f);
+            _descScrollRect.anchorMax = new Vector2(1f, 0.6f);
+            _descScrollRect.offsetMin = new Vector2(112f, 8f);
+            _descScrollRect.offsetMax = new Vector2(-20f, -2f);
+            var dscroll = dscrollGo.GetComponent<ScrollRect>();
+            dscroll.horizontal = false;
+            dscroll.vertical = true;
+            dscroll.movementType = ScrollRect.MovementType.Clamped;
+            dscroll.scrollSensitivity = 24f;
+            _descScroll = dscroll;
+
+            var dviewGo = new GameObject("Viewport",
+                typeof(RectTransform), typeof(RectMask2D));
+            dviewGo.transform.SetParent(_descScrollRect, false);
+            var dviewR = (RectTransform)dviewGo.transform;
+            dviewR.anchorMin = Vector2.zero; dviewR.anchorMax = Vector2.one;
+            dviewR.offsetMin = Vector2.zero; dviewR.offsetMax = Vector2.zero;
+
+            var dcontGo = new GameObject("Content",
+                typeof(RectTransform), typeof(ContentSizeFitter), typeof(VerticalLayoutGroup));
+            dcontGo.transform.SetParent(dviewR, false);
+            var dcontR = (RectTransform)dcontGo.transform;
+            dcontR.anchorMin = new Vector2(0f, 1f); dcontR.anchorMax = new Vector2(1f, 1f);
+            dcontR.pivot = new Vector2(0.5f, 1f);
+            dcontR.anchoredPosition = Vector2.zero;
+            dcontR.sizeDelta = Vector2.zero;
+            var dfit = dcontGo.GetComponent<ContentSizeFitter>();
+            dfit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var dlayout = dcontGo.GetComponent<VerticalLayoutGroup>();
+            dlayout.padding = new RectOffset(0, 0, 0, 0);
+            dlayout.spacing = 0f;
+            dlayout.childForceExpandWidth = true;
+            dlayout.childForceExpandHeight = false;
+            dlayout.childControlWidth = true;
+            dlayout.childControlHeight = true;
+
             var descGo = new GameObject("Description",
                 typeof(RectTransform), typeof(Text), typeof(Outline));
-            descGo.transform.SetParent(_detailHost, false);
-            var dr = (RectTransform)descGo.transform;
-            dr.anchorMin = new Vector2(0f, 0f); dr.anchorMax = new Vector2(1f, 0.5f);
-            dr.offsetMin = new Vector2(112f, 8f);
-            dr.offsetMax = new Vector2(-20f, -2f);
+            descGo.transform.SetParent(dcontR, false);
             _detailDescriptionText = descGo.GetComponent<Text>();
             _detailDescriptionText.alignment = TextAnchor.UpperLeft;
-            _detailDescriptionText.fontSize = 26;
+            _detailDescriptionText.fontSize = 22;
             _detailDescriptionText.color = new Color(0.90f, 0.86f, 0.76f, 1f);
             _detailDescriptionText.font = NightDashUIFonts.Arcade;
             _detailDescriptionText.raycastTarget = false;
@@ -304,6 +352,9 @@ namespace NightDash.Runtime.UI
             var dro = descGo.GetComponent<Outline>();
             dro.effectColor = new Color(0f, 0f, 0f, 0.9f);
             dro.effectDistance = new Vector2(1.5f, -1.5f);
+
+            dscroll.viewport = dviewR;
+            dscroll.content = dcontR;
         }
 
         private void BuildHint()
@@ -319,7 +370,7 @@ namespace NightDash.Runtime.UI
             var t = go.GetComponent<Text>();
             t.text = "←/→  COLUMN     ↑/↓  SELECT     [TAB] / [ESC]  CLOSE";
             t.alignment = TextAnchor.MiddleCenter;
-            t.fontSize = 26;
+            t.fontSize = 22;
             t.color = new Color(0.80f, 0.74f, 0.62f, 1f);
             t.font = NightDashUIFonts.Arcade;
             t.raycastTarget = false;
@@ -461,6 +512,73 @@ namespace NightDash.Runtime.UI
                 _detailDescriptionText.text = string.Empty;
                 _detailIcon.sprite = null;
                 _detailIcon.enabled = false;
+            }
+
+            // Snap row list so the focused row is fully visible, and reset
+            // the description scroll so a newly-focused entry starts at the
+            // top of its blurb instead of mid-paragraph.
+            EnsureFocusedRowVisible();
+            if (_descScroll != null && _descScroll.content != null)
+            {
+                _descScroll.verticalNormalizedPosition = 1f;
+            }
+        }
+
+        // Adjusts the active column's ScrollRect so the focused row is fully
+        // visible. Without this, the player can press ↓ past the bottom of
+        // the viewport and only see the partial sliver of the last row.
+        private void EnsureFocusedRowVisible()
+        {
+            var pool = _focusColumn == 0 ? _weaponRows : _passiveRows;
+            if (_focusRow < 0 || _focusRow >= pool.Count) return;
+            RowBinding binding = pool[_focusRow];
+            if (binding.Go == null || !binding.Go.activeSelf) return;
+
+            var rowRect = (RectTransform)binding.Go.transform;
+            ScrollRect scroll = rowRect.GetComponentInParent<ScrollRect>();
+            if (scroll == null || scroll.viewport == null || scroll.content == null) return;
+
+            // VerticalLayoutGroup defers placement; force a layout pass so
+            // we sample current world positions rather than last frame's.
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scroll.content);
+
+            RectTransform content = scroll.content;
+            RectTransform viewport = scroll.viewport;
+            float contentH = content.rect.height;
+            float viewportH = viewport.rect.height;
+            float scrollable = contentH - viewportH;
+            if (scrollable <= 0.5f) return; // nothing to scroll
+
+            // Convert row center into content-local space; content's pivot is
+            // (0.5, 1) so its local +Y is "up from top edge". Depth below the
+            // top edge = -localY.
+            Vector3 rowCenterWorld = rowRect.TransformPoint(rowRect.rect.center);
+            Vector3 rowCenterLocal = content.InverseTransformPoint(rowCenterWorld);
+            float rowH = rowRect.rect.height;
+            float rowTopDepth = -(rowCenterLocal.y + rowH * 0.5f);
+            float rowBotDepth = -(rowCenterLocal.y - rowH * 0.5f);
+
+            float ap = content.anchoredPosition.y;
+            // Visible window in "depth from content top" coordinates.
+            float visTop = ap;
+            float visBot = ap + viewportH;
+            const float margin = 4f;
+
+            float newAp = ap;
+            if (rowTopDepth < visTop + margin)
+            {
+                newAp = rowTopDepth - margin;
+            }
+            else if (rowBotDepth > visBot - margin)
+            {
+                newAp = rowBotDepth - viewportH + margin;
+            }
+            newAp = Mathf.Clamp(newAp, 0f, scrollable);
+
+            if (Mathf.Abs(newAp - ap) > 0.1f)
+            {
+                content.anchoredPosition = new Vector2(content.anchoredPosition.x, newAp);
             }
         }
 
@@ -633,7 +751,7 @@ namespace NightDash.Runtime.UI
             nr.offsetMax = new Vector2(-140f, -2f);
             var nameText = nameGo.GetComponent<Text>();
             nameText.alignment = TextAnchor.MiddleLeft;
-            nameText.fontSize = 30;
+            nameText.fontSize = 28;
             nameText.color = new Color(0.95f, 0.92f, 0.86f, 1f);
             nameText.font = NightDashUIFonts.Arcade;
             nameText.raycastTarget = false;
@@ -651,7 +769,7 @@ namespace NightDash.Runtime.UI
             lr.sizeDelta = new Vector2(130f, 0f);
             var lvText = lvGo.GetComponent<Text>();
             lvText.alignment = TextAnchor.MiddleRight;
-            lvText.fontSize = 28;
+            lvText.fontSize = 26;
             lvText.color = new Color(0.95f, 0.55f, 0.50f, 1f);
             lvText.font = NightDashUIFonts.Arcade;
             lvText.raycastTarget = false;
