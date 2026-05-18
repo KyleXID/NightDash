@@ -442,15 +442,22 @@ namespace NightDash.ECS.Systems
         // structural changes allowed mid-iteration), drained immediately
         // after via FlushStatusQueue → main-thread EntityManager writes so
         // the component is visible on the SAME frame.
+        //
+        // List<> is initialised lazily (C# 9 struct field initializers
+        // require a matching explicit constructor — easier to skip that).
         private Unity.Mathematics.Random _statusRng;
-        private readonly System.Collections.Generic.List<(Entity target, byte mask, bool isBoss)>
-            _statusQueueScratch = new();
+        private System.Collections.Generic.List<(Entity target, byte mask, bool isBoss)>
+            _statusQueueScratch;
 
         private void QueueStatusOnHit(Entity target, bool isBoss)
         {
             if (_statusRng.state == 0)
             {
                 _statusRng = Unity.Mathematics.Random.CreateFromIndex(0xA17F_3911u);
+            }
+            if (_statusQueueScratch == null)
+            {
+                _statusQueueScratch = new System.Collections.Generic.List<(Entity, byte, bool)>();
             }
             StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
             byte mask = 0;
@@ -464,7 +471,7 @@ namespace NightDash.ECS.Systems
 
         private void FlushStatusQueue(ref SystemState state)
         {
-            if (_statusQueueScratch.Count == 0) return;
+            if (_statusQueueScratch == null || _statusQueueScratch.Count == 0) return;
             StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
             EntityManager em = state.EntityManager;
             for (int i = 0; i < _statusQueueScratch.Count; i++)
