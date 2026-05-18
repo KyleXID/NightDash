@@ -452,7 +452,11 @@ namespace NightDash.Runtime.UI
 
             var registry = DataRegistry.Instance;
             if (registry == null || registry.Catalog == null) return;
-            var classes = registry.Catalog.classes;
+            // Snapshot the catalog into a *stable* local list ordered by the
+            // canonical class id sequence below. DataCatalog rebuilds (e.g.
+            // after Reimport / new .asset added) reorder Resources.LoadAll
+            // results, which would otherwise shuffle the lobby cards.
+            var classes = SortClassesByCanonicalOrder(registry.Catalog.classes);
             if (classes == null || classes.Count == 0) return;
 
             int cardCount = Mathf.Min(CharacterCardCount, classes.Count);
@@ -952,6 +956,55 @@ namespace NightDash.Runtime.UI
             if (_visualBridge == null)
                 _visualBridge = FindFirstObjectByType<NightDashDebugVisualBridge>();
             if (_visualBridge != null) _visualBridge.enabled = true;
+        }
+
+        // Canonical class display order for the lobby cards. DataCatalog
+        // sorts by GUID under the hood, which means adding any asset can
+        // re-shuffle the roster — pinning the sequence here keeps Warrior
+        // in slot 0 etc. regardless of catalog state.
+        private static readonly string[] ClassOrder =
+        {
+            "class_warrior",
+            "class_priest",
+            "class_mage",
+            "class_archer",
+            "class_astrologer",
+            "class_gunslinger",
+            "class_paladin",
+        };
+
+        private static System.Collections.Generic.List<NightDash.Data.ClassData> SortClassesByCanonicalOrder(
+            System.Collections.Generic.List<NightDash.Data.ClassData> input)
+        {
+            if (input == null) return null;
+            var ordered = new System.Collections.Generic.List<NightDash.Data.ClassData>(input.Count);
+            // Pass 1 — emit in the canonical order, skipping any id the
+            // catalog doesn't actually have on disk.
+            for (int i = 0; i < ClassOrder.Length; i++)
+            {
+                for (int j = 0; j < input.Count; j++)
+                {
+                    if (input[j] != null && input[j].id == ClassOrder[i])
+                    {
+                        ordered.Add(input[j]);
+                        break;
+                    }
+                }
+            }
+            // Pass 2 — append anything the catalog has that wasn't in the
+            // canonical list so new classes still show up even before
+            // ClassOrder is updated.
+            for (int j = 0; j < input.Count; j++)
+            {
+                if (input[j] == null) continue;
+                bool alreadyAdded = false;
+                for (int k = 0; k < ordered.Count; k++)
+                {
+                    if (ordered[k] == input[j]) { alreadyAdded = true; break; }
+                }
+                if (!alreadyAdded) ordered.Add(input[j]);
+            }
+            return ordered;
         }
 
         private static RectTransform CreateRect(string name, Transform parent)
