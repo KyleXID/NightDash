@@ -446,26 +446,34 @@ namespace NightDash.Runtime
                 kindRect.offsetMin = new Vector2(20f, 0f);
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
-                // Description host — a clipped window over the card's lower
-                // panel. ScrollRect-free; we just shift the Text rect's
-                // pivot/anchored Y inside the host for the ping-pong scroll.
-                // RectMask2D handles the clip without needing a graphic.
+                // Description host — a clipped window pinned to the BOTTOM
+                // of the card with a FIXED pixel height that fits exactly
+                // 3 lines of 28pt (28 × 3 = 84 + 12 padding ≈ 96px). Using
+                // a percentage anchor here (the old 0.02..0.34 setup) made
+                // the host ~148px which silently absorbed 4-5 lines and
+                // suppressed the auto-scroll trigger. Pixel-fixed height
+                // makes "3 lines visible, line 4 scrolls" reliable across
+                // every description regardless of length.
                 RectTransform descHost = CreateRect("DescHost", card);
-                // Top edge pulled down so the description sits a bit lower
-                // inside its card panel — clears the card frame's inner
-                // bevel and reads as a defined block.
-                descHost.anchorMin = new Vector2(0f, 0.02f);
-                descHost.anchorMax = new Vector2(1f, 0.34f);
-                descHost.offsetMin = new Vector2(24f, 0f);
-                descHost.offsetMax = new Vector2(-24f, 0f);
+                descHost.anchorMin = new Vector2(0f, 0f);
+                descHost.anchorMax = new Vector2(1f, 0f);
+                descHost.pivot = new Vector2(0.5f, 0f);
+                descHost.offsetMin = new Vector2(24f, 12f);
+                descHost.offsetMax = new Vector2(-24f, 108f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
 
-                _optionTexts[i] = CreateText(descHost, "-", 32, TextAnchor.UpperCenter,
+                _optionTexts[i] = CreateText(descHost, "-", OptionBodyFontSize, TextAnchor.UpperCenter,
                     new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Overflow;
+                // Pin lineSpacing so the host-height math (28 × 3 = 84) is
+                // independent of the font's intrinsic leading. Disable rich
+                // text so a stray <size> tag in any data file can't bypass
+                // the unified 28pt baseline.
+                optText.lineSpacing = 1f;
+                optText.supportRichText = false;
                 var textRect = optText.rectTransform;
                 // Anchor TOP-stretch so the text rect grows downward off the
                 // top of the host. We'll set its height to preferredHeight
@@ -701,22 +709,14 @@ namespace NightDash.Runtime
             entityManager.SetComponentData(singleton, request);
         }
 
-        // Picks a font size that keeps the description body inside the
-        // card's lower panel even with longer flavor text. Tuned by character
-        // count rather than Unity's BestFit so the shrink steps are
-        // deterministic and predictable across the three cards.
-        private static int FontSizeForBody(string body)
-        {
-            int len = body?.Length ?? 0;
-            // The level line alone fits at 40pt. As detail text piles on,
-            // step the size down so a 3+ line layout still respects the
-            // panel's vertical bounds.
-            if (len > 110) return 22;
-            if (len > 80) return 26;
-            if (len > 55) return 30;
-            if (len > 35) return 34;
-            return 40;
-        }
+        // Description bodies must render at a single uniform size — the
+        // earlier length-based shrink (22..40pt) made adjacent cards look
+        // mismatched and, worse, hid overflow because longer text was
+        // silently downscaled until it fit the host. With a fixed 28pt the
+        // descHost (sized for exactly 3 lines) will overflow on line 4+
+        // and the auto-scroll tick will engage.
+        private const int OptionBodyFontSize = 28;
+        private static int FontSizeForBody(string body) => OptionBodyFontSize;
 
         // Used by the card's TOP slot — just the upgrade category in upper
         // case. Lives separately so long body text never pushes the label
