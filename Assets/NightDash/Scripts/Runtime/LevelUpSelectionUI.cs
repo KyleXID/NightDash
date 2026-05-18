@@ -133,8 +133,13 @@ namespace NightDash.Runtime
                 RectTransform tr = text.rectTransform;
 
                 float overshoot = tr.rect.height - host.rect.height;
-                // Text fits inside the mask — pin to top, no animation.
-                if (overshoot <= 1f)
+                // Allow up to one font-size worth of overshoot before we
+                // start panning. A 4-line block at 32pt computes a few px
+                // past 32×4 because of ascent/descent, but visually the
+                // text still reads as "fits the box" — the player only
+                // needs scrolling once an entire extra line falls below.
+                float tolerance = text.fontSize;
+                if (overshoot <= tolerance)
                 {
                     tr.anchoredPosition = Vector2.zero;
                     continue;
@@ -448,16 +453,18 @@ namespace NightDash.Runtime
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
                 // Description host — pinned to the card's lower band with
-                // a FIXED pixel height of 130px (fits 4 lines of 32pt with
-                // tighter padding). Raised 60px up from the card bottom so
-                // the block sits well under the icon zone without crowding
-                // the bottom frame. Line 5 overflows and engages auto-scroll.
+                // a FIXED pixel height of 120px. Raised 60px up from the
+                // card bottom so the block sits well under the icon zone.
+                // A 4-line block at 32pt computes to ~128px preferred (the
+                // last line's ascent/descent adds a few px past 32×4) so
+                // we lean on TickAutoScroll's overshoot tolerance to leave
+                // those last few px alone instead of nudging the rect.
                 RectTransform descHost = CreateRect("DescHost", card);
                 descHost.anchorMin = new Vector2(0f, 0f);
                 descHost.anchorMax = new Vector2(1f, 0f);
                 descHost.pivot = new Vector2(0.5f, 0f);
                 descHost.offsetMin = new Vector2(40f, 60f);
-                descHost.offsetMax = new Vector2(-40f, 190f);
+                descHost.offsetMax = new Vector2(-40f, 180f);
                 descHost.gameObject.AddComponent<RectMask2D>();
                 _optionContentRects[i] = descHost;
 
