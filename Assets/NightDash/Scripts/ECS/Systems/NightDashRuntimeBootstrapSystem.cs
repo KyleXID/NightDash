@@ -63,7 +63,8 @@ namespace NightDash.ECS.Systems
                 typeof(UpgradeSelectionRequest),
                 typeof(RunNavigationRequest),
                 typeof(RunSelection),
-                typeof(EnemySpawnConfig));
+                typeof(EnemySpawnConfig),
+                typeof(StatusEffectConfig));
 
             state.EntityManager.SetComponentData(entity, new GameLoopState
             {
@@ -92,6 +93,25 @@ namespace NightDash.ECS.Systems
                 ChestPending = 0,
                 ChestOpened = 0
             });
+            // Status-effect tuning — DoT damage / tick interval / duration
+            // per effect plus the Boss immunity bitmask (freeze + stun).
+            state.EntityManager.SetComponentData(entity, new StatusEffectConfig
+            {
+                BurnDamagePerTick   = 4f,
+                BurnTickInterval    = 1.0f,
+                BurnDuration        = 4.0f,
+                PoisonDamagePerTick = 3f,
+                PoisonTickInterval  = 2.0f,
+                PoisonDuration      = 8.0f,
+                FreezeDuration      = 2.5f,
+                StunDuration        = 1.2f,
+                BurnApplyChance     = 0.08f,
+                PoisonApplyChance   = 0.08f,
+                FreezeApplyChance   = 0.05f,
+                StunApplyChance     = 0.05f,
+                BossImmunityMask    = (byte)(StatusEffectBits.Freeze | StatusEffectBits.Stun),
+            });
+
             state.EntityManager.SetComponentData(entity, new DifficultyState
             {
                 RiskScore = 0,

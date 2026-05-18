@@ -80,7 +80,20 @@ namespace NightDash.ECS.Systems
                 FixedString64Bytes archetypeId = archetype.ValueRO.Id;
                 bool isCaster = archetypeId == "ash_caster";
                 bool isBoss = SystemAPI.HasComponent<BossTag>(entity);
-                if (hasPlayer && lengthSq <= contactRangeSq)
+
+                // Status effects: stun blocks everything (movement + ranged
+                // attack + contact contribution); freeze blocks movement
+                // alone — the caster ranged volley still resolves so frozen
+                // enemies aren't completely inert when shooting from range.
+                bool isStunned = false;
+                bool isFrozen = false;
+                if (SystemAPI.HasComponent<StatusEffectState>(entity))
+                {
+                    StatusEffectState sfx = SystemAPI.GetComponent<StatusEffectState>(entity);
+                    isStunned = (sfx.ActiveMask & StatusEffectBits.Stun) != 0;
+                    isFrozen  = (sfx.ActiveMask & StatusEffectBits.Freeze) != 0;
+                }
+                if (hasPlayer && lengthSq <= contactRangeSq && !isStunned)
                 {
                     contactDamage += math.max(0f, stats.ValueRO.Damage) * dt;
                 }
@@ -88,6 +101,7 @@ namespace NightDash.ECS.Systems
                 if (hasPlayer &&
                     bossAttackFrame &&
                     isBoss &&
+                    !isStunned &&
                     lengthSq <= bossAttackRangeSq)
                 {
                     contactDamage += math.max(4f, stats.ValueRO.Damage * 2.2f);
@@ -95,6 +109,7 @@ namespace NightDash.ECS.Systems
 
                 if (hasPlayer &&
                     isCaster &&
+                    !isStunned &&
                     lengthSq > contactRangeSq)
                 {
                     float cycleOffset = math.frac((loop.ValueRO.ElapsedTime + entity.Index * 0.173f) / CasterAttackCycle);
@@ -105,6 +120,14 @@ namespace NightDash.ECS.Systems
                 }
 
                 if (lengthSq <= 0.0001f)
+                {
+                    continue;
+                }
+
+                // Frozen / stunned enemies stand still. Caster behavior is
+                // already gated above; this skip covers the brute/runner
+                // chase path too.
+                if (isFrozen || isStunned)
                 {
                     continue;
                 }
@@ -245,6 +268,14 @@ namespace NightDash.ECS.Systems
                     enemyStats.ValueRW = updatedEnemy;
                     consumed = true;
 
+                    // Queue status effect rolls — applying mid-foreach is a
+                    // structural change that would invalidate iteration. The
+                    // queue is drained after the hit loop finishes.
+                    if (SystemAPI.HasSingleton<StatusEffectConfig>())
+                    {
+                        QueueStatusOnHit(enemyEntity, SystemAPI.HasComponent<BossTag>(enemyEntity));
+                    }
+
                     float3 enemyPos = enemyTransform.ValueRO.Position;
                     NightDashCombatEvents.FireEnemyDamaged(enemyPos, damageDealt);
 
@@ -266,6 +297,10 @@ namespace NightDash.ECS.Systems
                     ecb.DestroyEntity(projectileEntity);
                 }
             }
+
+            // Drain the status-effect queue now that the hit foreach has
+            // released its iterator — structural changes are safe here.
+            FlushStatusQueue(ref state);
 
             if (hasPlayer && playerEntity != Entity.Null && contactDamage > 0f)
             {
@@ -401,6 +436,51 @@ namespace NightDash.ECS.Systems
             {
                 stats.CurrentHealth = math.max(0f, stats.CurrentHealth - damage);
             }
+        }
+
+        // Status-effect roll queue. Filled during the hit-foreach (no
+        // structural changes allowed mid-iteration), drained immediately
+        // after via FlushStatusQueue → main-thread EntityManager writes so
+        // the component is visible on the SAME frame.
+        private Unity.Mathematics.Random _statusRng;
+        private readonly System.Collections.Generic.List<(Entity target, byte mask, bool isBoss)>
+            _statusQueueScratch = new();
+
+        private void QueueStatusOnHit(Entity target, bool isBoss)
+        {
+            if (_statusRng.state == 0)
+            {
+                _statusRng = Unity.Mathematics.Random.CreateFromIndex(0xA17F_3911u);
+            }
+            StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
+            byte mask = 0;
+            if (_statusRng.NextFloat() < cfg.BurnApplyChance)   mask |= StatusEffectBits.Burn;
+            if (_statusRng.NextFloat() < cfg.PoisonApplyChance) mask |= StatusEffectBits.Poison;
+            if (_statusRng.NextFloat() < cfg.FreezeApplyChance) mask |= StatusEffectBits.Freeze;
+            if (_statusRng.NextFloat() < cfg.StunApplyChance)   mask |= StatusEffectBits.Stun;
+            if (mask == 0) return;
+            _statusQueueScratch.Add((target, mask, isBoss));
+        }
+
+        private void FlushStatusQueue(ref SystemState state)
+        {
+            if (_statusQueueScratch.Count == 0) return;
+            StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
+            EntityManager em = state.EntityManager;
+            for (int i = 0; i < _statusQueueScratch.Count; i++)
+            {
+                var (target, mask, isBoss) = _statusQueueScratch[i];
+                if (!em.Exists(target)) continue;
+                if ((mask & StatusEffectBits.Burn)   != 0)
+                    StatusEffectSystem.ApplyEffect(em, target, StatusEffectKind.Burn, cfg, isBoss);
+                if ((mask & StatusEffectBits.Poison) != 0)
+                    StatusEffectSystem.ApplyEffect(em, target, StatusEffectKind.Poison, cfg, isBoss);
+                if ((mask & StatusEffectBits.Freeze) != 0)
+                    StatusEffectSystem.ApplyEffect(em, target, StatusEffectKind.Freeze, cfg, isBoss);
+                if ((mask & StatusEffectBits.Stun)   != 0)
+                    StatusEffectSystem.ApplyEffect(em, target, StatusEffectKind.Stun, cfg, isBoss);
+            }
+            _statusQueueScratch.Clear();
         }
     }
 }
