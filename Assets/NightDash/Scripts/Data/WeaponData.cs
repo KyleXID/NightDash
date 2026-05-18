@@ -11,6 +11,10 @@ namespace NightDash.Data
         [FormerlySerializedAs("weaponId")] public string id;
         [FormerlySerializedAs("name")] public string displayName;
         public WeaponType weaponType = WeaponType.Projectile;
+        // Optional inventory / HUD icon. When null the UI either falls back
+        // to a generic placeholder or simply hides the slot — same pattern
+        // as PassiveData.icon.
+        public Sprite icon;
 
         [Header("Core")]
         [Min(1)] public int maxLevel = 8;

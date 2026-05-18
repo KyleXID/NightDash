@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 097df27ac669c4b93b726e993a85459f, type: 3}
+  m_Name: passive_mana_overload
+  m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
+  id: passive_mana_overload
+  displayName: "마나 과부하"
+  description: "재사용 대기시간을 크게 단축하지만 최대 체력이 줄어든다."
+  icon: {fileID: 0}
+  category: 2
+  maxLevel: 5
+  effects:
+  - stat: cooldown
+    op: 1
+    value: -0.2
+  - stat: health
+    op: 1
+    value: -0.12
+  condition:
+    type: 0
+    arg:
+  legacyHealthMultiplier: 1
+  legacyDamageMultiplier: 1
+  legacyCooldownMultiplier: 1

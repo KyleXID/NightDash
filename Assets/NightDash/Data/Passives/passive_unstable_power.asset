@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 097df27ac669c4b93b726e993a85459f, type: 3}
+  m_Name: passive_unstable_power
+  m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
+  id: passive_unstable_power
+  displayName: "불안정한 힘"
+  description: "공격력이 크게 증가하지만 투사체 비행 속도가 흔들린다."
+  icon: {fileID: 0}
+  category: 1
+  maxLevel: 5
+  effects:
+  - stat: damage
+    op: 1
+    value: 0.28
+  - stat: projectile_speed
+    op: 1
+    value: -0.08
+  condition:
+    type: 0
+    arg:
+  legacyHealthMultiplier: 1
+  legacyDamageMultiplier: 1
+  legacyCooldownMultiplier: 1

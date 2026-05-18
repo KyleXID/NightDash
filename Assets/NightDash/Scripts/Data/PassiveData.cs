@@ -11,6 +11,10 @@ namespace NightDash.Data
         [FormerlySerializedAs("passiveId")] public string id;
         [FormerlySerializedAs("name")] public string displayName;
         [TextArea] public string description;
+        // Optional explicit icon override. When null the runtime falls back
+        // to a Resources lookup keyed on the passive id (see
+        // NightDashUIIcons.GetPassive).
+        public Sprite icon;
 
         [Header("Config")]
         public PassiveCategory category = PassiveCategory.Stat;

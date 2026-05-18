@@ -38,13 +38,23 @@ namespace NightDash.ECS.Systems
 
             if (!NightDashPlayerInputRuntime.ConsumePotionRequest()) return;
 
+            // Difficulty modifier: scale potion heal amount (no_heal sets this to 0).
+            float healMultiplier = 1f;
+            if (SystemAPI.HasSingleton<DifficultyState>())
+            {
+                healMultiplier = SystemAPI.GetSingleton<DifficultyState>().HealRateMultiplier;
+            }
+            float scaledHeal = PotionHealAmount * healMultiplier;
+
             foreach (var stats in SystemAPI.Query<RefRW<CombatStats>>().WithAll<PlayerTag>())
             {
                 CombatStats s = stats.ValueRO;
                 if (s.PotionCount <= 0) continue;
                 if (s.CurrentHealth >= s.MaxHealth) continue; // No room — refuse spend.
 
-                s.CurrentHealth = math.min(s.MaxHealth, s.CurrentHealth + PotionHealAmount);
+                // Still consume the potion when healMultiplier==0 (no_heal) so the
+                // modifier is visibly punitive rather than silently no-op-ing.
+                s.CurrentHealth = math.min(s.MaxHealth, s.CurrentHealth + scaledHeal);
                 s.PotionCount = math.max(0, s.PotionCount - 1);
                 stats.ValueRW = s;
             }

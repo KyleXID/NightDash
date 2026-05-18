@@ -89,6 +89,8 @@ namespace NightDash.Runtime.UI
         private RawImage _backgroundImage;
         private Material _warmthMaterial;
         private Text _stageLabel;
+        private NightDashLobbyModifierPanel _modifierPanel;
+        private readonly List<(string id, int level)> _modifierStageScratch = new();
 
         private Image _campfireImage;
         private Sprite[] _campfireFrames;
@@ -157,9 +159,11 @@ namespace NightDash.Runtime.UI
         private void Awake()
         {
             _legacyLobbyUi = FindFirstObjectByType<RunSelectionLobbyUI>(FindObjectsInactive.Include);
+            // Stage ids must exist before BuildModifierPanel() runs — otherwise
+            // the panel sees a null stageId on first entry and locks itself.
+            CollectStageIds();
             BuildCanvas();
             BuildCards();
-            CollectStageIds();
             _initialized = true;
         }
 
@@ -173,6 +177,14 @@ namespace NightDash.Runtime.UI
             // Keep gameplay frozen and views hidden — selection screen, not play.
             Time.timeScale = 0f;
             HideGameplayViews();
+
+            // Belt-and-suspenders sweep: if any earlier flow left the ECS
+            // world in RunStatus.Playing with stale enemy entities (or if
+            // Bootstrap auto-set Playing before the player ever pressed
+            // Start), the lobby would have monsters piling up at origin in
+            // the background while the player browsed. Teardown is
+            // idempotent — safe to call when nothing is alive.
+            RunTeardownBridge.DestroyCurrentRun(clearNavigation: true);
 
             // Hard-disable the legacy OnGUI lobby so it cannot draw on top of us.
             if (_legacyLobbyUi != null)
@@ -191,6 +203,20 @@ namespace NightDash.Runtime.UI
             ApplySelectionVisuals();
             UpdateStageLabel();
             _animTime = 0f;
+
+            // Awake-time panel build saw _stageIndex == 0 (catalog order),
+            // which can lock the panel if the first registered stage isn't
+            // stage_01. Re-Configure with the real saved stage so the very
+            // first lobby entry isn't stuck behind the clear-lock notice.
+            if (_modifierPanel != null && _stageIds.Count > 0
+                && _stageIndex >= 0 && _stageIndex < _stageIds.Count)
+            {
+                RunSelectionSession.GetCurrentModifierStages(_modifierStageScratch);
+                _modifierPanel.Configure(_stageIds[_stageIndex], _modifierStageScratch);
+            }
+            // Seed the session with the lobby's initial selection so the
+            // hold-Tab overlay sees the right class on the first frame.
+            PushSelectionToSession();
         }
 
         private void OnDisable()
@@ -228,6 +254,29 @@ namespace NightDash.Runtime.UI
             BuildCampfire();
             BuildStageLabel();
             BuildHelpText();
+            BuildModifierPanel();
+        }
+
+        private void BuildModifierPanel()
+        {
+            var rect = CreateRect("ModifierPanel", transform);
+            rect.anchorMin = new Vector2(1f, 0.5f);
+            rect.anchorMax = new Vector2(1f, 0.5f);
+            rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-40f, 0f);
+            // Tight fit: header band (84px) + 5 chips at 118px + 4 spacings
+            // at 10px + 12px bottom padding = 726px. No excess vertical space.
+            rect.sizeDelta = new Vector2(380f, 726f);
+
+            _modifierPanel = rect.gameObject.AddComponent<NightDashLobbyModifierPanel>();
+
+            // Hydrate selected modifier stages from PlayerPrefs so the panel
+            // restores the player's previous (id, level) state on lobby re-entry.
+            RunSelectionSession.GetCurrentModifierStages(_modifierStageScratch);
+            string currentStage = _stageIds.Count > 0 && _stageIndex >= 0 && _stageIndex < _stageIds.Count
+                ? _stageIds[_stageIndex]
+                : null;
+            _modifierPanel.Configure(currentStage, _modifierStageScratch);
         }
 
         private void BuildStageLabel()
@@ -245,6 +294,7 @@ namespace NightDash.Runtime.UI
             t.color = Color.white;
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;
+            AddTextOutline(t, 2.5f);
             _stageLabel = t;
         }
 
@@ -488,6 +538,7 @@ namespace NightDash.Runtime.UI
                 label.color = Color.white;
                 label.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
                 label.raycastTarget = false;
+                AddTextOutline(label, 2f);
 
                 _cards.Add(new CharacterCard
                 {
@@ -562,12 +613,24 @@ namespace NightDash.Runtime.UI
             rect.sizeDelta = new Vector2(1400f, 80f);
 
             var t = rect.gameObject.AddComponent<Text>();
-            t.text = "← →  CHARACTER     ↑ ↓  STAGE     ENTER  START     ESC  BACK";
+            t.text = "← →  CHARACTER     ↑ ↓  STAGE     [TAB]  INFO     ENTER  START     ESC  BACK";
             t.alignment = TextAnchor.MiddleCenter;
             t.fontSize = 40;
             t.color = new Color(1f, 1f, 1f, 0.78f);
             t.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
             t.raycastTarget = false;
+            AddTextOutline(t, 1.5f);
+        }
+
+        // Lobby-wide text outline helper. All lobby glyphs sit on top of the
+        // warm pulsing background, so a consistent dark outline keeps them
+        // readable regardless of the warmth shader phase.
+        private static void AddTextOutline(Text text, float distance)
+        {
+            if (text == null) return;
+            var outline = text.gameObject.AddComponent<UnityEngine.UI.Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+            outline.effectDistance = new Vector2(distance, -distance);
         }
 
         // ====================================================================
@@ -725,6 +788,7 @@ namespace NightDash.Runtime.UI
             _classIndex = classIdx;
             _animTime = 0f; // restart idle from frame 0
             ApplySelectionVisuals();
+            PushSelectionToSession();
         }
 
         private void MoveStage(int delta)
@@ -733,7 +797,33 @@ namespace NightDash.Runtime.UI
             int prev = _stageIndex;
             // Hard clamp at the ends, matching character navigation.
             _stageIndex = Mathf.Clamp(_stageIndex + delta, 0, _stageIds.Count - 1);
-            if (_stageIndex != prev) UpdateStageLabel();
+            if (_stageIndex != prev)
+            {
+                UpdateStageLabel();
+                // Stage changed: rebuild modifier panel so clear-locked stages
+                // gray out the toggles and previously-saved selections still
+                // pre-fill where applicable.
+                if (_modifierPanel != null)
+                {
+                    RunSelectionSession.GetCurrentModifierStages(_modifierStageScratch);
+                    _modifierPanel.Configure(_stageIds[_stageIndex], _modifierStageScratch);
+                }
+                PushSelectionToSession();
+            }
+        }
+
+        // Mirror the lobby's current stage+class selection into
+        // RunSelectionSession without disturbing the modifier stack — so the
+        // hold-Tab class info overlay (and any other transient reader) can
+        // see the live selection while the player is still browsing.
+        private void PushSelectionToSession()
+        {
+            if (_cards.Count == 0 || _stageIds.Count == 0) return;
+            int classIdx = Mathf.Clamp(_classIndex, 0, _cards.Count - 1);
+            int stageIdx = Mathf.Clamp(_stageIndex, 0, _stageIds.Count - 1);
+            string classId = _cards[classIdx].ClassId;
+            string stageId = _stageIds[stageIdx];
+            RunSelectionSession.SetCurrentStageAndClass(stageId, classId);
         }
 
         private void ApplySelectionVisuals()
@@ -805,9 +895,13 @@ namespace NightDash.Runtime.UI
             string classId = _cards[Mathf.Clamp(_classIndex, 0, _cards.Count - 1)].ClassId;
             string stageId = _stageIds[Mathf.Clamp(_stageIndex, 0, _stageIds.Count - 1)];
 
-            RunSelectionSession.SetCurrent(stageId, classId);
+            // Capture modifier picks with stack levels (empty if stage is locked / nothing chosen).
+            _modifierStageScratch.Clear();
+            if (_modifierPanel != null) _modifierPanel.GetSelectedModifierStages(_modifierStageScratch);
+
+            RunSelectionSession.SetCurrent(stageId, classId, _modifierStageScratch);
             bool applied = RunSelectionLobbyWorldBridge.TryApplySelectionToCurrentWorld(stageId, classId);
-            NightDashLog.Info($"[NightDash] Lobby Start: stage='{stageId}', class='{classId}', applied={applied}.");
+            NightDashLog.Info($"[NightDash] Lobby Start: stage='{stageId}', class='{classId}', modifiers={_modifierStageScratch.Count}, applied={applied}.");
 
             // Resume sim, restore gameplay views, hand off input context.
             Time.timeScale = 1f;

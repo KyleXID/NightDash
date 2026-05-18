@@ -36,15 +36,15 @@ namespace NightDash.Runtime.UI
         private const string ButtonReturnTitleLabel = "Return to Title";
         private const string ButtonQuitLabel = "Quit";
 
-        // Settings is intentionally disabled in M3 — placeholder until the
-        // settings panel ships in a later sprint. Navigation skips it.
+        // All five buttons are now interactable — Settings opens the volume
+        // modal (NightDashSettingsModal) instead of being grayed out.
         private const int ButtonCount = 5;
         private const int IdxResume = 0;
         private const int IdxSettings = 1;
         private const int IdxReturnLobby = 2;
         private const int IdxReturnTitle = 3;
         private const int IdxQuit = 4;
-        private static readonly bool[] ButtonEnabled = { true, false, true, true, true };
+        private static readonly bool[] ButtonEnabled = { true, true, true, true, true };
 
         private Canvas _canvas;
         private GameObject _backdrop;
@@ -132,6 +132,11 @@ namespace NightDash.Runtime.UI
         {
             if (NightDashInputContextStack.Top != NightDashInputContext.Pause) return;
 
+            // When the Settings modal is open it handles ESC itself. Bail
+            // out here so the same keypress doesn't double-close the modal
+            // *and* resume the game in the same frame.
+            if (NightDash.Runtime.UI.NightDashSettingsModal.IsOpen) return;
+
             ReadKeyboard(out bool up, out bool down, out bool confirm, out bool cancel);
 
             if (_confirmActive)
@@ -165,7 +170,7 @@ namespace NightDash.Runtime.UI
             switch (_selectedIndex)
             {
                 case IdxResume: Resume(); break;
-                case IdxSettings: /* Settings disabled */ break;
+                case IdxSettings: NightDash.Runtime.UI.NightDashSettingsModal.Show(); break;
                 case IdxReturnLobby:
                     ShowConfirm("Return to Lobby?\nCurrent run will be discarded.", ReturnToLobby);
                     break;
@@ -506,22 +511,73 @@ namespace NightDash.Runtime.UI
             msgText.horizontalOverflow = HorizontalWrapMode.Wrap;
             msgText.verticalOverflow = VerticalWrapMode.Overflow;
 
+            // Hint row layout (left → right):
+            //   [confirm 40x40]  YES (ENTER)            NO (ESC)  [cancel 40x40]
+            // Each glyph cluster takes its own anchored slot inside the 1000px
+            // hint rect; the gap between Yes and No is wide enough that the
+            // text from one side cannot crawl over the icon from the other.
             var hintGo = new GameObject("Hint");
             var hintRect = hintGo.AddComponent<RectTransform>();
             hintRect.SetParent(rootRect, false);
             hintRect.anchorMin = new Vector2(0.5f, 0.5f);
             hintRect.anchorMax = new Vector2(0.5f, 0.5f);
             hintRect.pivot = new Vector2(0.5f, 0.5f);
-            hintRect.sizeDelta = new Vector2(900f, 60f);
+            hintRect.sizeDelta = new Vector2(800f, 60f);
             hintRect.anchoredPosition = new Vector2(0f, -120f);
 
-            var hintText = hintGo.AddComponent<Text>();
-            hintText.text = "Enter: Yes        Esc: No";
-            hintText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
-            hintText.fontSize = 40;
-            hintText.alignment = TextAnchor.MiddleCenter;
-            hintText.color = new Color(0.78f, 0.74f, 0.68f, 1f);
-            hintText.raycastTarget = false;
+            // Yes group sits centered in the left half of the hint rect.
+            //   icon center at x = -270, label rect spans -260..-30 → group
+            //   center ≈ -150 .. which lands the (icon + label) cluster at
+            //   the optical middle of the left half (-200). Mirror values
+            //   below build the No side symmetrically.
+            NightDash.Runtime.UI.NightDashUIIcons.Attach(
+                hintRect,
+                NightDash.Runtime.UI.NightDashUIIcons.Confirm,
+                new Vector2(40f, 40f),
+                new Vector2(-270f, -3f));
+
+            var yesGo = new GameObject("YesLabel");
+            var yesRect = yesGo.AddComponent<RectTransform>();
+            yesRect.SetParent(hintRect, false);
+            yesRect.anchorMin = new Vector2(0f, 0f);
+            yesRect.anchorMax = new Vector2(0.5f, 1f);
+            // offsetMin pushes the label's left edge further in so it never
+            // crowds the confirm glyph at -270 (icon right ≈ -250).
+            yesRect.offsetMin = new Vector2(170f, 0f);
+            // Drop the top edge another 2px — the Silver pixel font's glyph
+            // cluster needs a little extra downward bias to line up with the
+            // icon's optical center.
+            yesRect.offsetMax = new Vector2(-30f, -6f);
+            var yesText = yesGo.AddComponent<Text>();
+            yesText.text = "YES (ENTER)";
+            yesText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
+            yesText.fontSize = 36;
+            yesText.alignment = TextAnchor.MiddleLeft;
+            yesText.color = new Color(0.85f, 0.92f, 0.76f, 1f);
+            yesText.raycastTarget = false;
+
+            // No group: mirror of Yes (cancel icon left, label right) so the
+            // whole cluster lands at the optical middle of the right half.
+            NightDash.Runtime.UI.NightDashUIIcons.Attach(
+                hintRect,
+                NightDash.Runtime.UI.NightDashUIIcons.Cancel,
+                new Vector2(40f, 40f),
+                new Vector2(110f, -3f));
+
+            var noGo = new GameObject("NoLabel");
+            var noRect = noGo.AddComponent<RectTransform>();
+            noRect.SetParent(hintRect, false);
+            noRect.anchorMin = new Vector2(0.5f, 0f);
+            noRect.anchorMax = new Vector2(1f, 1f);
+            noRect.offsetMin = new Vector2(170f, 0f);
+            noRect.offsetMax = new Vector2(-30f, -6f);
+            var noText = noGo.AddComponent<Text>();
+            noText.text = "NO (ESC)";
+            noText.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
+            noText.fontSize = 36;
+            noText.alignment = TextAnchor.MiddleLeft;
+            noText.color = new Color(0.92f, 0.78f, 0.74f, 1f);
+            noText.raycastTarget = false;
 
             _confirmOverlay = root;
             _confirmMessageLabel = msgText;

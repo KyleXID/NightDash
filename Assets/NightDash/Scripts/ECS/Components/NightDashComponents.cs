@@ -67,6 +67,17 @@ namespace NightDash.ECS.Components
     {
         public int RiskScore;
         public float RewardMultiplier;
+
+        // Aggregated effect multipliers (1.0 = no effect). Cached by DifficultySystem
+        // from the DifficultyModifierElement buffer each frame so consumers don't
+        // re-sum the buffer.
+        public float EnemyHpMultiplier;
+        public float EnemySpeedMultiplier;
+        public float SpawnRateMultiplier;
+        public float HealRateMultiplier;
+        public float CooldownMultiplier;
+        public float HazardMultiplier;
+        public byte OnKillExplosionEnabled;
     }
 
     public struct EvolutionState : IComponentData

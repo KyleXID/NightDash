@@ -24,6 +24,20 @@ namespace NightDash.Runtime
         private readonly Button[] _optionButtons = new Button[3];
         private readonly RectTransform[] _optionCards = new RectTransform[3];
         private readonly Image[] _optionCardImages = new Image[3];
+        // Per-card item / passive icon, sandwiched between the kind banner
+        // (top ~72-96%) and the description body (~4-40%). Populated each
+        // refresh from UpgradeOptionElement.Id via DataRegistry, with a
+        // category-specific placeholder when no sprite is shipped.
+        private readonly Image[] _optionIconImages = new Image[3];
+        // ScrollRect + content RectTransform per card, used for auto-scroll
+        // when the description overflows the visible band.
+        private readonly ScrollRect[] _optionScrollRects = new ScrollRect[3];
+        private readonly RectTransform[] _optionContentRects = new RectTransform[3];
+        // Tracks how long the currently-selected card has been focused. Used
+        // by the ping-pong scroll animation so each focus change restarts
+        // the loop at the top.
+        private float _focusedScrollTime;
+        private int _lastScrollFocusIndex = -1;
 
         // Keyboard navigation state — visible while the level-up panel is
         // active. Mouse clicks still work via the Button.onClick handlers.
@@ -86,6 +100,64 @@ namespace NightDash.Runtime
             if (_levelRoot != null && _levelRoot.activeSelf)
             {
                 HandleKeyboardNav();
+                TickAutoScroll();
+            }
+        }
+
+        // Ping-pong scroll for the focused card. Non-focused cards snap back
+        // to the top so their description always starts from line 1 when the
+        // player tabs over to them.
+        private void TickAutoScroll()
+        {
+            // Hold at the top for a beat, then crawl to the bottom, hold, and
+            // crawl back. Tuned so a 4-line description has time to read.
+            const float HoldTopSec    = 1.2f;
+            const float ScrollDownSec = 3.0f;
+            const float HoldBotSec    = 1.0f;
+            const float ScrollUpSec   = 2.0f;
+            float period = HoldTopSec + ScrollDownSec + HoldBotSec + ScrollUpSec;
+
+            if (_selectedIndex != _lastScrollFocusIndex)
+            {
+                _focusedScrollTime = 0f;
+                _lastScrollFocusIndex = _selectedIndex;
+            }
+            _focusedScrollTime += Time.unscaledDeltaTime;
+
+            for (int i = 0; i < _optionContentRects.Length; i++)
+            {
+                RectTransform host = _optionContentRects[i];
+                Text text = _optionTexts[i];
+                if (host == null || text == null || !host.gameObject.activeInHierarchy) continue;
+                RectTransform tr = text.rectTransform;
+
+                float overshoot = tr.rect.height - host.rect.height;
+                // Text fits inside the mask — pin to top, no animation.
+                if (overshoot <= 1f)
+                {
+                    tr.anchoredPosition = Vector2.zero;
+                    continue;
+                }
+                if (i != _selectedIndex)
+                {
+                    tr.anchoredPosition = Vector2.zero;
+                    continue;
+                }
+
+                float t = _focusedScrollTime % period;
+                float normalized;
+                if (t < HoldTopSec)
+                    normalized = 0f;
+                else if (t < HoldTopSec + ScrollDownSec)
+                    normalized = (t - HoldTopSec) / ScrollDownSec;
+                else if (t < HoldTopSec + ScrollDownSec + HoldBotSec)
+                    normalized = 1f;
+                else
+                    normalized = 1f - (t - HoldTopSec - ScrollDownSec - HoldBotSec) / ScrollUpSec;
+                normalized = Mathf.Clamp01(normalized);
+                // Slide the Text rect down (positive y, since pivot is top
+                // and we want the bottom of the text visible).
+                tr.anchoredPosition = new Vector2(0f, overshoot * normalized);
             }
         }
 
@@ -298,10 +370,15 @@ namespace NightDash.Runtime
 
             RectTransform cards = CreateRect("Cards", panel);
             HorizontalLayoutGroup cardsLayout = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
-            cardsLayout.spacing = 4f;
+            cardsLayout.spacing = 36f;
             cardsLayout.childAlignment = TextAnchor.MiddleCenter;
             cardsLayout.childControlHeight = false;
             cardsLayout.childControlWidth = false;
+            // HorizontalLayoutGroup defaults childForceExpand* to true, which
+            // pads gaps between siblings with leftover row width and visually
+            // ignores the spacing field. Disable so spacing maps 1:1 to pixels.
+            cardsLayout.childForceExpandWidth = false;
+            cardsLayout.childForceExpandHeight = false;
             // 520 = card (464) + ~28px margin above/below so the selected
             // card's 1.08× scale doesn't bleed into header/footer.
             SetPreferredHeight(cards, 520f);
@@ -335,6 +412,27 @@ namespace NightDash.Runtime
                 _optionCards[i] = card;
                 _optionCardImages[i] = cardImage;
 
+                // Item / passive icon — pinned to the top section of the
+                // card. It's the focal visual, allowed to overlap the
+                // WEAPON/PASSIVE kind banner above it (text stays readable
+                // thanks to its outline).
+                // Card visual zones (bottom-up percent of card rect):
+                //   0.02-0.34  → description body
+                //   0.50-0.74  → icon zone (big art space ABOVE description)
+                //   0.72-0.96  → WEAPON/PASSIVE banner label
+                // The icon sits inside the art zone — nudged slightly toward
+                // the banner so it doesn't crowd the description below.
+                RectTransform iconRect = CreateRect("OptionIcon", card);
+                iconRect.anchorMin = new Vector2(0.5f, 0.56f);
+                iconRect.anchorMax = new Vector2(0.5f, 0.78f);
+                iconRect.pivot = new Vector2(0.5f, 0.5f);
+                iconRect.anchoredPosition = Vector2.zero;
+                iconRect.sizeDelta = new Vector2(90f, 90f);
+                Image iconImg = iconRect.gameObject.AddComponent<Image>();
+                iconImg.preserveAspect = true;
+                iconImg.raycastTarget = false;
+                _optionIconImages[i] = iconImg;
+
                 // Kind label sits in the card's TOP banner (~72~96%) so it
                 // never collides with the description below. Outline keeps
                 // it readable on the legendary card's gold center glow.
@@ -348,22 +446,40 @@ namespace NightDash.Runtime
                 kindRect.offsetMin = new Vector2(20f, 0f);
                 kindRect.offsetMax = new Vector2(-20f, 0f);
 
-                // Description text sits inside the card's lower description
-                // panel (~4~46%). Kind label moved out, so this region now
-                // only holds the level line + optional flavor detail.
-                // Font size is set per-frame in RefreshState based on the
-                // body's character count instead of BestFit, so long passives
-                // shrink predictably and short ones stay readable.
-                _optionTexts[i] = CreateText(card, "-", 36, TextAnchor.MiddleCenter, new Color(0.95f, 0.92f, 0.98f, 1f));
+                // Description host — a clipped window over the card's lower
+                // panel. ScrollRect-free; we just shift the Text rect's
+                // pivot/anchored Y inside the host for the ping-pong scroll.
+                // RectMask2D handles the clip without needing a graphic.
+                RectTransform descHost = CreateRect("DescHost", card);
+                // Top edge pulled down so the description sits a bit lower
+                // inside its card panel — clears the card frame's inner
+                // bevel and reads as a defined block.
+                descHost.anchorMin = new Vector2(0f, 0.02f);
+                descHost.anchorMax = new Vector2(1f, 0.34f);
+                descHost.offsetMin = new Vector2(24f, 0f);
+                descHost.offsetMax = new Vector2(-24f, 0f);
+                descHost.gameObject.AddComponent<RectMask2D>();
+                _optionContentRects[i] = descHost;
+
+                _optionTexts[i] = CreateText(descHost, "-", 32, TextAnchor.UpperCenter,
+                    new Color(0.95f, 0.92f, 0.98f, 1f));
                 var optText = _optionTexts[i];
                 optText.horizontalOverflow = HorizontalWrapMode.Wrap;
                 optText.verticalOverflow = VerticalWrapMode.Overflow;
-                // Outline already added by CreateText.
                 var textRect = optText.rectTransform;
-                textRect.anchorMin = new Vector2(0f, 0.02f);
-                textRect.anchorMax = new Vector2(1f, 0.40f);
-                textRect.offsetMin = new Vector2(24f, 0f);
-                textRect.offsetMax = new Vector2(-24f, 0f);
+                // Anchor TOP-stretch so the text rect grows downward off the
+                // top of the host. We'll set its height to preferredHeight
+                // each refresh so wrap is honored, and TickAutoScroll slides
+                // its anchoredPosition.y to scroll vertically.
+                textRect.anchorMin = new Vector2(0f, 1f);
+                textRect.anchorMax = new Vector2(1f, 1f);
+                textRect.pivot = new Vector2(0.5f, 1f);
+                textRect.anchoredPosition = Vector2.zero;
+                textRect.sizeDelta = new Vector2(-8f, 160f);
+
+                // ScrollRect is gone, but the array slot kept for now so we
+                // don't have to reshape the rest of the code.
+                _optionScrollRects[i] = null;
             }
 
             // Footer hosts three explicitly-anchored siblings so each piece
@@ -395,17 +511,14 @@ namespace NightDash.Runtime
 
             // Reroll icon — anchored just right of the button. Button is
             // centered with half-width 151.5; gap 24 puts the icon at +176.
-            RectTransform iconRect = CreateRect("RerollIcon", footer);
-            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
-            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            iconRect.pivot = new Vector2(0f, 0.5f);
-            iconRect.sizeDelta = new Vector2(64f, 64f);
-            iconRect.anchoredPosition = new Vector2(176f, -16f);
-            Image iconImg = iconRect.gameObject.AddComponent<Image>();
-            var iconSprite = Resources.Load<Sprite>("NightDash/UI/Icons/nd_ui_icon_reroll_default");
-            if (iconSprite != null) iconImg.sprite = iconSprite;
-            iconImg.preserveAspect = true;
-            iconImg.raycastTarget = false;
+            // Sprite goes through the shared icon registry so all menus pull
+            // from the same cache.
+            NightDash.Runtime.UI.NightDashUIIcons.Attach(
+                footer,
+                NightDash.Runtime.UI.NightDashUIIcons.Reroll,
+                new Vector2(64f, 64f),
+                new Vector2(176f + 32f, -16f), // +32 to keep visual center; Attach uses center pivot
+                "RerollIcon");
 
             // "Rerolls Left: N" text — sits to the right of the icon (icon
             // width 64 + gap 14 = 78 → text starts at +254 from center).
@@ -504,6 +617,14 @@ namespace NightDash.Runtime
                 {
                     _optionKindTexts[i].text = BuildOptionKindLabel(option);
                 }
+                if (_optionIconImages[i] != null)
+                {
+                    ApplyOptionIcon(_optionIconImages[i], option);
+                }
+                // Adjust the ScrollRect's Content height to the Text's
+                // actual rendered height so short descriptions fit and long
+                // ones become scrollable.
+                ResizeOptionContent(i);
                 newVisible++;
             }
 
@@ -603,6 +724,87 @@ namespace NightDash.Runtime
         private static string BuildOptionKindLabel(UpgradeOptionElement option)
         {
             return option.Kind.ToString().ToUpperInvariant();
+        }
+
+        // Sizes the Text rect inside its DescHost mask so the wrapped text
+        // is fully drawn. The host clips with RectMask2D and TickAutoScroll
+        // slides the Text rect vertically when the text exceeds the host.
+        private void ResizeOptionContent(int index)
+        {
+            RectTransform host = _optionContentRects[index];
+            Text text = _optionTexts[index];
+            if (host == null || text == null) return;
+
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(host);
+
+            float preferred = Mathf.Max(text.preferredHeight, host.rect.height);
+            var tr = text.rectTransform;
+            tr.sizeDelta = new Vector2(-8f, preferred);
+            tr.anchoredPosition = Vector2.zero; // reset to top
+        }
+
+        // Resolves an icon sprite for an upgrade option and applies it to
+        // the per-card image. Falls back to a category-specific placeholder
+        // when the registry doesn't have a hand-authored icon yet.
+        private static void ApplyOptionIcon(Image img, UpgradeOptionElement option)
+        {
+            string id = option.Id.ToString();
+            Sprite sprite = null;
+
+            DataRegistry registry = DataRegistry.Instance;
+            if (registry != null)
+            {
+                switch (option.Kind)
+                {
+                    case UpgradeKind.Weapon:
+                        if (registry.TryGetWeapon(id, out NightDash.Data.WeaponData wd) && wd != null && wd.icon != null)
+                            sprite = wd.icon;
+                        break;
+                    case UpgradeKind.Passive:
+                        if (registry.TryGetPassive(id, out NightDash.Data.PassiveData pd) && pd != null && pd.icon != null)
+                            sprite = pd.icon;
+                        if (sprite == null)
+                            sprite = NightDash.Runtime.UI.NightDashUIIcons.GetPassive(id);
+                        break;
+                }
+            }
+
+            if (sprite == null)
+            {
+                // Placeholder per category — keeps the slot from looking
+                // empty until the real PixelLab art lands.
+                string fallbackKey = option.Kind == UpgradeKind.Weapon
+                    ? NightDash.Runtime.UI.NightDashUIIcons.Reroll       // sword-ish swap icon
+                    : NightDash.Runtime.UI.NightDashUIIcons.UnlockRelic; // generic relic for passive
+                sprite = NightDash.Runtime.UI.NightDashUIIcons.Get(fallbackKey);
+            }
+
+            img.sprite = sprite;
+            img.enabled = sprite != null;
+            if (sprite == null)
+            {
+                // Last-resort visual: solid dark block tinted with category
+                // color so the card still reads as "icon here".
+                img.enabled = true;
+                img.color = option.Kind == UpgradeKind.Weapon
+                    ? new Color(0.42f, 0.20f, 0.20f, 0.9f)
+                    : new Color(0.30f, 0.22f, 0.34f, 0.9f);
+            }
+            else
+            {
+                // Restore neutral tint when we have a sprite — placeholder
+                // dummies (Reroll/UnlockRelic) get a slight desat so the
+                // player can tell them apart from real art.
+                bool isPlaceholder = option.Kind == UpgradeKind.Passive
+                    ? (NightDash.Runtime.UI.NightDashUIIcons.GetPassive(id) == null)
+                    : !(registry != null
+                        && registry.TryGetWeapon(id, out var w)
+                        && w != null && w.icon != null);
+                img.color = isPlaceholder
+                    ? new Color(0.82f, 0.78f, 0.70f, 0.9f)
+                    : Color.white;
+            }
         }
 
         // Used by the card's BOTTOM description slot — title, level line,

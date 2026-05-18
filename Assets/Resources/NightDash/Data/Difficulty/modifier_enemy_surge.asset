@@ -10,20 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b6db888ff982740b0b0c9d381616f87b, type: 3}
-  m_Name: modifier_no_heal
+  m_Name: modifier_enemy_surge
   m_EditorClassIdentifier: NightDash::NightDash.Data.DifficultyModifierData
-  id: mod_no_heal
-  displayName: "\uAD6C\uC6D0\uC758 \uBD80\uC7AC"
-  category: 1
-  riskPoint: 2
+  id: mod_enemy_surge
+  displayName: "\uAD70\uC138\uC758 \uD3ED\uC99D"
+  icon: {fileID: 21300000, guid: 091a5fd5b9734aa6bf2fdf9ea94cd2e8, type: 3}
+  category: 0
+  riskPoint: 3
   enemyModifiers:
     hpPct: 0
     moveSpeedPct: 0
-    spawnRatePct: 0
+    spawnRatePct: 0.5
   playerModifiers:
-    healRatePct: -1.0
+    healRatePct: 0
     cooldownPct: 0
   runtimeEffects:
     hazardMultiplier: 0
     onKillExplosion: 0
-  rewardBonusPct: 0.2
+  rewardBonusPct: 0.3

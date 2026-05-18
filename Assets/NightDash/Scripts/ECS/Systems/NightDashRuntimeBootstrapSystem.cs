@@ -92,7 +92,18 @@ namespace NightDash.ECS.Systems
                 ChestPending = 0,
                 ChestOpened = 0
             });
-            state.EntityManager.SetComponentData(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });
+            state.EntityManager.SetComponentData(entity, new DifficultyState
+            {
+                RiskScore = 0,
+                RewardMultiplier = 1f,
+                EnemyHpMultiplier = 1f,
+                EnemySpeedMultiplier = 1f,
+                SpawnRateMultiplier = 1f,
+                HealRateMultiplier = 1f,
+                CooldownMultiplier = 1f,
+                HazardMultiplier = 1f,
+                OnKillExplosionEnabled = 0
+            });
             state.EntityManager.SetComponentData(entity, new EvolutionState
             {
                 HasNormalEvolution = 0,
@@ -198,8 +209,13 @@ namespace NightDash.ECS.Systems
             {
                 RiskScore = 0,
                 RewardMultiplierBonus = 0f,
-                EnemyHealthMultiplier = 1f,
-                EnemySpeedMultiplier = 1f
+                HpPct = 0f,
+                MoveSpeedPct = 0f,
+                SpawnRatePct = 0f,
+                HealRatePct = 0f,
+                CooldownPct = 0f,
+                HazardMultiplier = 0f,
+                OnKillExplosion = 0
             });
         }
     }

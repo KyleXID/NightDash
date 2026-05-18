@@ -323,6 +323,53 @@ namespace NightDash.ECS.Systems
 
                 ecb.DestroyEntity(enemyEntity);
             }
+
+            // Difficulty modifier: on-kill explosion. If the modifier is active,
+            // any enemy that died this frame splashes nearby survivors for fixed
+            // damage. Splash victims that die from this don't drop rewards
+            // (they re-enter the deadEnemies pipeline next frame instead).
+            if (deadEnemyPositions.Length > 0 &&
+                SystemAPI.HasSingleton<DifficultyState>() &&
+                SystemAPI.GetSingleton<DifficultyState>().OnKillExplosionEnabled != 0)
+            {
+                ApplyOnKillExplosions(ref state, deadEnemies, deadEnemyPositions);
+            }
+        }
+
+        private void ApplyOnKillExplosions(
+            ref SystemState state,
+            NativeList<Entity> deadEnemies,
+            NativeList<float3> deadEnemyPositions)
+        {
+            const float ExplosionRadius = 4f;
+            const float ExplosionDamage = 25f;
+            float radiusSq = ExplosionRadius * ExplosionRadius;
+
+            foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
+                         .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
+                         .WithAll<EnemyTag>()
+                         .WithEntityAccess())
+            {
+                if (CombatHelpers.ContainsEntity(deadEnemies, enemyEntity)) continue;
+                if (enemyStats.ValueRO.CurrentHealth <= 0f) continue;
+
+                float3 pos = enemyTransform.ValueRO.Position;
+                bool inBlast = false;
+                for (int j = 0; j < deadEnemyPositions.Length; j++)
+                {
+                    if (math.lengthsq(pos - deadEnemyPositions[j]) <= radiusSq)
+                    {
+                        inBlast = true;
+                        break;
+                    }
+                }
+                if (!inBlast) continue;
+
+                CombatStats updated = enemyStats.ValueRO;
+                updated.CurrentHealth = math.max(0f, updated.CurrentHealth - ExplosionDamage);
+                enemyStats.ValueRW = updated;
+                NightDashCombatEvents.FireEnemyDamaged(pos, ExplosionDamage);
+            }
         }
 
         // Per-archetype mass for enemy separation. Higher mass = pushes others

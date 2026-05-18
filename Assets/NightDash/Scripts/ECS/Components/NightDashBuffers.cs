@@ -28,8 +28,16 @@ namespace NightDash.ECS.Components
     {
         public int RiskScore;
         public float RewardMultiplierBonus;
-        public float EnemyHealthMultiplier;
-        public float EnemySpeedMultiplier;
+
+        // pct values mirror DifficultyModifierData. Stored additively so DifficultySystem
+        // can sum them into DifficultyState. (multiplier = 1 + sum(pct))
+        public float HpPct;
+        public float MoveSpeedPct;
+        public float SpawnRatePct;
+        public float HealRatePct;
+        public float CooldownPct;
+        public float HazardMultiplier;
+        public byte OnKillExplosion;
     }
 
     [InternalBufferCapacity(8)]

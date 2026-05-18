@@ -56,6 +56,16 @@ namespace NightDash.Editor
         [MenuItem("NightDash/Art/Apply Stage01 Environment")]
         public static void ApplyStage01Environment()
         {
+            // EditorSceneManager.OpenScene is forbidden during play mode — stop
+            // the run first so we don't crash mid-frame with InvalidOperation.
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning(
+                    "[NightDash] Stage01 environment setup blocked: cannot rebuild the scene during play mode. " +
+                    "Stop play first, then run NightDash/Art/Apply Stage01 Environment again.");
+                return;
+            }
+
             SliceAll();
             BuildScene();
             AssetDatabase.SaveAssets();

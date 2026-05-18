@@ -40,6 +40,15 @@ namespace NightDash.Runtime
         [SerializeField] private Texture2D buttonPressedTexture;
         [SerializeField] private Texture2D buttonDisabledTexture;
 
+        [Header("Difficulty Modifiers")]
+        [Tooltip("HUD 우상단에 표시할 활성 난이도 modifier SO 목록. 비어 있으면 strip 미표시. " +
+                 "ECS data flow 연결 전 단계라 우선 Inspector wiring으로 가시화.")]
+        [SerializeField] private NightDash.Data.DifficultyModifierData[] activeModifiers;
+        [SerializeField] private float modifierIconSize = 44f;
+        [SerializeField] private float modifierIconSpacing = 6f;
+
+        private NightDashHudModifierStrip _modifierStrip;
+
         private RunSelectionLobbyUI _lobbyUi;
         private GameObject _hudRoot;
         private GameObject _resultRoot;
@@ -123,6 +132,15 @@ namespace NightDash.Runtime
                 _resultSelectedActionIndex = 0;
                 ApplyResultActionVisuals();
                 _resultWasEnabledLastFrame = true;
+
+                // Persist cleared stage so the lobby can unlock difficulty
+                // modifier selection for it on subsequent runs. Only writes
+                // on the rising edge so we never spam PlayerPrefs.
+                if (_resultVictory)
+                {
+                    RunSelectionSession.GetCurrent(out string stageId, out _);
+                    RunClearRecord.MarkCleared(stageId);
+                }
             }
 
             bool left, right, confirm;
@@ -162,9 +180,7 @@ namespace NightDash.Runtime
             {
                 if (buttons[i] == null) continue;
                 bool selected = i == _resultSelectedActionIndex;
-                buttons[i].transform.localScale = selected
-                    ? new Vector3(1.08f, 1.08f, 1f)
-                    : Vector3.one;
+                buttons[i].transform.localScale = Vector3.one;
 
                 var img = buttons[i].GetComponent<Image>();
                 if (img != null && defaultSprite != null && hoverSprite != null)
@@ -296,6 +312,10 @@ namespace NightDash.Runtime
             _goldText = CreateIconCounter(topRight, goldIcon, "Gold 0000", 48f, 48f);
             _soulText = CreateIconCounter(topRight, soulIcon, "Souls 000", 48f, 48f);
 
+            BuildModifierStrip(parent);
+            BuildClassPassiveBadge(parent);
+            BuildPauseHint(parent);
+
             RectTransform bottomLeft = CreatePanel("BottomLeftPanel", parent, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(820f, 124f));
             // No backdrop here — text outlines carry legibility against the
             // gameplay scene below.
@@ -333,6 +353,251 @@ namespace NightDash.Runtime
             // objective marker, mini-event prompt).
         }
 
+        private void BuildModifierStrip(Transform parent)
+        {
+            // Always build the strip host so runtime SetActiveDifficultyModifiers
+            // calls have somewhere to write — even when the player picked no
+            // modifiers (host stays empty, ContentSizeFitter shrinks to 0).
+            RectTransform host = CreateRect("ModifierStrip", parent);
+            host.anchorMin = new Vector2(1f, 1f);
+            host.anchorMax = new Vector2(1f, 1f);
+            host.pivot = new Vector2(1f, 1f);
+            // Sits directly under the TopRightPanel (-18, -18 anchor with 102 height,
+            // 8px gap before the strip).
+            host.anchoredPosition = new Vector2(-18f, -128f);
+            host.sizeDelta = Vector2.zero;
+
+            _modifierStrip = host.gameObject.AddComponent<NightDashHudModifierStrip>();
+            _modifierStrip.ConfigureLayout(modifierIconSize, modifierIconSpacing, TextAnchor.MiddleRight);
+
+            // Resources fallback for "no lobby pass" cases (e.g. running the
+            // scene directly with no run-selection wiring). Lobby start path
+            // overrides this immediately via SetActiveDifficultyModifiers.
+            if (activeModifiers == null || activeModifiers.Length == 0)
+            {
+                NightDash.Data.DifficultyModifierData[] loaded =
+                    Resources.LoadAll<NightDash.Data.DifficultyModifierData>("NightDash/Data/Difficulty");
+                if (loaded != null && loaded.Length > 0)
+                {
+                    System.Array.Sort(loaded, (a, b) =>
+                        string.CompareOrdinal(a != null ? a.id : string.Empty,
+                                              b != null ? b.id : string.Empty));
+                    activeModifiers = loaded;
+                }
+            }
+
+            _modifierStrip.SetActiveModifiers(activeModifiers);
+        }
+
+        // Class-specific passive badge — small icon + label at the bottom-
+        // right of the HUD. Reads the active class from the lobby session,
+        // resolves the unique passive through DataRegistry, then picks the
+        // sprite (PassiveData.icon override OR the Resources fallback).
+        // Class passive badge wiring — fields keep the host alive across
+        // class swaps so RefreshClassPassiveBadge can just swap the sprite +
+        // text instead of rebuilding the rect.
+        private RectTransform _classPassiveBadgeHost;
+        private UnityEngine.UI.Image _classPassiveBadgeIcon;
+        private UnityEngine.UI.Text _classPassiveBadgeName;
+        private UnityEngine.UI.Text _classPassiveBadgeSummary;
+        private string _classPassiveBadgeClassId;
+
+        private void BuildClassPassiveBadge(Transform parent)
+        {
+            // Always build the host (even when no passive resolves yet) so
+            // RefreshClassPassiveBadge can light it up later — the player
+            // might enter the HUD before DataRegistry / RunSelectionSession
+            // settle, and we don't want to lose the slot.
+            // Compact strip: icon + name only. The detailed description (and
+            // any future stat readout) lives inside NightDashInventoryOverlay
+            // — keep the HUD itself uncluttered while the player is fighting.
+            RectTransform host = CreateRect("ClassPassiveBadge", parent);
+            host.anchorMin = new Vector2(0f, 0f);
+            host.anchorMax = new Vector2(0f, 0f);
+            host.pivot = new Vector2(0f, 0f);
+            host.anchoredPosition = new Vector2(24f, 160f);
+            host.sizeDelta = new Vector2(340f, 52f);
+            _classPassiveBadgeHost = host;
+
+            var iconGo = new GameObject("Icon",
+                typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            iconGo.transform.SetParent(host, false);
+            var ir = (RectTransform)iconGo.transform;
+            ir.anchorMin = new Vector2(0f, 0.5f);
+            ir.anchorMax = new Vector2(0f, 0.5f);
+            ir.pivot = new Vector2(0f, 0.5f);
+            ir.anchoredPosition = new Vector2(4f, 0f);
+            ir.sizeDelta = new Vector2(40f, 40f);
+            _classPassiveBadgeIcon = iconGo.GetComponent<UnityEngine.UI.Image>();
+            _classPassiveBadgeIcon.preserveAspect = true;
+            _classPassiveBadgeIcon.raycastTarget = false;
+
+            var nameGo = new GameObject("Name",
+                typeof(RectTransform), typeof(UnityEngine.UI.Text), typeof(UnityEngine.UI.Outline));
+            nameGo.transform.SetParent(host, false);
+            var nr = (RectTransform)nameGo.transform;
+            nr.anchorMin = new Vector2(0f, 0f);
+            nr.anchorMax = new Vector2(1f, 1f);
+            nr.offsetMin = new Vector2(52f, 0f);
+            nr.offsetMax = new Vector2(0f, -4f);
+            _classPassiveBadgeName = nameGo.GetComponent<UnityEngine.UI.Text>();
+            _classPassiveBadgeName.alignment = TextAnchor.MiddleLeft;
+            _classPassiveBadgeName.fontSize = 22;
+            _classPassiveBadgeName.color = new Color(0.96f, 0.90f, 0.74f, 1f);
+            _classPassiveBadgeName.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
+            _classPassiveBadgeName.raycastTarget = false;
+            _classPassiveBadgeName.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var no = nameGo.GetComponent<UnityEngine.UI.Outline>();
+            no.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            no.effectDistance = new Vector2(2f, -2f);
+
+            // Summary text removed — moved to InventoryOverlay. The HUD only
+            // surfaces the passive name now.
+            _classPassiveBadgeSummary = null;
+
+            RefreshClassPassiveBadge(forceRebuild: true);
+        }
+
+        // Polled every frame — bails immediately when the active class id
+        // hasn't changed since the previous refresh.
+        private void RefreshClassPassiveBadge(bool forceRebuild = false)
+        {
+            if (_classPassiveBadgeHost == null) return;
+
+            RunSelectionSession.GetCurrent(out _, out string classId);
+            if (!forceRebuild && classId == _classPassiveBadgeClassId) return;
+            _classPassiveBadgeClassId = classId;
+
+            if (string.IsNullOrEmpty(classId)
+                || !TryResolveActivePassive(out _, out string passiveId, out string displayName, out UnityEngine.Sprite sprite))
+            {
+                _classPassiveBadgeHost.gameObject.SetActive(false);
+                return;
+            }
+            _classPassiveBadgeHost.gameObject.SetActive(true);
+            _classPassiveBadgeIcon.sprite = sprite;
+            _classPassiveBadgeName.text = string.IsNullOrEmpty(displayName) ? passiveId : displayName;
+
+            // Summary text is now hosted by the inventory overlay (Tab) —
+            // _classPassiveBadgeSummary is intentionally null in the new
+            // layout, but the guard below keeps the field safe if someone
+            // reinstates the second row later.
+            if (_classPassiveBadgeSummary != null)
+            {
+                _classPassiveBadgeSummary.text = string.Empty;
+            }
+        }
+
+        private static bool TryResolveActivePassive(out string classId, out string passiveId, out string displayName, out UnityEngine.Sprite sprite)
+        {
+            classId = null;
+            passiveId = null;
+            displayName = null;
+            sprite = null;
+
+            RunSelectionSession.GetCurrent(out _, out classId);
+            if (string.IsNullOrEmpty(classId)) return false;
+
+            DataRegistry registry = DataRegistry.Instance;
+            if (registry == null) return false;
+            if (!registry.TryGetClass(classId, out NightDash.Data.ClassData klass) || klass == null) return false;
+
+            passiveId = !string.IsNullOrEmpty(klass.uniquePassiveId)
+                ? klass.uniquePassiveId
+                : (klass.startingPassive != null ? klass.startingPassive.id : null);
+            if (string.IsNullOrEmpty(passiveId)) return false;
+
+            if (registry.TryGetPassive(passiveId, out NightDash.Data.PassiveData passive) && passive != null)
+            {
+                displayName = passive.displayName;
+                if (passive.icon != null) sprite = passive.icon;
+            }
+
+            // Resources fallback when the asset hasn't been wired with an icon.
+            if (sprite == null)
+            {
+                sprite = NightDash.Runtime.UI.NightDashUIIcons.GetPassive(passiveId);
+            }
+            // Sprite is the only signal callers care about — a passive with
+            // no shipped icon would render as an empty rect next to its name,
+            // so we treat that case as "don't show the badge at all" rather
+            // than half-displaying it.
+            return sprite != null;
+        }
+
+        // ESC hint pinned at the top-right corner, just under the modifier
+        // strip. Icon and label sit shoulder to shoulder — readable from a
+        // glance without bloating the HUD chrome.
+        private void BuildPauseHint(Transform parent)
+        {
+            // Bottom-right corner — clears the modifier strip (top-right)
+            // and the bottom-left stat cluster. Pivot at bottom-right so
+            // the offset reads as "X / Y px in from that corner".
+            RectTransform host = CreateRect("PauseHint", parent);
+            host.anchorMin = new Vector2(1f, 0f);
+            host.anchorMax = new Vector2(1f, 0f);
+            host.pivot = new Vector2(1f, 0f);
+            host.anchoredPosition = new Vector2(-24f, 24f);
+            host.sizeDelta = new Vector2(360f, 48f);
+
+            // Single text label combining both hints; the pause icon sits
+            // beside it as a visual cue. Two-line text reads cleaner than
+            // packing two separate icon+label clusters into the corner.
+            var labelGo = new GameObject("HintLabel",
+                typeof(RectTransform), typeof(Text), typeof(Outline));
+            labelGo.transform.SetParent(host, false);
+            var lr = (RectTransform)labelGo.transform;
+            lr.anchorMin = new Vector2(0f, 0f);
+            lr.anchorMax = new Vector2(1f, 1f);
+            lr.pivot = new Vector2(0.5f, 0.5f);
+            lr.offsetMin = new Vector2(52f, 0f);
+            lr.offsetMax = new Vector2(0f, 0f);
+            var lt = labelGo.GetComponent<Text>();
+            lt.text = "[ESC] PAUSE     [TAB] INVENTORY";
+            lt.alignment = TextAnchor.MiddleLeft;
+            lt.fontSize = 22;
+            lt.color = new Color(0.96f, 0.90f, 0.74f, 1f);
+            lt.font = NightDash.Runtime.UI.NightDashUIFonts.Arcade;
+            lt.raycastTarget = false;
+            lt.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var lo = labelGo.GetComponent<Outline>();
+            lo.effectColor = new Color(0f, 0f, 0f, 0.95f);
+            lo.effectDistance = new Vector2(2f, -2f);
+
+            var iconRect = NightDash.Runtime.UI.NightDashUIIcons.Attach(
+                host,
+                NightDash.Runtime.UI.NightDashUIIcons.Pause,
+                new Vector2(34f, 34f),
+                Vector2.zero);
+            if (iconRect != null)
+            {
+                iconRect.anchorMin = new Vector2(0f, 0.5f);
+                iconRect.anchorMax = new Vector2(0f, 0.5f);
+                iconRect.pivot = new Vector2(0f, 0.5f);
+                iconRect.anchoredPosition = new Vector2(6f, -1f);
+            }
+        }
+
+        public void SetActiveDifficultyModifiers(System.Collections.Generic.IList<NightDash.Data.DifficultyModifierData> modifiers)
+        {
+            if (_modifierStrip != null)
+            {
+                _modifierStrip.SetActiveModifiers(modifiers);
+            }
+        }
+
+        // Overload that carries the per-modifier stack level. Levels list must
+        // align with modifiers index-for-index; missing entries default to 1.
+        public void SetActiveDifficultyModifiers(
+            System.Collections.Generic.IList<NightDash.Data.DifficultyModifierData> modifiers,
+            System.Collections.Generic.IList<int> levels)
+        {
+            if (_modifierStrip != null)
+            {
+                _modifierStrip.SetActiveModifiers(modifiers, levels);
+            }
+        }
+
         private void BuildResult(Transform parent)
         {
             RectTransform dim = CreateRect("Dim", parent);
@@ -350,8 +615,11 @@ namespace NightDash.Runtime
             // Bottom padding 100 (vs 56 above) pushes the action row up so
             // the Retry/Lobby/Title cluster sits closer to the stats panel
             // instead of hugging the bottom trim.
-            panelLayout.padding = new RectOffset(72, 72, 64, 100);
-            panelLayout.spacing = 10f;
+            // Top padding trimmed from 64→24 so the skull/crown icon and the
+            // stats card sit higher inside the ornate frame; the extra room
+            // funnels into the BottomSpacer below the stats block.
+            panelLayout.padding = new RectOffset(72, 72, 24, 100);
+            panelLayout.spacing = 8f;
             panelLayout.childControlWidth = true;
             panelLayout.childControlHeight = true;
             panelLayout.childForceExpandHeight = false;
@@ -362,8 +630,8 @@ namespace NightDash.Runtime
             iconLayout.childAlignment = TextAnchor.MiddleCenter;
             iconLayout.childControlHeight = false;
             iconLayout.childControlWidth = false;
-            SetPreferredHeight(iconRow, 150f);
-            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 140f, 140f);
+            SetPreferredHeight(iconRow, 210f);
+            _resultOutcomeIcon = CreateSimpleIcon(iconRow, defeatIcon, 200f, 200f);
 
             RectTransform headerRow = CreateRect("OutcomeHeaderRow", panel);
             SetPreferredHeight(headerRow, 96f);
@@ -394,10 +662,16 @@ namespace NightDash.Runtime
 
             RectTransform actions = CreateRect("Actions", panel);
             HorizontalLayoutGroup actionLayout = actions.gameObject.AddComponent<HorizontalLayoutGroup>();
-            actionLayout.spacing = 36f;
+            actionLayout.spacing = 24f;
             actionLayout.childControlWidth = false;
             actionLayout.childControlHeight = false;
             actionLayout.childAlignment = TextAnchor.MiddleCenter;
+            // HorizontalLayoutGroup defaults childForceExpand* to true, which
+            // pads the gap between buttons with leftover row width and visually
+            // ignores the spacing field (same bug as LevelUp cards). Disable so
+            // spacing maps 1:1 and the trio sits closer together.
+            actionLayout.childForceExpandWidth = false;
+            actionLayout.childForceExpandHeight = false;
             // Buttons shrunk to 2.25× scale (227×83) so total row width
             // matches the previous 124-height row's visual weight while
             // freeing up vertical space. Same inter-button gap (~36px gives
@@ -407,9 +681,9 @@ namespace NightDash.Runtime
             // Three-action footer: Retry runs the same stage again, Lobby
             // returns to character / stage select, Title goes all the way
             // back to the main menu. (Quit lives on the Title screen.)
-            _retryButton = CreateActionButton(actions, "Retry", RequestRetry);
-            _returnToLobbyButton = CreateActionButton(actions, "Lobby", RequestReturnToLobby);
-            _returnToTitleButton = CreateActionButton(actions, "Title", RequestReturnToTitle);
+            _retryButton = CreateActionButton(actions, "Retry", RequestRetry, null);
+            _returnToLobbyButton = CreateActionButton(actions, "Lobby", RequestReturnToLobby, null);
+            _returnToTitleButton = CreateActionButton(actions, "Title", RequestReturnToTitle, null);
         }
 
         private void BuildReward(Transform parent)
@@ -438,11 +712,15 @@ namespace NightDash.Runtime
             actionsLayout.childAlignment = TextAnchor.MiddleCenter;
             SetPreferredHeight(actions, 74f);
 
-            _rewardConfirmButton = CreateActionButton(actions, "Confirm", SubmitBossRewardConfirm);
+            _rewardConfirmButton = CreateActionButton(actions, "Confirm", SubmitBossRewardConfirm, null);
         }
 
         private void UpdateFromGameState()
         {
+            // Class can change mid-session when the player exits to lobby and
+            // picks a different character — keep the passive badge in sync.
+            RefreshClassPassiveBadge();
+
             RunStatus status = RunStatus.Loading;
             bool runActive = false;
             bool snapshotValid = false;
@@ -899,7 +1177,7 @@ namespace NightDash.Runtime
             return valueText;
         }
 
-        private Button CreateActionButton(RectTransform parent, string label, Action onClick)
+        private Button CreateActionButton(RectTransform parent, string label, Action onClick, string iconKey)
         {
             // Uniform 2.25× of the alpha-trimmed 101×37 button sprite
             // (= 227×83) — sized down from the original 3× so the action
@@ -928,8 +1206,24 @@ namespace NightDash.Runtime
             };
             button.onClick.AddListener(() => onClick?.Invoke());
 
+            // Optional left-side icon — same pattern as the title/pause menus
+            // so action buttons read consistently across screens.
+            if (!string.IsNullOrEmpty(iconKey))
+            {
+                NightDash.Runtime.UI.NightDashUIIcons.Attach(
+                    rect,
+                    iconKey,
+                    new Vector2(44f, 44f),
+                    new Vector2(-78f, 0f));
+            }
+
             Text text = CreateText(rect, label.ToUpperInvariant(), 32, TextAnchor.MiddleCenter, new Color(1f, 0.95f, 0.82f, 1f));
             StretchFull(text.rectTransform);
+            // Reserve left padding for the icon when present.
+            if (!string.IsNullOrEmpty(iconKey))
+            {
+                text.rectTransform.offsetMin = new Vector2(40f, text.rectTransform.offsetMin.y);
+            }
             return button;
         }
 

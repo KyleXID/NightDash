@@ -27,6 +27,19 @@ namespace NightDash.ECS.Systems
             RefRW<BossSpawnState> bossState = SystemAPI.GetSingletonRW<BossSpawnState>();
             DynamicBuffer<SpawnArchetypeElement> spawnArchetypes = SystemAPI.GetSingletonBuffer<SpawnArchetypeElement>();
 
+            // Difficulty modifiers (HP/speed/spawn-rate). DifficultySystem caches the
+            // sums on DifficultyState, so we just read it.
+            float difficultyHpMultiplier = 1f;
+            float difficultySpeedMultiplier = 1f;
+            float difficultySpawnMultiplier = 1f;
+            if (SystemAPI.HasSingleton<DifficultyState>())
+            {
+                DifficultyState diff = SystemAPI.GetSingleton<DifficultyState>();
+                difficultyHpMultiplier = diff.EnemyHpMultiplier;
+                difficultySpeedMultiplier = diff.EnemySpeedMultiplier;
+                difficultySpawnMultiplier = diff.SpawnRateMultiplier;
+            }
+
             if (loop.IsRunActive == 0 || loop.Status != RunStatus.Playing || stageConfig.IsStageCleared == 1)
             {
                 return;
@@ -51,7 +64,8 @@ namespace NightDash.ECS.Systems
                 Entity boss = ecb.Instantiate(spawnConfig.ValueRO.BossPrefab);
                 float2 bossOffset = random.NextFloat2Direction() * 10f;
                 ecb.SetComponent(boss, LocalTransform.FromPosition(new float3(playerPosition.x + bossOffset.x, playerPosition.y + bossOffset.y, 0f)));
-                ApplyEnemyArchetype(ref ecb, boss, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: true, ref random, fallbackBoss: true));
+                ApplyEnemyArchetype(ref ecb, boss, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: true, ref random, fallbackBoss: true),
+                    difficultyHpMultiplier, difficultySpeedMultiplier);
                 spawnConfig.ValueRW.RandomSeed = random.NextUInt();
                 bossState.ValueRW.HasSpawnedBoss = 1;
                 return;
@@ -76,7 +90,7 @@ namespace NightDash.ECS.Systems
 
             // Escalation: spawn rate increases over time (up to 3x at 10 min)
             float escalation = 1f + math.min(2f, loop.ElapsedTime / 300f);
-            float effectiveInterval = math.max(0.05f, baseInterval / (math.max(0.25f, stageConfig.SpawnRateMultiplier) * escalation));
+            float effectiveInterval = math.max(0.05f, baseInterval / (math.max(0.25f, stageConfig.SpawnRateMultiplier) * escalation * difficultySpawnMultiplier));
             spawnConfig.ValueRW.SpawnTimer = effectiveInterval;
 
             // Spawn 1-3 enemies per batch (more as time passes)
@@ -86,7 +100,8 @@ namespace NightDash.ECS.Systems
                 float2 offset = random.NextFloat2Direction() * random.NextFloat(4f, 10f);
                 Entity enemy = ecb.Instantiate(spawnConfig.ValueRO.EnemyPrefab);
                 ecb.SetComponent(enemy, LocalTransform.FromPosition(new float3(playerPosition.x + offset.x, playerPosition.y + offset.y, 0f)));
-                ApplyEnemyArchetype(ref ecb, enemy, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: false, ref random, fallbackBoss: false));
+                ApplyEnemyArchetype(ref ecb, enemy, ResolveSpawnProfile(spawnArchetypes, loop.ElapsedTime, includeBoss: false, ref random, fallbackBoss: false),
+                    difficultyHpMultiplier, difficultySpeedMultiplier);
             }
             spawnConfig.ValueRW.RandomSeed = random.NextUInt();
         }
@@ -180,7 +195,8 @@ namespace NightDash.ECS.Systems
             return math.max(1, weight * spawnPerMinute);
         }
 
-        private static void ApplyEnemyArchetype(ref EntityCommandBuffer ecb, Entity enemy, EnemySpawnProfile profile)
+        private static void ApplyEnemyArchetype(ref EntityCommandBuffer ecb, Entity enemy, EnemySpawnProfile profile,
+            float hpMultiplier, float speedMultiplier)
         {
             if (profile.IsBoss)
             {
@@ -191,12 +207,14 @@ namespace NightDash.ECS.Systems
                 ecb.RemoveComponent<BossTag>(enemy);
             }
 
+            float scaledHp = profile.MaxHealth * hpMultiplier;
+            float scaledSpeed = profile.MoveSpeed * speedMultiplier;
             ecb.SetComponent(enemy, new CombatStats
             {
-                CurrentHealth = profile.MaxHealth,
-                MaxHealth = profile.MaxHealth,
+                CurrentHealth = scaledHp,
+                MaxHealth = scaledHp,
                 Damage = profile.Damage,
-                MoveSpeed = profile.MoveSpeed
+                MoveSpeed = scaledSpeed
             });
             ecb.SetComponent(enemy, new EnemyArchetypeData
             {

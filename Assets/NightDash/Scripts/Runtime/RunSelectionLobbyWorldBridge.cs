@@ -1,11 +1,20 @@
+using System.Collections.Generic;
+using NightDash.Data;
 using NightDash.ECS.Components;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace NightDash.Runtime
 {
     internal static class RunSelectionLobbyWorldBridge
     {
+        // Scratch buffers reused across calls so the lobby start path doesn't
+        // allocate every press.
+        private static readonly List<(string id, int level)> s_ModifierStages = new();
+        private static readonly List<DifficultyModifierData> s_ModifierData = new();
+        private static readonly List<int> s_ModifierLevels = new();
+
         public static bool TryApplySelectionToCurrentWorld(string stageId, string classId)
         {
             int worldCount = World.All.Count;
@@ -221,6 +230,70 @@ namespace NightDash.Runtime
                     IsPending = 0
                 });
             }
+
+            ApplyDifficultyModifiers(entityManager, singleton);
+        }
+
+        // Rebuilds the entity's DifficultyModifierElement buffer from the lobby's
+        // modifier selection (stored in RunSelectionSession). Also pushes the
+        // SO+level pairs to the HUD strip so the gameplay UI mirrors the run.
+        private static void ApplyDifficultyModifiers(EntityManager entityManager, Entity singleton)
+        {
+            RunSelectionSession.GetCurrentModifierStages(s_ModifierStages);
+
+            s_ModifierData.Clear();
+            s_ModifierLevels.Clear();
+            var resolvedStages = new List<DifficultyStage>(s_ModifierStages.Count);
+            DataRegistry registry = DataRegistry.Instance;
+            if (registry != null && s_ModifierStages.Count > 0)
+            {
+                for (int i = 0; i < s_ModifierStages.Count; i++)
+                {
+                    (string id, int level) entry = s_ModifierStages[i];
+                    if (!registry.TryGetDifficulty(entry.id, out DifficultyModifierData data) || data == null) continue;
+                    if (!data.TryGetStage(entry.level, out DifficultyStage stage)) continue;
+                    s_ModifierData.Add(data);
+                    s_ModifierLevels.Add(entry.level);
+                    resolvedStages.Add(stage);
+                }
+            }
+
+            if (!entityManager.HasBuffer<DifficultyModifierElement>(singleton))
+            {
+                entityManager.AddBuffer<DifficultyModifierElement>(singleton);
+            }
+            DynamicBuffer<DifficultyModifierElement> buffer =
+                entityManager.GetBuffer<DifficultyModifierElement>(singleton);
+            buffer.Clear();
+
+            for (int i = 0; i < resolvedStages.Count; i++)
+            {
+                DifficultyStage stage = resolvedStages[i];
+                buffer.Add(new DifficultyModifierElement
+                {
+                    RiskScore = stage.riskPoint,
+                    RewardMultiplierBonus = stage.rewardBonusPct,
+                    HpPct = stage.enemyModifiers.hpPct,
+                    MoveSpeedPct = stage.enemyModifiers.moveSpeedPct,
+                    SpawnRatePct = stage.enemyModifiers.spawnRatePct,
+                    HealRatePct = stage.playerModifiers.healRatePct,
+                    CooldownPct = stage.playerModifiers.cooldownPct,
+                    HazardMultiplier = stage.runtimeEffects.hazardMultiplier,
+                    OnKillExplosion = stage.runtimeEffects.onKillExplosion ? (byte)1 : (byte)0
+                });
+            }
+
+            if (buffer.Length == 0)
+            {
+                // DifficultySystem requires at least one entry to write the
+                // cached state. A zero entry resolves to all-1x multipliers
+                // (no effect), which is what we want when nothing is picked.
+                buffer.Add(default);
+            }
+
+            NightDashHudResultUI hud =
+                Object.FindFirstObjectByType<NightDashHudResultUI>(FindObjectsInactive.Include);
+            if (hud != null) hud.SetActiveDifficultyModifiers(s_ModifierData, s_ModifierLevels);
         }
     }
 }

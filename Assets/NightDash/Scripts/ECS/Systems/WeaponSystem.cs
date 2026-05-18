@@ -78,6 +78,13 @@ namespace NightDash.ECS.Systems
             DynamicBuffer<OwnedPassiveElement> ownedPassives = SystemAPI.GetSingletonBuffer<OwnedPassiveElement>();
             DynamicBuffer<OwnedWeaponElement> ownedWeapons = SystemAPI.GetSingletonBuffer<OwnedWeaponElement>();
             PlayerRuntimeProfile playerProfile = RuntimeBalanceUtility.ResolvePlayerRuntimeProfile(registry, classData, ownedPassives);
+
+            // Difficulty modifier: cooldown multiplier (positive pct = longer cooldown).
+            float cooldownMultiplier = 1f;
+            if (SystemAPI.HasSingleton<DifficultyState>())
+            {
+                cooldownMultiplier = SystemAPI.GetSingleton<DifficultyState>().CooldownMultiplier;
+            }
             EntityCommandBuffer ecb = SystemAPI
                 .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
                 .CreateCommandBuffer(state.WorldUnmanaged);
@@ -113,7 +120,7 @@ namespace NightDash.ECS.Systems
                             ownedWeapons.Length,
                             ownedWeapon.Id,
                             isMelee);
-                        ownedWeapon.CooldownRemaining = profile.Cooldown;
+                        ownedWeapon.CooldownRemaining = profile.Cooldown * cooldownMultiplier;
                         firingIndex += 1;
                     }
 

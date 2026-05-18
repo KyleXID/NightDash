@@ -17,7 +17,43 @@ MonoBehaviour:
   durationSec: 600
   bossSpawnSec: 540
   environmentHazards: []
-  spawnPhases: []
+  spawnPhases:
+  - fromSec: 0
+    toSec: 180
+    entries:
+    - enemyId: ghoul_scout
+      weight: 8
+      spawnPerMin: 34
+    - enemyId: ash_caster
+      weight: 6
+      spawnPerMin: 22
+  - fromSec: 180
+    toSec: 360
+    entries:
+    - enemyId: ghoul_scout
+      weight: 6
+      spawnPerMin: 36
+    - enemyId: ash_caster
+      weight: 9
+      spawnPerMin: 30
+    - enemyId: ember_bat
+      weight: 5
+      spawnPerMin: 22
+  - fromSec: 360
+    toSec: 540
+    entries:
+    - enemyId: ghoul_scout
+      weight: 4
+      spawnPerMin: 28
+    - enemyId: ash_caster
+      weight: 10
+      spawnPerMin: 34
+    - enemyId: ember_bat
+      weight: 7
+      spawnPerMin: 28
+    - enemyId: wasteland_brute
+      weight: 6
+      spawnPerMin: 22
   eliteEvents: []
   bossId: boss_library_guardian
   rewardTableId: reward_bonus_library

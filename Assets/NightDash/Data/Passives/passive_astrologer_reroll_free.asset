@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: passive_astrologer_reroll_free
   m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
   id: passive_astrologer_reroll_free
-  displayName: "\uB9AC\uB864 \uBB34\uB8CC"
+  displayName: "\uBCC4\uC758 \uADA4\uB3C4"
   description: "\uD22C\uC0AC\uCCB4 \uC0AC\uC815\uAC70\uB9AC\uC640 \uBE44\uD589 \uC18D\uB3C4\uB97C \uB192\uC5EC \uC911\uAC70\uB9AC \uC804\uD22C\uB97C \uAC15\uD654\uD569\uB2C8\uB2E4."
   category: 1
   maxLevel: 5

@@ -1,7 +1,10 @@
+using System.Collections.Generic;
+using NightDash.Data;
 using NightDash.ECS.Components;
 using NightDash.Runtime;
 using Unity.Collections;
 using Unity.Entities;
+using UnityEngine;
 
 namespace NightDash.ECS.Systems
 {
@@ -9,6 +12,11 @@ namespace NightDash.ECS.Systems
     [UpdateBefore(typeof(DataBootstrapSystem))]
     public partial struct RunSelectionOverrideSystem : ISystem
     {
+        // Scratch storage so we don't allocate every override.
+        private static readonly List<(string id, int level)> s_ModifierStageScratch = new();
+        private static readonly List<DifficultyModifierData> s_ModifierSoScratch = new();
+        private static readonly List<int> s_ModifierLevelScratch = new();
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<RunSelection>();
@@ -25,6 +33,9 @@ namespace NightDash.ECS.Systems
             RefRW<RunSelection> selection = SystemAPI.GetSingletonRW<RunSelection>();
             selection.ValueRW.StageId = new FixedString64Bytes(stageId);
             selection.ValueRW.ClassId = new FixedString64Bytes(classId);
+            Entity selectionEntity = SystemAPI.GetSingletonEntity<RunSelection>();
+
+            ApplyDifficultyModifiers(ref state, selectionEntity);
 
             RefRW<DataLoadState> load = SystemAPI.GetSingletonRW<DataLoadState>();
             load.ValueRW.HasLoaded = 0;
@@ -108,6 +119,75 @@ namespace NightDash.ECS.Systems
             }
 
             NightDashLog.Info($"[NightDash] RunSelection override applied: stage='{stageId}', class='{classId}'.");
+        }
+
+        // Replace the entity's DifficultyModifierElement buffer with the lobby's
+        // selected modifiers (resolved via DataRegistry + stage level lookup).
+        // Also pushes the SO+level pairs into the HUD strip so the gameplay UI
+        // mirrors the actual active modifiers (instead of the Resources fallback).
+        private static void ApplyDifficultyModifiers(ref SystemState state, Entity entity)
+        {
+            RunSelectionSession.GetCurrentModifierStages(s_ModifierStageScratch);
+
+            DataRegistry registry = DataRegistry.Instance;
+            s_ModifierSoScratch.Clear();
+            s_ModifierLevelScratch.Clear();
+            var stageResolved = new List<DifficultyStage>(s_ModifierStageScratch.Count);
+            if (registry != null && s_ModifierStageScratch.Count > 0)
+            {
+                for (int i = 0; i < s_ModifierStageScratch.Count; i++)
+                {
+                    (string id, int level) entry = s_ModifierStageScratch[i];
+                    if (!registry.TryGetDifficulty(entry.id, out DifficultyModifierData data) || data == null) continue;
+                    if (!data.TryGetStage(entry.level, out DifficultyStage stage)) continue;
+                    s_ModifierSoScratch.Add(data);
+                    s_ModifierLevelScratch.Add(entry.level);
+                    stageResolved.Add(stage);
+                }
+            }
+
+            if (!state.EntityManager.HasBuffer<DifficultyModifierElement>(entity))
+            {
+                state.EntityManager.AddBuffer<DifficultyModifierElement>(entity);
+            }
+            DynamicBuffer<DifficultyModifierElement> buffer =
+                state.EntityManager.GetBuffer<DifficultyModifierElement>(entity);
+            buffer.Clear();
+
+            for (int i = 0; i < stageResolved.Count; i++)
+            {
+                DifficultyStage stage = stageResolved[i];
+                buffer.Add(new DifficultyModifierElement
+                {
+                    RiskScore = stage.riskPoint,
+                    RewardMultiplierBonus = stage.rewardBonusPct,
+                    HpPct = stage.enemyModifiers.hpPct,
+                    MoveSpeedPct = stage.enemyModifiers.moveSpeedPct,
+                    SpawnRatePct = stage.enemyModifiers.spawnRatePct,
+                    HealRatePct = stage.playerModifiers.healRatePct,
+                    CooldownPct = stage.playerModifiers.cooldownPct,
+                    HazardMultiplier = stage.runtimeEffects.hazardMultiplier,
+                    OnKillExplosion = stage.runtimeEffects.onKillExplosion ? (byte)1 : (byte)0
+                });
+            }
+
+            // If the player picked nothing, leave a single null entry so
+            // DifficultySystem still sees a buffer (its update loop iterates
+            // and just produces all-1x multipliers).
+            if (buffer.Length == 0)
+            {
+                buffer.Add(default);
+            }
+
+            PushModifiersToHud();
+        }
+
+        private static void PushModifiersToHud()
+        {
+            NightDashHudResultUI hud =
+                Object.FindFirstObjectByType<NightDashHudResultUI>(FindObjectsInactive.Include);
+            if (hud == null) return;
+            hud.SetActiveDifficultyModifiers(s_ModifierSoScratch, s_ModifierLevelScratch);
         }
     }
 }

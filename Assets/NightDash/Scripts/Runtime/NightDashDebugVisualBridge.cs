@@ -40,8 +40,13 @@ namespace NightDash.Runtime
         private const string ClipWalk = "Walk";
         private const string ClipIdle = "Idle";
 
-        // Movement → Walk vs Idle threshold. Squared to avoid sqrt.
-        private const float MoveDeadzoneSq = 0.0001f;
+        // Movement → Walk vs Idle threshold, in (units/second)². Squared to avoid sqrt.
+        // Compared against per-second velocity so the deadzone is framerate-invariant —
+        // high framerates make per-frame deltas tiny (e.g. 600fps: 4u/s × 0.0017s = 0.0068
+        // per frame, squared = 4.6e-5) which would fall under a per-frame threshold and
+        // incorrectly read as "not moving". Per-second velocity stays at the expected
+        // magnitude (4u/s)² = 16 regardless of framerate.
+        private const float MoveDeadzoneSq = 0.25f;
 
         // ------------------------------------------------------------------ id mappings
         // Player class id (RunSelection.ClassId) is used directly as animation set id.
@@ -412,6 +417,9 @@ namespace NightDash.Runtime
             if (view.Go == null) return;
 
             // Velocity from previous-frame position diff (no PhysicsVelocity2D dep).
+            // Normalize by dt so the threshold compares per-second velocity — otherwise
+            // higher framerates would shrink the per-frame delta below the deadzone and
+            // incorrectly read every moving entity as "not moving".
             float3 velocity = float3.zero;
             if (_lastPositions.TryGetValue(entity, out var last))
             {
@@ -419,15 +427,11 @@ namespace NightDash.Runtime
             }
             _lastPositions[entity] = pos;
 
-            float speedSq = velocity.x * velocity.x + velocity.y * velocity.y;
+            float invDt = dt > 1e-5f ? 1f / dt : 0f;
+            float vxPerSec = velocity.x * invDt;
+            float vyPerSec = velocity.y * invDt;
+            float speedSq = vxPerSec * vxPerSec + vyPerSec * vyPerSec;
             bool moving = speedSq > MoveDeadzoneSq;
-
-            // TEMP DIAGNOSTIC — strip after the walking-clip bug is resolved.
-            // Logs once per second if the entity is moving but stuck on Idle.
-            if (Time.frameCount % 60 == 0 && view.AnimSet != null)
-            {
-                NightDashLog.Info($"[Anim] e={entity.Index} v²={speedSq:F4} moving={moving} clip={view.CurrentClipName} t={view.ClipTime:F2}");
-            }
 
             // Flip horizontally based on movement direction (preserves last facing on idle).
             if (view.Renderer != null && math.abs(velocity.x) > 0.001f)

@@ -20,15 +20,16 @@ namespace NightDash.Runtime
         // strings inlined for now and routed through M0 ScreenRouter.
         private const string ButtonStartLabel = "Start";
         private const string ButtonContinueLabel = "Continue";
+        private const string ButtonCollectionLabel = "Collection";
         private const string ButtonSettingsLabel = "Settings";
         private const string ButtonQuitLabel = "Quit";
 
         private RunSelectionLobbyUI _lobbyUi;
         private NightDashDebugVisualBridge _visualBridge;
         private GameObject _firstButton;
-        private readonly GameObject[] _menuButtons = new GameObject[4];
-        private readonly Text[] _menuButtonLabels = new Text[4];
-        private readonly System.Action[] _menuButtonActions = new System.Action[4];
+        private readonly GameObject[] _menuButtons = new GameObject[5];
+        private readonly Text[] _menuButtonLabels = new Text[5];
+        private readonly System.Action[] _menuButtonActions = new System.Action[5];
         private int _selectedIndex;
 
         // Button frame 4-state sprites loaded once at Awake. Same pattern as
@@ -76,6 +77,10 @@ namespace NightDash.Runtime
 
         private void Awake()
         {
+            // Re-apply persisted master volume on the very first session
+            // boot so the player's last setting isn't silently reset.
+            NightDash.Runtime.UI.NightDashSettingsModal.ApplyPersistedVolume();
+
             _lobbyUi = FindFirstObjectByType<RunSelectionLobbyUI>();
             if (_lobbyUi != null)
             {
@@ -171,6 +176,13 @@ namespace NightDash.Runtime
         {
             // Only this screen owns input while it is the topmost context.
             if (NightDashInputContextStack.Top != NightDashInputContext.Title) return;
+
+            // Defer all input to a foreground modal (Settings / Collection)
+            // while it's open so ESC and arrow keys don't bleed through to
+            // the title menu underneath.
+            if (NightDash.Runtime.UI.NightDashSettingsModal.IsOpen) return;
+            if (NightDash.Runtime.UI.NightDashCollectionScreen.IsOpen) return;
+            if (NightDash.Runtime.UI.NightDashSaveSlotModal.IsOpen) return;
 
             // Direct keyboard polling — avoids Update-order dependency on
             // NightDashUIInputRuntime and works whether or not Input System
@@ -433,13 +445,15 @@ namespace NightDash.Runtime
             // each subsequent button 110px lower.
             _menuButtonActions[0] = OnStartClicked;
             _menuButtonActions[1] = OnContinueClicked;
-            _menuButtonActions[2] = OnSettingsClicked;
-            _menuButtonActions[3] = OnQuitClicked;
+            _menuButtonActions[2] = OnCollectionClicked;
+            _menuButtonActions[3] = OnSettingsClicked;
+            _menuButtonActions[4] = OnQuitClicked;
 
-            _menuButtons[0] = CreateMenuButton("StartButton",    ButtonStartLabel,    0);
-            _menuButtons[1] = CreateMenuButton("ContinueButton", ButtonContinueLabel, 1);
-            _menuButtons[2] = CreateMenuButton("SettingsButton", ButtonSettingsLabel, 2);
-            _menuButtons[3] = CreateMenuButton("QuitButton",     ButtonQuitLabel,     3);
+            _menuButtons[0] = CreateMenuButton("StartButton",      ButtonStartLabel,      0);
+            _menuButtons[1] = CreateMenuButton("ContinueButton",   ButtonContinueLabel,   1);
+            _menuButtons[2] = CreateMenuButton("CollectionButton", ButtonCollectionLabel, 2);
+            _menuButtons[3] = CreateMenuButton("SettingsButton",   ButtonSettingsLabel,   3);
+            _menuButtons[4] = CreateMenuButton("QuitButton",       ButtonQuitLabel,       4);
 
             _firstButton = _menuButtons[0];
             _selectedIndex = 0;
@@ -489,7 +503,10 @@ namespace NightDash.Runtime
             const float buttonWidth = 303f;
             const float buttonHeight = 111f;
             const float buttonSpacing = 22f;
-            const float topY = 50f; // first button slightly above screen center
+            // 5-button stack: total height = 5*111 + 4*22 = 643. Push the top
+            // slot higher so the stack stays vertically centered after adding
+            // the Collection entry.
+            const float topY = 110f;
 
             var rect = CreateRect(name, gameObject.transform);
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -533,6 +550,13 @@ namespace NightDash.Runtime
 
         private void OnStartClicked()
         {
+            // Coming from the title screen counts as a "fresh run" — wipe
+            // any leftover modifier stacks from a previous play session so
+            // the player isn't surprised by chips that are already at Lv.3
+            // because of a long-forgotten click. Stage / class selections
+            // stay so last-played choices keep auto-hydrating the lobby.
+            RunSelectionSession.ClearModifierStages();
+
             // Hand off to NightDashLobbyScreenUI (M2). The legacy
             // RunSelectionLobbyUI stays disabled — it draws via OnGUI and
             // would otherwise overlay the new Canvas lobby. If the canvas
@@ -564,16 +588,26 @@ namespace NightDash.Runtime
 
         private void OnContinueClicked()
         {
-            // Continue uses the same path as Start for now — RunSelectionSession
-            // already restores the last stage/class selection from PlayerPrefs.
-            // Future: branch to Result review or last save slot.
-            OnStartClicked();
+            // Continue now opens the (mock) save-slot picker. Any slot maps
+            // back to the standard Start flow because multi-slot persistence
+            // isn't wired yet — but the picker gives the player a sense of
+            // "loading a save" and shows the load/save icons in context.
+            NightDash.Runtime.UI.NightDashSaveSlotModal.Show(
+                onSelected: _ => OnStartClicked(),
+                onCancel: null);
         }
 
         private void OnSettingsClicked()
         {
-            // Placeholder: settings panel arrives in a later sprint.
-            NightDashLog.Info("[NightDash] Settings — not yet implemented.");
+            NightDash.Runtime.UI.NightDashSettingsModal.Show();
+        }
+
+        private void OnCollectionClicked()
+        {
+            // Pass an explicit callback so the title screen knows when the
+            // modal closes — the highlight pulse can resume cleanly without
+            // a stray Enter falling through to the menu action.
+            NightDash.Runtime.UI.NightDashCollectionScreen.Show(onClosed: null);
         }
 
         private void OnQuitClicked()

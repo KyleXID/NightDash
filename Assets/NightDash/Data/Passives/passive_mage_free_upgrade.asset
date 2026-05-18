@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: passive_mage_free_upgrade
   m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
   id: passive_mage_free_upgrade
-  displayName: "\uBB34\uB8CC \uAC15\uD654"
+  displayName: "\uC2E0\uC18D \uC601\uCC3D"
   description: "\uC7AC\uC0AC\uC6A9 \uB300\uAE30\uC2DC\uAC04\uC744 \uC904\uC5EC \uD22C\uC0AC\uCCB4 \uD68C\uC804\uC728\uC744 \uB192\uC785\uB2C8\uB2E4."
   category: 1
   maxLevel: 5

@@ -34,6 +34,11 @@ namespace NightDash.Runtime.UI
             // are guarded by their own Top-context checks.
             if (NightDashInputContextStack.Top != NightDashInputContext.Playing) return;
 
+            // Inventory overlay handles its own ESC (close-the-panel) — if
+            // we don't bail here, the same keypress would simultaneously
+            // close the inventory *and* open the pause menu.
+            if (NightDashInventoryOverlay.IsOpen) return;
+
             if (!IsEscapePressedThisFrame()) return;
 
             if (_pauseMenu == null)

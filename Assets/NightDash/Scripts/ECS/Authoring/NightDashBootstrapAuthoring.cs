@@ -37,7 +37,11 @@ namespace NightDash.ECS.Authoring
             new TimelineWindow { startTime = 840f, endTime = 1200f, spawnMultiplier = 2.2f, bonusSpawn = true }
         };
 
-        [Header("Difficulty Checklist")]
+        [Header("Difficulty Checklist (SO-based, preferred)")]
+        [Tooltip("Wire DifficultyModifierData SOs here. If set, takes precedence over the legacy DifficultyEntry array.")]
+        public NightDash.Data.DifficultyModifierData[] activeModifiers;
+
+        [Header("Difficulty Checklist (Legacy fallback)")]
         public DifficultyEntry[] difficultyModifiers =
         {
             new DifficultyEntry { riskScore = 2, rewardMultiplierBonus = 0.2f, enemyHealthMultiplier = 1.2f, enemySpeedMultiplier = 1.1f },
@@ -171,7 +175,18 @@ namespace NightDash.ECS.Authoring
                     ChestPending = 0,
                     ChestOpened = 0
                 });
-                AddComponent(entity, new DifficultyState { RiskScore = 0, RewardMultiplier = 1f });
+                AddComponent(entity, new DifficultyState
+                {
+                    RiskScore = 0,
+                    RewardMultiplier = 1f,
+                    EnemyHpMultiplier = 1f,
+                    EnemySpeedMultiplier = 1f,
+                    SpawnRateMultiplier = 1f,
+                    HealRateMultiplier = 1f,
+                    CooldownMultiplier = 1f,
+                    HazardMultiplier = 1f,
+                    OnKillExplosionEnabled = 0
+                });
                 AddComponent(entity, new EvolutionState
                 {
                     HasNormalEvolution = 0,
@@ -260,16 +275,40 @@ namespace NightDash.ECS.Authoring
                 }
 
                 DynamicBuffer<DifficultyModifierElement> difficultyBuffer = AddBuffer<DifficultyModifierElement>(entity);
-                if (authoring.difficultyModifiers != null)
+                bool soWired = authoring.activeModifiers != null && authoring.activeModifiers.Length > 0;
+                if (soWired)
                 {
-                    for (int i = 0; i < authoring.difficultyModifiers.Length; i++)
+                    for (int i = 0; i < authoring.activeModifiers.Length; i++)
                     {
+                        NightDash.Data.DifficultyModifierData mod = authoring.activeModifiers[i];
+                        if (mod == null) continue;
                         difficultyBuffer.Add(new DifficultyModifierElement
                         {
-                            RiskScore = authoring.difficultyModifiers[i].riskScore,
-                            RewardMultiplierBonus = authoring.difficultyModifiers[i].rewardMultiplierBonus,
-                            EnemyHealthMultiplier = authoring.difficultyModifiers[i].enemyHealthMultiplier,
-                            EnemySpeedMultiplier = authoring.difficultyModifiers[i].enemySpeedMultiplier
+                            RiskScore = mod.riskPoint,
+                            RewardMultiplierBonus = mod.rewardBonusPct,
+                            HpPct = mod.enemyModifiers.hpPct,
+                            MoveSpeedPct = mod.enemyModifiers.moveSpeedPct,
+                            SpawnRatePct = mod.enemyModifiers.spawnRatePct,
+                            HealRatePct = mod.playerModifiers.healRatePct,
+                            CooldownPct = mod.playerModifiers.cooldownPct,
+                            HazardMultiplier = mod.runtimeEffects.hazardMultiplier,
+                            OnKillExplosion = mod.runtimeEffects.onKillExplosion ? (byte)1 : (byte)0
+                        });
+                    }
+                }
+                else if (authoring.difficultyModifiers != null)
+                {
+                    // Legacy fallback: translate the old multiplier form (e.g. 1.2x) into the
+                    // pct-additive form the new pipeline expects (0.2 = +20%).
+                    for (int i = 0; i < authoring.difficultyModifiers.Length; i++)
+                    {
+                        DifficultyEntry entry = authoring.difficultyModifiers[i];
+                        difficultyBuffer.Add(new DifficultyModifierElement
+                        {
+                            RiskScore = entry.riskScore,
+                            RewardMultiplierBonus = entry.rewardMultiplierBonus,
+                            HpPct = entry.enemyHealthMultiplier - 1f,
+                            MoveSpeedPct = entry.enemySpeedMultiplier - 1f
                         });
                     }
                 }
