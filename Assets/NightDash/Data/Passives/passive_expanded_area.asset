@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 097df27ac669c4b93b726e993a85459f, type: 3}
+  m_Name: passive_expanded_area
+  m_EditorClassIdentifier: NightDash::NightDash.Data.PassiveData
+  id: passive_expanded_area
+  displayName: "영역 확장"
+  description: "무기의 사거리와 공격 범위가 넓어져 더 많은 적을 한 번에 공격합니다."
+  category: 0
+  maxLevel: 5
+  effects:
+  - stat: range
+    op: 1
+    value: 0.12
+  condition:
+    type: 0
+    arg:
+  legacyHealthMultiplier: 1
+  legacyDamageMultiplier: 1
+  legacyCooldownMultiplier: 1
