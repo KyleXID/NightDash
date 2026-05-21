@@ -75,6 +75,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 9f11f8c9aafb40eea54485e256c96a2e, type: 2}
   - {fileID: 11400000, guid: b7be56890156437cb768adbb26182439, type: 2}
   - {fileID: 11400000, guid: d39c18a79f0646b0825b13b345f85df2, type: 2}
+  - {fileID: 11400000, guid: c95c4764d05348daa83542a7e4890a12, type: 2}
   passives:
   - {fileID: 11400000, guid: 9b0d7e07cae54c12a5f62f5a1d1c810f, type: 2}
   - {fileID: 11400000, guid: 88d5bbf73653e49b1b609424dc2f5828, type: 2}
@@ -145,6 +146,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f4baed36d18f40899ab4f361923b8dfa, type: 2}
   - {fileID: 11400000, guid: edf04ef359a0450c9d59045329a91872, type: 2}
   - {fileID: 11400000, guid: 4782fc30f85e4367ac0b71212e378b1b, type: 2}
+  - {fileID: 11400000, guid: 6a62c97a78574485810f0cb05e70733e, type: 2}
   stages:
   - {fileID: 11400000, guid: d5f0557e3336246f3a69b4690d91bb9a, type: 2}
   - {fileID: 11400000, guid: 2f1f53c86243240278bbf4d693914947, type: 2}
