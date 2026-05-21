@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf087338bc6cf4fbd879ccccef430cce, type: 3}
+  m_Name: evolution_demon_orb
+  m_EditorClassIdentifier: NightDash::NightDash.Data.EvolutionData
+  id: evolution_demon_orb
+  resultWeaponId: weapon_demon_orb_evolved
+  requiredWeaponId: weapon_demon_orb
+  requiredWeaponLevel: 8
+  requiredPassiveIds:
+  - passive_mage_free_upgrade
+  - passive_mana_overload
+  - passive_dark_boost
+  requiredRiskScoreMin: 0
+  requiredModifiers: []
+  isAbyss: 0
+  priority: 10

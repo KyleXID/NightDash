@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2bef07f52d7145d6afd1601c2fda76c, type: 3}
+  m_Name: weapon_chain_scythe_abyss
+  m_EditorClassIdentifier: NightDash::NightDash.Data.WeaponData
+  id: weapon_chain_scythe_abyss
+  displayName: "\uACF5\uD5C8 \uC218\uD655\uC790"
+  weaponType: 1
+  maxLevel: 8
+  baseCooldown: 0.72
+  basePowerCoeff: 2.35
+  baseRange: 6.6
+  baseProjectileSpeed: 11.2
+  includeInUpgradePool: 0
+  levelCurves: []
+  specialFlags:
+    canPierce: 1
+    canCrit: 1
+    hasKnockback: 1

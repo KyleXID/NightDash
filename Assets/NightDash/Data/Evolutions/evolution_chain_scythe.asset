@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cf087338bc6cf4fbd879ccccef430cce, type: 3}
+  m_Name: evolution_chain_scythe
+  m_EditorClassIdentifier: NightDash::NightDash.Data.EvolutionData
+  id: evolution_chain_scythe
+  resultWeaponId: weapon_chain_scythe_evolved
+  requiredWeaponId: weapon_chain_scythe
+  requiredWeaponLevel: 8
+  requiredPassiveIds:
+  - passive_life_drain
+  - passive_blood_pact
+  - passive_solitude
+  requiredRiskScoreMin: 15
+  requiredModifiers: []
+  isAbyss: 0
+  priority: 10
