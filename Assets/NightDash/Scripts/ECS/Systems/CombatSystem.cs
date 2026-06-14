@@ -224,6 +224,38 @@ namespace NightDash.ECS.Systems
 
                 if (projectile.ValueRO.Lifetime <= 0f)
                 {
+                    // Landing AoE (e.g. star-fall meteor): full damage to the direct
+                    // target in a small core, reduced splash out to SplashRadius.
+                    if (projectile.ValueRO.IsPlayerOwned == 1 && projectile.ValueRO.SplashRadius > 0f)
+                    {
+                        const float coreSq = 0.49f; // 0.7^2 — direct-target core takes full damage
+                        float splashSq = projectile.ValueRO.SplashRadius * projectile.ValueRO.SplashRadius;
+                        float fullDmg = projectile.ValueRO.Damage;
+                        float splashDmg = projectile.ValueRO.Damage * projectile.ValueRO.SplashFactor;
+                        float3 impactPos = projectileTransform.ValueRO.Position;
+                        foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
+                                     .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
+                                     .WithAll<EnemyTag>()
+                                     .WithEntityAccess())
+                        {
+                            float3 enemyPos = enemyTransform.ValueRO.Position;
+                            float dsq = math.lengthsq(enemyPos - impactPos);
+                            if (dsq > splashSq) continue;
+
+                            float dmg = dsq <= coreSq ? fullDmg : splashDmg;
+                            CombatStats es = enemyStats.ValueRO;
+                            es.CurrentHealth = math.max(0f, es.CurrentHealth - dmg);
+                            enemyStats.ValueRW = es;
+                            NightDashCombatEvents.FireEnemyDamaged(enemyPos, dmg);
+
+                            if (es.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
+                            {
+                                deadEnemies.Add(enemyEntity);
+                                deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
+                                deadEnemyPositions.Add(enemyPos);
+                            }
+                        }
+                    }
                     ecb.DestroyEntity(projectileEntity);
                     continue;
                 }

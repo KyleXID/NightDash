@@ -452,7 +452,13 @@ namespace NightDash.Runtime
                         var frames = LoadFramesFromResources(vfxInfo.path);
                         if (frames != null && frames.Length >= 2)
                         {
-                            go = CreateAnimatedProjectileView("Projectile", frames, vfxInfo.scale, SortProjectile, tint, ProjectileVfxFps);
+                            // PlayOnce weapons (e.g. star-fall) play the whole sequence
+                            // exactly once over their Lifetime so the animation finishes
+                            // right as they land; everything else loops at the default fps.
+                            bool playOnce = projectiles[i].PlayOnce != 0;
+                            float life = projectiles[i].Lifetime;
+                            float fps = (playOnce && life > 0.01f) ? (frames.Length / life) : ProjectileVfxFps;
+                            go = CreateAnimatedProjectileView("Projectile", frames, vfxInfo.scale, SortProjectile, tint, fps, loop: !playOnce);
                         }
                         else
                         {
@@ -639,7 +645,7 @@ namespace NightDash.Runtime
         }
 
         // Projectile view that plays a looping sprite-frame animation.
-        private static GameObject CreateAnimatedProjectileView(string label, Sprite[] frames, float scale, int sortOrder, Color tint, float fps)
+        private static GameObject CreateAnimatedProjectileView(string label, Sprite[] frames, float scale, int sortOrder, Color tint, float fps, bool loop = true)
         {
             var go = new GameObject($"[View] {label}");
             var sr = go.AddComponent<SpriteRenderer>();
@@ -651,7 +657,7 @@ namespace NightDash.Runtime
             var anim = go.AddComponent<SpriteAnimator>();
             anim.frames = frames;
             anim.fps = fps;
-            anim.loop = true;
+            anim.loop = loop;
             anim.playOnStart = true;
             return go;
         }

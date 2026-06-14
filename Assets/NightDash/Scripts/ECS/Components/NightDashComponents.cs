@@ -224,6 +224,9 @@ namespace NightDash.ECS.Components
         public float TickTimer;      // countdown to the next damaging tick
         public float Knockback;      // outward push applied to enemies on a damaging tick (0 = none)
         public byte AlignToVelocity; // 1 = view rotates to face travel direction (bullets/arrows/spears); 0 = fixed orientation (sky-fall, melee, orbit)
+        public byte PlayOnce;        // 1 = the VFX animation plays through ONCE over Lifetime (non-looping) so it finishes on impact; 0 = loop at default fps
+        public float SplashRadius;   // >0 = on landing (Lifetime end) deal an AoE: full damage in a small core, reduced in the splash ring
+        public float SplashFactor;   // splash damage multiplier (0..1) applied to enemies outside the core but inside SplashRadius
     }
 
     public struct PhysicsVelocity2D : IComponentData

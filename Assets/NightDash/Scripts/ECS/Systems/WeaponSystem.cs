@@ -228,18 +228,24 @@ namespace NightDash.ECS.Systems
                     const float FallSpeed = 7f;
                     float3 spawnPos = new float3(target.x + DiagDist + spawnOffset.x, target.y + DiagDist + spawnOffset.y, 0f);
                     float2 dir = math.normalize(new float2(target.x - spawnPos.x, target.y - spawnPos.y));
+                    // Lifetime = exact travel time to the target so the (non-looping)
+                    // VFX animation finishes right as the star lands.
+                    float travelTime = math.distance(new float2(spawnPos.x, spawnPos.y), new float2(target.x, target.y)) / FallSpeed;
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = 1.1f,
+                        Lifetime = math.max(0.2f, travelTime),
                         IsPlayerOwned = 1,
-                        Radius = 0.7f,
+                        Radius = 0f,          // no mid-flight hit — damage is dealt as a landing AoE
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
-                        AlignToVelocity = 0, // keep the star's drawn diagonal tail orientation
+                        AlignToVelocity = 0,  // keep the star's drawn diagonal tail orientation
+                        PlayOnce = 1,         // play the fall animation once, finishing on impact
+                        SplashRadius = 1.8f,  // landing AoE: full to the target, reduced to nearby
+                        SplashFactor = 0.5f,  // 50% splash damage to enemies outside the core
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = dir * FallSpeed });
                     break;
