@@ -24,8 +24,9 @@ namespace NightDash.ECS.Components
     // (e.g. the barrier / the big light ring).
     public struct OrbitState : IComponentData
     {
-        public float Radius;       // distance from the player, in world units
-        public float AngularSpeed; // radians per second
-        public float Angle;        // current angle, radians
+        public float Radius;        // distance from the player, in world units
+        public float AngularSpeed;  // radians per second
+        public float Angle;         // current angle, radians
+        public float CenterYOffset; // raises the orbit center above the player (e.g. ring/barrier sit at the torso, not the feet)
     }
 }

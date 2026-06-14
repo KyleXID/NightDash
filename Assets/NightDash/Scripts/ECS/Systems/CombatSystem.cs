@@ -212,7 +212,7 @@ namespace NightDash.ECS.Systems
                     orbit.Angle += orbit.AngularSpeed * dt;
                     SystemAPI.SetComponent(projectileEntity, orbit);
                     float r = orbit.Radius;
-                    projectileTransform.ValueRW.Position = playerPosition + new float3(math.cos(orbit.Angle) * r, math.sin(orbit.Angle) * r, 0f);
+                    projectileTransform.ValueRW.Position = playerPosition + new float3(math.cos(orbit.Angle) * r, orbit.CenterYOffset + math.sin(orbit.Angle) * r, 0f);
                 }
                 else if (behavior != (byte)ProjectileBehavior.GroundZone)
                 {

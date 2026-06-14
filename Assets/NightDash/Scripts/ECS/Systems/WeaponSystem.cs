@@ -242,10 +242,10 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.PiercingBolt:
                 {
-                    // Emanates from the player along the aim direction, travels
-                    // slowly, pierces (multi-hit) every enemy in the straight line,
-                    // and lingers before fading.
-                    const float BoltSpeed = 6f;
+                    // Lightning: emitted FROM the player but always travels straight
+                    // UP in a fixed vertical orientation (never rotates). Slow,
+                    // pierces every enemy in its vertical line, lingers before fading.
+                    const float BoltSpeed = 5f;
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
                     ecb.AddComponent(e, new ProjectileData
@@ -257,18 +257,18 @@ namespace NightDash.ECS.Systems
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
-                        TickInterval = 0.15f, // pierce: damages every enemy along the line, never consumed
+                        TickInterval = 0.15f, // pierce: damages every enemy in the vertical line, never consumed
                         TickTimer = 0.15f,
-                        AlignToVelocity = 1,  // faces travel direction
+                        AlignToVelocity = 0,  // fixed vertical orientation (never rotates to horizontal)
                     });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * BoltSpeed });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, BoltSpeed) });
                     break;
                 }
                 case WeaponBehaviorKind.OrbitRing:
                 {
-                    // Big ring centered on the player; damages enemies within the ring radius.
+                    // Ring centered on the player (slightly raised); damages enemies within the ring radius.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.6f, angle: 0f, hitRadius: 2.4f, tick: 0.4f, knockback: 0f);
+                        radius: 0f, angularSpeed: 1.6f, angle: 0f, hitRadius: 1.6f, tick: 0.4f, knockback: 0f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.OrbitBlades:
@@ -282,9 +282,9 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.Barrier:
                 {
-                    // Protective shield centered on the player; knocks enemies back on contact.
+                    // Protective shield centered on the player (slightly raised); knocks enemies back on contact.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.2f, angle: 0f, hitRadius: 1.3f, tick: 0.3f, knockback: 6f);
+                        radius: 0f, angularSpeed: 1.2f, angle: 0f, hitRadius: 1.0f, tick: 0.3f, knockback: 6f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.GroundZone:
@@ -379,10 +379,11 @@ namespace NightDash.ECS.Systems
             float angle,
             float hitRadius,
             float tick,
-            float knockback)
+            float knockback,
+            float centerYOffset = 0f)
         {
             Entity e = ecb.CreateEntity();
-            float3 pos = playerPos + new float3(math.cos(angle) * radius, math.sin(angle) * radius, 0f);
+            float3 pos = playerPos + new float3(math.cos(angle) * radius, centerYOffset + math.sin(angle) * radius, 0f);
             ecb.AddComponent(e, LocalTransform.FromPosition(pos));
             ecb.AddComponent(e, new ProjectileData
             {
@@ -398,7 +399,7 @@ namespace NightDash.ECS.Systems
                 Knockback = knockback,
             });
             ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
-            ecb.AddComponent(e, new OrbitState { Radius = radius, AngularSpeed = angularSpeed, Angle = angle });
+            ecb.AddComponent(e, new OrbitState { Radius = radius, AngularSpeed = angularSpeed, Angle = angle, CenterYOffset = centerYOffset });
         }
     }
 }

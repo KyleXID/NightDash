@@ -73,26 +73,26 @@ namespace NightDash.Runtime
                 // Legacy / static (no frame sequence on disk → static sprite).
                 { "weapon_hellflame_slash",       (VfxDir + "spr_vfx_hellflame_slash", 1.2f) },
                 { "weapon_abyss_hellflame_slash", (VfxDir + "spr_vfx_hellflame_slash", 1.5f) },
-                { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        1.8f) },
-                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.8f) },
+                { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        1.5f) },
+                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.5f) },
 
                 // Animated weapon VFX (frame sequences spr_vfx_<id>_NN.png).
-                { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 2.4f) },
-                { "weapon_chain_scythe",          (VfxDir + "spr_vfx_chain_scythe",     4.0f) },
-                { "weapon_demon_orb",             (VfxDir + "spr_vfx_demon_orb",        1.6f) },
-                { "weapon_abyss_tentacle",        (VfxDir + "spr_vfx_abyss_tentacle",   4.5f) },
-                { "weapon_dark_barrier",          (VfxDir + "spr_vfx_dark_barrier",     7.2f) },  // 캐릭터보다 크게
-                { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   2.6f) },
-                { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      2.2f) },
-                { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        2.4f) },
-                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",      10.5f) },  // 큰 고리, 캐릭터 둘러쌈
-                { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       1.5f) },
-                { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         1.4f) },
-                { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     1.7f) },
-                { "weapon_slash_combo",           (VfxDir + "spr_vfx_slash_combo",      2.2f) },
-                { "weapon_spear",                 (VfxDir + "spr_vfx_spear",            1.9f) },
-                { "weapon_spinning_blade",        (VfxDir + "spr_vfx_spinning_blade",   3.7f) },
-                { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     1.7f) },
+                { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 2.0f) },
+                { "weapon_chain_scythe",          (VfxDir + "spr_vfx_chain_scythe",     3.2f) },
+                { "weapon_demon_orb",             (VfxDir + "spr_vfx_demon_orb",        1.4f) },
+                { "weapon_abyss_tentacle",        (VfxDir + "spr_vfx_abyss_tentacle",   3.6f) },
+                { "weapon_dark_barrier",          (VfxDir + "spr_vfx_dark_barrier",     5.5f) },  // 캐릭터보다 약간 크게 (반투명)
+                { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   2.2f) },
+                { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      1.9f) },
+                { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        2.0f) },
+                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       7.0f) },  // 고리, 캐릭터 둘러쌈 (반투명)
+                { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       1.3f) },
+                { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         1.2f) },
+                { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     1.4f) },
+                { "weapon_slash_combo",           (VfxDir + "spr_vfx_slash_combo",      1.9f) },
+                { "weapon_spear",                 (VfxDir + "spr_vfx_spear",            1.6f) },
+                { "weapon_spinning_blade",        (VfxDir + "spr_vfx_spinning_blade",   3.0f) },
+                { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     1.4f) },
             };
 
         // Resolves a weapon id to its VFX entry, falling back to the base weapon
@@ -443,8 +443,10 @@ namespace NightDash.Runtime
                     if (isPlayer && !string.IsNullOrEmpty(weaponId) && TryResolveWeaponVfx(weaponId, out var vfxInfo))
                     {
                         if (isMelee) tint = new Color(1f, 0.9f, 0.6f, 0.9f);
-                        // Barrier shield is rendered see-through so the player stays visible underneath.
-                        if (weaponId.Contains("dark_barrier")) tint = new Color(1f, 1f, 1f, 0.5f);
+                        // Barrier shield & light ring are rendered see-through so they
+                        // don't obscure the player / enemies underneath (readability).
+                        if (weaponId.Contains("dark_barrier") || weaponId.Contains("light_ring"))
+                            tint = new Color(1f, 1f, 1f, 0.5f);
 
                         // Prefer an animated frame sequence (spr_vfx_<id>_NN).
                         var frames = LoadFramesFromResources(vfxInfo.path);
