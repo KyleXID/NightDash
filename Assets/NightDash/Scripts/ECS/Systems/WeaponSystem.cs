@@ -150,7 +150,7 @@ namespace NightDash.ECS.Systems
         // their base weapon's behavior.
         private enum WeaponBehaviorKind
         {
-            Linear, Melee, MeleeSweep, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
+            Linear, Melee, MeleeSweep, SlashStrike, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -169,9 +169,9 @@ namespace NightDash.ECS.Systems
                 case "weapon_spinning_blade": return WeaponBehaviorKind.OrbitBlades;
                 case "weapon_dark_barrier":   return WeaponBehaviorKind.Barrier;
                 case "weapon_abyss_tentacle": return WeaponBehaviorKind.GroundZone;
+                case "weapon_slash_combo":    return WeaponBehaviorKind.SlashStrike;
                 case "weapon_chain_scythe":
-                case "weapon_demon_greatsword":
-                case "weapon_slash_combo":    return WeaponBehaviorKind.MeleeSweep;
+                case "weapon_demon_greatsword": return WeaponBehaviorKind.MeleeSweep;
             }
             return type == WeaponType.Melee ? WeaponBehaviorKind.Melee : WeaponBehaviorKind.Linear;
         }
@@ -327,6 +327,35 @@ namespace NightDash.ECS.Systems
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
                         radius: reach, angularSpeed: dir * sweepSpeed, angle: startAngle,
                         hitRadius: math.max(0.7f, weapon.Range * 0.3f), tick: 0.08f, knockback: 0f);
+                    break;
+                }
+                case WeaponBehaviorKind.SlashStrike:
+                {
+                    // Continuous slashing: when an enemy is within range, the slash
+                    // effect spawns ON the enemy (stationary) and rapidly multi-hits
+                    // for a moment. Skips (holds cooldown) if no enemy is close.
+                    float distToTarget = math.length(target - origin);
+                    float strikeRange = math.max(2.5f, weapon.Range);
+                    if (distToTarget > strikeRange)
+                    {
+                        return false; // nearest enemy is out of slashing range
+                    }
+                    Entity e = ecb.CreateEntity();
+                    ecb.AddComponent(e, LocalTransform.FromPosition(new float3(target.x, target.y, 0f)));
+                    ecb.AddComponent(e, new ProjectileData
+                    {
+                        Damage = weapon.Damage,
+                        Lifetime = 0.4f,
+                        IsPlayerOwned = 1,
+                        Radius = 0.7f,
+                        WeaponId = weaponId,
+                        IsMelee = 1,
+                        Behavior = (byte)ProjectileBehavior.GroundZone, // stays on the spot it struck
+                        TickInterval = 0.1f, // rapid multi-hit ("난도질"), never consumed
+                        TickTimer = 0.1f,
+                        AlignToVelocity = 0,
+                    });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
                     break;
                 }
                 case WeaponBehaviorKind.Melee:
