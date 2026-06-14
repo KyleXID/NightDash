@@ -441,6 +441,8 @@ namespace NightDash.Runtime
                     if (isPlayer && !string.IsNullOrEmpty(weaponId) && TryResolveWeaponVfx(weaponId, out var vfxInfo))
                     {
                         if (isMelee) tint = new Color(1f, 0.9f, 0.6f, 0.9f);
+                        // Barrier shield is rendered see-through so the player stays visible underneath.
+                        if (weaponId.Contains("dark_barrier")) tint = new Color(1f, 1f, 1f, 0.5f);
 
                         // Prefer an animated frame sequence (spr_vfx_<id>_NN).
                         var frames = LoadFramesFromResources(vfxInfo.path);

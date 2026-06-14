@@ -217,6 +217,12 @@ namespace NightDash.ECS.Components
         public float Radius;
         public FixedString64Bytes WeaponId;
         public byte IsMelee;
+
+        // Behavior extension (all default 0 = original linear single-hit).
+        public byte Behavior;       // ProjectileBehavior
+        public float TickInterval;  // >0 → persistent multi-hit aura: damages every interval, never destroyed by a hit
+        public float TickTimer;     // countdown to the next damaging tick
+        public float Knockback;     // outward push applied to enemies on a damaging tick (0 = none)
     }
 
     public struct PhysicsVelocity2D : IComponentData

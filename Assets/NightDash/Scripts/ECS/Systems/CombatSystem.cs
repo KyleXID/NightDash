@@ -193,10 +193,27 @@ namespace NightDash.ECS.Systems
                          .WithEntityAccess())
             {
                 projectile.ValueRW.Lifetime -= dt;
-                projectileTransform.ValueRW.Position += new float3(
-                    velocity.ValueRO.Value.x * dt,
-                    velocity.ValueRO.Value.y * dt,
-                    0f);
+
+                // Behavior-driven movement. Orbit weapons re-anchor to the live
+                // player position each frame (stay attached as the player
+                // moves); ground zones stay put; everything else travels along
+                // its velocity (linear projectiles, melee, sky-fall descent).
+                byte behavior = projectile.ValueRO.Behavior;
+                if (behavior == (byte)ProjectileBehavior.Orbit && hasPlayer && SystemAPI.HasComponent<OrbitState>(projectileEntity))
+                {
+                    OrbitState orbit = SystemAPI.GetComponent<OrbitState>(projectileEntity);
+                    orbit.Angle += orbit.AngularSpeed * dt;
+                    SystemAPI.SetComponent(projectileEntity, orbit);
+                    float r = orbit.Radius;
+                    projectileTransform.ValueRW.Position = playerPosition + new float3(math.cos(orbit.Angle) * r, math.sin(orbit.Angle) * r, 0f);
+                }
+                else if (behavior != (byte)ProjectileBehavior.GroundZone)
+                {
+                    projectileTransform.ValueRW.Position += new float3(
+                        velocity.ValueRO.Value.x * dt,
+                        velocity.ValueRO.Value.y * dt,
+                        0f);
+                }
 
                 if (projectile.ValueRO.Lifetime <= 0f)
                 {
@@ -231,6 +248,74 @@ namespace NightDash.ECS.Systems
                                 RefRW<StageRuntimeConfig> stage = SystemAPI.GetSingletonRW<StageRuntimeConfig>();
                                 stage.ValueRW.IsStageCleared = 0;
                             }
+                        }
+                    }
+
+                    continue;
+                }
+
+                // Persistent multi-hit weapons (orbit ring / spinning blades /
+                // barrier / ground zone): on a fixed cadence, damage EVERY enemy
+                // in radius and never get consumed by a hit — only Lifetime ends
+                // them. Knockback shoves contacted enemies outward (barrier).
+                if (projectile.ValueRO.TickInterval > 0f)
+                {
+                    projectile.ValueRW.TickTimer -= dt;
+                    if (projectile.ValueRO.TickTimer > 0f)
+                    {
+                        continue;
+                    }
+                    // Reset to a full interval (discard any accumulated debt)
+                    // so a frame spike can't chain several ticks in a row.
+                    projectile.ValueRW.TickTimer = projectile.ValueRO.TickInterval;
+
+                    float tickRadiusSq = projectile.ValueRO.Radius * projectile.ValueRO.Radius;
+                    float knockback = projectile.ValueRO.Knockback;
+                    float3 center = projectileTransform.ValueRO.Position;
+
+                    foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
+                                 .Query<RefRW<LocalTransform>, RefRW<CombatStats>>()
+                                 .WithAll<EnemyTag>()
+                                 .WithEntityAccess())
+                    {
+                        float3 enemyPos = enemyTransform.ValueRO.Position;
+                        float distanceSq = math.lengthsq(enemyPos - center);
+                        if (distanceSq > tickRadiusSq)
+                        {
+                            continue;
+                        }
+
+                        CombatStats tickEnemy = enemyStats.ValueRO;
+                        float tickDamage = projectile.ValueRO.Damage;
+                        if (hasPlayer)
+                        {
+                            CombatStats playerForCrit = playerStatsRef.ValueRO;
+                            if (playerForCrit.CritChance > 0f && playerForCrit.CritMultiplier > 1f &&
+                                _critRng.NextFloat() < playerForCrit.CritChance)
+                            {
+                                tickDamage *= playerForCrit.CritMultiplier;
+                            }
+                        }
+                        tickEnemy.CurrentHealth = math.max(0f, tickEnemy.CurrentHealth - tickDamage);
+                        enemyStats.ValueRW = tickEnemy;
+
+                        if (SystemAPI.HasSingleton<StatusEffectConfig>())
+                        {
+                            QueueStatusOnHit(enemyEntity, SystemAPI.HasComponent<BossTag>(enemyEntity));
+                        }
+
+                        if (knockback > 0f && distanceSq > 0.0001f)
+                        {
+                            enemyTransform.ValueRW.Position += math.normalize(enemyPos - center) * (knockback * 0.12f);
+                        }
+
+                        NightDashCombatEvents.FireEnemyDamaged(enemyPos, tickDamage);
+
+                        if (tickEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
+                        {
+                            deadEnemies.Add(enemyEntity);
+                            deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
+                            deadEnemyPositions.Add(enemyPos);
                         }
                     }
 
