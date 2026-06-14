@@ -220,25 +220,28 @@ namespace NightDash.ECS.Systems
             {
                 case WeaponBehaviorKind.Skyfall:
                 {
-                    // Meteor: drops straight down onto the target from just above
-                    // it (a bit higher than enemy size, not the top of the map).
-                    const float SkyHeight = 1.8f;
-                    const float FallSpeed = 11f;
-                    float3 spawnPos = new float3(target.x + spawnOffset.x, target.y + SkyHeight, 0f);
+                    // Meteor: streaks DIAGONALLY in from the upper-right toward the
+                    // target (the star's tail is drawn diagonal, so it must come from
+                    // the upper-right). Spawns a good distance away so the descent
+                    // reads, and keeps its drawn orientation (no velocity rotation).
+                    const float DiagDist = 3.0f; // up-right offset from the target
+                    const float FallSpeed = 7f;
+                    float3 spawnPos = new float3(target.x + DiagDist + spawnOffset.x, target.y + DiagDist + spawnOffset.y, 0f);
+                    float2 dir = math.normalize(new float2(target.x - spawnPos.x, target.y - spawnPos.y));
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = (SkyHeight / FallSpeed) + 0.35f,
+                        Lifetime = 1.1f,
                         IsPlayerOwned = 1,
                         Radius = 0.7f,
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
-                        AlignToVelocity = 0, // fixed vertical (sprite is drawn falling)
+                        AlignToVelocity = 0, // keep the star's drawn diagonal tail orientation
                     });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, -FallSpeed) });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = dir * FallSpeed });
                     break;
                 }
                 case WeaponBehaviorKind.PiercingBolt:
