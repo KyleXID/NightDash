@@ -776,6 +776,9 @@ namespace NightDash.Runtime.UI
                     // to the id so the detail strip isn't empty.
                     desc = $"기본 쿨다운 {wd.baseCooldown:0.0}s · 사거리 {wd.baseRange:0.0}";
                 }
+                // SO.icon is unassigned for all weapons → resolve from Resources
+                // (same convention the level-up cards use).
+                if (sprite == null) sprite = NightDashUIIcons.GetWeapon(id);
                 PopulateRow(_weaponRows, i, display, $"Lv.{w.Level}/{w.MaxLevel}", sprite, desc);
             }
 

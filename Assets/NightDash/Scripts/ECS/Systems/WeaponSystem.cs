@@ -150,7 +150,7 @@ namespace NightDash.ECS.Systems
         // their base weapon's behavior.
         private enum WeaponBehaviorKind
         {
-            Linear, Melee, MeleeSweep, SlashStrike, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
+            Linear, Melee, MeleeSweep, SlashStrike, HammerSlam, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -170,6 +170,7 @@ namespace NightDash.ECS.Systems
                 case "weapon_dark_barrier":   return WeaponBehaviorKind.Barrier;
                 case "weapon_abyss_tentacle": return WeaponBehaviorKind.GroundZone;
                 case "weapon_slash_combo":    return WeaponBehaviorKind.SlashStrike;
+                case "weapon_hell_hammer":    return WeaponBehaviorKind.HammerSlam;
                 case "weapon_chain_scythe":
                 case "weapon_demon_greatsword": return WeaponBehaviorKind.MeleeSweep;
             }
@@ -353,6 +354,36 @@ namespace NightDash.ECS.Systems
                         Behavior = (byte)ProjectileBehavior.GroundZone, // stays on the spot it struck
                         TickInterval = 0.1f, // rapid multi-hit ("난도질"), never consumed
                         TickTimer = 0.1f,
+                        AlignToVelocity = 0,
+                    });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
+                    break;
+                }
+                case WeaponBehaviorKind.HammerSlam:
+                {
+                    // Heavy bludgeon: like SlashStrike (lands ON a nearby enemy) but
+                    // SLOW and WEIGHTY — wide impact, knockback, few hard hits.
+                    // (Contrast vs SlashStrike: bigger radius, slower tick, knockback.)
+                    float distToTarget = math.length(target - origin);
+                    float strikeRange = math.max(2.5f, weapon.Range);
+                    if (distToTarget > strikeRange)
+                    {
+                        return false; // nearest enemy is out of slam range
+                    }
+                    Entity e = ecb.CreateEntity();
+                    ecb.AddComponent(e, LocalTransform.FromPosition(new float3(target.x, target.y, 0f)));
+                    ecb.AddComponent(e, new ProjectileData
+                    {
+                        Damage = weapon.Damage,
+                        Lifetime = 0.45f,
+                        IsPlayerOwned = 1,
+                        Radius = 1.3f,        // wide, heavy impact area
+                        WeaponId = weaponId,
+                        IsMelee = 1,
+                        Behavior = (byte)ProjectileBehavior.GroundZone, // stays on the spot it struck
+                        TickInterval = 0.35f, // slow, weighty cadence (few hard hits)
+                        TickTimer = 0.35f,
+                        Knockback = 6f,       // 묵직: knocks enemies back
                         AlignToVelocity = 0,
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
