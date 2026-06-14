@@ -102,7 +102,8 @@ namespace NightDash.ECS.Systems
                 IsPlayerOwned = 0,
                 Radius = CasterProjectileRadius,
                 WeaponId = default,
-                IsMelee = 0
+                IsMelee = 0,
+                AlignToVelocity = 1 // enemy shots face their travel direction (unchanged behavior)
             });
             ecb.AddComponent(projectile, new PhysicsVelocity2D
             {

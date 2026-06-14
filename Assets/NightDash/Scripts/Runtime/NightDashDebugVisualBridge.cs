@@ -68,29 +68,31 @@ namespace NightDash.Runtime
         private static readonly Dictionary<string, (string path, float scale)> WeaponVfxMap =
             new Dictionary<string, (string, float)>
             {
+                // scale = 화면상 크기 배율. ring/barrier 등 지속·범위 무기는 히트 반경에
+                // 맞춰 캐릭터(스케일 1.8)보다 크게. 모든 값 인게임 튜닝 대상.
                 // Legacy / static (no frame sequence on disk → static sprite).
                 { "weapon_hellflame_slash",       (VfxDir + "spr_vfx_hellflame_slash", 1.2f) },
                 { "weapon_abyss_hellflame_slash", (VfxDir + "spr_vfx_hellflame_slash", 1.5f) },
-                { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        0.8f) },
-                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.0f) },
+                { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        1.8f) },
+                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.8f) },
 
                 // Animated weapon VFX (frame sequences spr_vfx_<id>_NN.png).
-                { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 1.4f) },
-                { "weapon_chain_scythe",          (VfxDir + "spr_vfx_chain_scythe",     1.4f) },
-                { "weapon_demon_orb",             (VfxDir + "spr_vfx_demon_orb",        0.9f) },
-                { "weapon_abyss_tentacle",        (VfxDir + "spr_vfx_abyss_tentacle",   1.3f) },
-                { "weapon_dark_barrier",          (VfxDir + "spr_vfx_dark_barrier",     1.2f) },
-                { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   1.2f) },
-                { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      1.2f) },
-                { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        1.3f) },
-                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       1.2f) },
-                { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       0.8f) },
-                { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         0.7f) },
-                { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     0.9f) },
-                { "weapon_slash_combo",           (VfxDir + "spr_vfx_slash_combo",      1.2f) },
-                { "weapon_spear",                 (VfxDir + "spr_vfx_spear",            1.0f) },
-                { "weapon_spinning_blade",        (VfxDir + "spr_vfx_spinning_blade",   1.0f) },
-                { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     0.9f) },
+                { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 2.4f) },
+                { "weapon_chain_scythe",          (VfxDir + "spr_vfx_chain_scythe",     4.0f) },
+                { "weapon_demon_orb",             (VfxDir + "spr_vfx_demon_orb",        1.6f) },
+                { "weapon_abyss_tentacle",        (VfxDir + "spr_vfx_abyss_tentacle",   4.5f) },
+                { "weapon_dark_barrier",          (VfxDir + "spr_vfx_dark_barrier",     7.2f) },  // 캐릭터보다 크게
+                { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   2.6f) },
+                { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      2.2f) },
+                { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        2.4f) },
+                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",      10.5f) },  // 큰 고리, 캐릭터 둘러쌈
+                { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       1.5f) },
+                { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         1.4f) },
+                { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     1.7f) },
+                { "weapon_slash_combo",           (VfxDir + "spr_vfx_slash_combo",      2.2f) },
+                { "weapon_spear",                 (VfxDir + "spr_vfx_spear",            1.9f) },
+                { "weapon_spinning_blade",        (VfxDir + "spr_vfx_spinning_blade",   3.7f) },
+                { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     1.7f) },
             };
 
         // Resolves a weapon id to its VFX entry, falling back to the base weapon
@@ -477,13 +479,19 @@ namespace NightDash.Runtime
                 if (_world != null && _world.IsCreated)
                 {
                     var em = _world.EntityManager;
-                    if (em.Exists(entity) && em.HasComponent<PhysicsVelocity2D>(entity))
+                    if (em.Exists(entity) && em.HasComponent<ProjectileData>(entity) && em.HasComponent<PhysicsVelocity2D>(entity))
                     {
-                        var vel = em.GetComponentData<PhysicsVelocity2D>(entity).Value;
-                        if (math.lengthsq(vel) > 0.01f)
+                        // Only directional projectiles (bullets/arrows/spears) rotate to
+                        // face travel. Sky-fall bolts, melee sweeps and orbit weapons keep
+                        // their drawn orientation (AlignToVelocity == 0).
+                        if (em.GetComponentData<ProjectileData>(entity).AlignToVelocity != 0)
                         {
-                            float angle = math.degrees(math.atan2(vel.y, vel.x));
-                            go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                            var vel = em.GetComponentData<PhysicsVelocity2D>(entity).Value;
+                            if (math.lengthsq(vel) > 0.01f)
+                            {
+                                float angle = math.degrees(math.atan2(vel.y, vel.x));
+                                go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
+                            }
                         }
                     }
                 }

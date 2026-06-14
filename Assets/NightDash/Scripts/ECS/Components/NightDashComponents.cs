@@ -219,10 +219,11 @@ namespace NightDash.ECS.Components
         public byte IsMelee;
 
         // Behavior extension (all default 0 = original linear single-hit).
-        public byte Behavior;       // ProjectileBehavior
-        public float TickInterval;  // >0 → persistent multi-hit aura: damages every interval, never destroyed by a hit
-        public float TickTimer;     // countdown to the next damaging tick
-        public float Knockback;     // outward push applied to enemies on a damaging tick (0 = none)
+        public byte Behavior;        // ProjectileBehavior
+        public float TickInterval;   // >0 → persistent multi-hit aura: damages every interval, never destroyed by a hit
+        public float TickTimer;      // countdown to the next damaging tick
+        public float Knockback;      // outward push applied to enemies on a damaging tick (0 = none)
+        public byte AlignToVelocity; // 1 = view rotates to face travel direction (bullets/arrows/spears); 0 = fixed orientation (sky-fall, melee, orbit)
     }
 
     public struct PhysicsVelocity2D : IComponentData

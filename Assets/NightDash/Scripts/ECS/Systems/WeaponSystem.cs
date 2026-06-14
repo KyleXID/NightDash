@@ -142,7 +142,7 @@ namespace NightDash.ECS.Systems
         // their base weapon's behavior.
         private enum WeaponBehaviorKind
         {
-            Linear, Melee, MeleeArc, Skyfall, OrbitRing, OrbitBlades, Barrier, GroundZone
+            Linear, Melee, MeleeArc, Skyfall, Lightning, OrbitRing, OrbitBlades, Barrier, GroundZone
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -155,8 +155,8 @@ namespace NightDash.ECS.Systems
             switch (baseId)
             {
                 case "weapon_starfall":
-                case "weapon_void_starfall":
-                case "weapon_dark_lightning": return WeaponBehaviorKind.Skyfall;
+                case "weapon_void_starfall": return WeaponBehaviorKind.Skyfall;
+                case "weapon_dark_lightning": return WeaponBehaviorKind.Lightning;
                 case "weapon_light_ring":     return WeaponBehaviorKind.OrbitRing;
                 case "weapon_spinning_blade": return WeaponBehaviorKind.OrbitBlades;
                 case "weapon_dark_barrier":   return WeaponBehaviorKind.Barrier;
@@ -209,21 +209,48 @@ namespace NightDash.ECS.Systems
             {
                 case WeaponBehaviorKind.Skyfall:
                 {
-                    // Falls straight down from above the target enemy (meteor / lightning strike).
-                    const float SkyHeight = 6f;
-                    const float FallSpeed = 16f;
+                    // Meteor: drops straight down onto the target from just above
+                    // it (a bit higher than enemy size, not the top of the map).
+                    const float SkyHeight = 1.8f;
+                    const float FallSpeed = 11f;
                     float3 spawnPos = new float3(target.x + spawnOffset.x, target.y + SkyHeight, 0f);
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = (SkyHeight / FallSpeed) + 0.4f,
+                        Lifetime = (SkyHeight / FallSpeed) + 0.35f,
                         IsPlayerOwned = 1,
                         Radius = 0.7f,
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
+                        AlignToVelocity = 0, // fixed vertical (sprite is drawn falling)
+                    });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, -FallSpeed) });
+                    break;
+                }
+                case WeaponBehaviorKind.Lightning:
+                {
+                    // Lightning bolt: fixed vertical, strikes straight down THROUGH
+                    // enemies (pierces / multi-hit) and lingers briefly before fading.
+                    const float SkyHeight = 3f;
+                    const float FallSpeed = 18f;
+                    float3 spawnPos = new float3(target.x + spawnOffset.x, target.y + SkyHeight, 0f);
+                    Entity e = ecb.CreateEntity();
+                    ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
+                    ecb.AddComponent(e, new ProjectileData
+                    {
+                        Damage = weapon.Damage,
+                        Lifetime = 0.9f,
+                        IsPlayerOwned = 1,
+                        Radius = 0.6f,
+                        WeaponId = weaponId,
+                        IsMelee = 0,
+                        Behavior = (byte)ProjectileBehavior.Linear,
+                        TickInterval = 0.15f, // pierce: hits every enemy in the path, never consumed
+                        TickTimer = 0.15f,
+                        AlignToVelocity = 0,  // fixed vertical
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, -FallSpeed) });
                     break;
@@ -274,7 +301,8 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.MeleeArc:
                 {
-                    // Wide fan sweep in front of the player (large-radius hemisphere approximation).
+                    // Wide fan sweep in front of the player — pierces (hits every
+                    // enemy in range) and is NOT consumed on contact; fades by Lifetime.
                     float arcOffset = math.min(weapon.Range * 0.5f, 1.4f);
                     float3 pos = origin + new float3(direction.x * arcOffset, direction.y * arcOffset, 0f);
                     Entity e = ecb.CreateEntity();
@@ -282,14 +310,17 @@ namespace NightDash.ECS.Systems
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = 0.3f,
+                        Lifetime = 0.35f,
                         IsPlayerOwned = 1,
                         Radius = math.max(1.3f, weapon.Range * 0.55f),
                         WeaponId = weaponId,
                         IsMelee = 1,
                         Behavior = (byte)ProjectileBehavior.Linear,
+                        TickInterval = 0.12f, // pierce / multi-hit, never consumed by a hit
+                        TickTimer = 0.12f,
+                        AlignToVelocity = 0,
                     });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * 1.0f });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * 0.5f });
                     break;
                 }
                 case WeaponBehaviorKind.Melee:
@@ -324,6 +355,7 @@ namespace NightDash.ECS.Systems
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
+                        AlignToVelocity = 1, // bullets/arrows/spears face their travel direction
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * math.max(2f, weapon.ProjectileSpeed) });
                     break;
