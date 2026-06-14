@@ -765,6 +765,8 @@ namespace NightDash.Runtime
                     case UpgradeKind.Weapon:
                         if (registry.TryGetWeapon(id, out NightDash.Data.WeaponData wd) && wd != null && wd.icon != null)
                             sprite = wd.icon;
+                        if (sprite == null)
+                            sprite = NightDash.Runtime.UI.NightDashUIIcons.GetWeapon(id);
                         break;
                     case UpgradeKind.Passive:
                         if (registry.TryGetPassive(id, out NightDash.Data.PassiveData pd) && pd != null && pd.icon != null)
@@ -803,9 +805,10 @@ namespace NightDash.Runtime
                 // player can tell them apart from real art.
                 bool isPlaceholder = option.Kind == UpgradeKind.Passive
                     ? (NightDash.Runtime.UI.NightDashUIIcons.GetPassive(id) == null)
-                    : !(registry != null
-                        && registry.TryGetWeapon(id, out var w)
-                        && w != null && w.icon != null);
+                    : (NightDash.Runtime.UI.NightDashUIIcons.GetWeapon(id) == null
+                        && !(registry != null
+                            && registry.TryGetWeapon(id, out var w)
+                            && w != null && w.icon != null));
                 img.color = isPlaceholder
                     ? new Color(0.82f, 0.78f, 0.70f, 0.9f)
                     : Color.white;

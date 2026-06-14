@@ -41,6 +41,13 @@ namespace NightDash.Runtime.UI
         // Passive so new categories don't have to migrate the existing set.
         private const string PassiveClassPrefix = "NightDash/UI/Icons/Class/nd_ui_icon_passive_";
         private const string PassiveSharedPrefix = "NightDash/UI/Icons/Passive/nd_ui_icon_passive_";
+        // Weapon icons live under Resources/NightDash/UI/Icons/Weapons:
+        //   nd_ui_icon_weapon_<id>            — base weapon
+        //   nd_ui_icon_evolution_<id>         — evolved variant
+        //   nd_ui_icon_evolution_abyss_<id>   — abyss variant
+        private const string WeaponBasePrefix    = "NightDash/UI/Icons/Weapons/nd_ui_icon_weapon_";
+        private const string WeaponEvolvedPrefix = "NightDash/UI/Icons/Weapons/nd_ui_icon_evolution_";
+        private const string WeaponAbyssPrefix   = "NightDash/UI/Icons/Weapons/nd_ui_icon_evolution_abyss_";
 
         private static readonly Dictionary<string, Sprite> s_Cache = new();
 
@@ -92,6 +99,44 @@ namespace NightDash.Runtime.UI
                 sprite = Resources.Load<Sprite>(
                     "NightDash/UI/Icons/Status/nd_ui_icon_status_" + statusKind + ResourceSuffix);
             }
+            s_Cache[cacheKey] = sprite;
+            return sprite;
+        }
+
+        // Resolves the icon for a weapon. Accepts the raw id ("weapon_demon_orb")
+        // or short form. Evolution variants map to evolution art and fall back
+        // to the base weapon icon when dedicated art is absent:
+        //   weapon_x          -> Weapons/nd_ui_icon_weapon_x
+        //   weapon_x_evolved  -> Weapons/nd_ui_icon_evolution_x        (else base)
+        //   weapon_x_abyss    -> Weapons/nd_ui_icon_evolution_abyss_x  (else base)
+        // Returns null when no matching sprite ships.
+        public static Sprite GetWeapon(string weaponId)
+        {
+            if (string.IsNullOrEmpty(weaponId)) return null;
+            string body = weaponId.StartsWith("weapon_")
+                ? weaponId.Substring("weapon_".Length)
+                : weaponId;
+            string cacheKey = "weapon:" + body;
+            if (s_Cache.TryGetValue(cacheKey, out Sprite cached)) return cached;
+
+            Sprite sprite;
+            if (body.EndsWith("_abyss"))
+            {
+                string baseBody = body.Substring(0, body.Length - "_abyss".Length);
+                sprite = Resources.Load<Sprite>(WeaponAbyssPrefix + baseBody + ResourceSuffix)
+                      ?? Resources.Load<Sprite>(WeaponBasePrefix + baseBody + ResourceSuffix);
+            }
+            else if (body.EndsWith("_evolved"))
+            {
+                string baseBody = body.Substring(0, body.Length - "_evolved".Length);
+                sprite = Resources.Load<Sprite>(WeaponEvolvedPrefix + baseBody + ResourceSuffix)
+                      ?? Resources.Load<Sprite>(WeaponBasePrefix + baseBody + ResourceSuffix);
+            }
+            else
+            {
+                sprite = Resources.Load<Sprite>(WeaponBasePrefix + body + ResourceSuffix);
+            }
+
             s_Cache[cacheKey] = sprite;
             return sprite;
         }
