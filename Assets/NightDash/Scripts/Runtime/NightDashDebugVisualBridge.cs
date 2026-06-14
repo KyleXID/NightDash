@@ -23,7 +23,7 @@ namespace NightDash.Runtime
     public sealed class NightDashDebugVisualBridge : MonoBehaviour
     {
         // ------------------------------------------------------------------ constants
-        private const float DefaultPlayerScale = 1.8f;
+        private const float DefaultPlayerScale = 1.6f;
         private const float DefaultBossScale   = 3.6f;
         private const float ProjectilePlayerScale = 0.8f;
         private const float ProjectileEnemyScale  = 0.6f;
@@ -477,6 +477,9 @@ namespace NightDash.Runtime
                         go = CreateStaticView("Projectile", sprite, scale, SortProjectile, tint);
                     }
 
+                    // Shadow arrow leaves a fading afterimage trail as it flies.
+                    if (go != null && weaponId.Contains("shadow_arrow")) go.AddComponent<VFXAfterimage>();
+
                     _projectileViews[entity] = go;
                 }
 
@@ -818,6 +821,45 @@ namespace NightDash.Runtime
                 if (kvp.Value != null) Destroy(kvp.Value);
             }
             views.Clear();
+        }
+    }
+
+    // Leaves a fading sprite afterimage behind a moving VFX (e.g. the shadow
+    // arrow's trail). Every `interval` it clones the current sprite at the
+    // current pose with a low alpha that fades out via VFXAutoDestroy.
+    public sealed class VFXAfterimage : MonoBehaviour
+    {
+        public float interval = 0.04f;
+        public float fadeDuration = 0.22f;
+        public float startAlpha = 0.5f;
+
+        private SpriteRenderer _sr;
+        private float _timer;
+
+        private void Awake() => _sr = GetComponent<SpriteRenderer>();
+
+        private void LateUpdate()
+        {
+            if (_sr == null || _sr.sprite == null) return;
+            _timer += Time.deltaTime;
+            if (_timer < interval) return;
+            _timer = 0f;
+
+            var ghost = new GameObject("[VFX] Afterimage");
+            var t = transform;
+            ghost.transform.SetPositionAndRotation(t.position, t.rotation);
+            ghost.transform.localScale = t.lossyScale;
+
+            var gsr = ghost.AddComponent<SpriteRenderer>();
+            gsr.sprite = _sr.sprite;
+            gsr.flipX = _sr.flipX;
+            gsr.flipY = _sr.flipY;
+            gsr.sortingOrder = _sr.sortingOrder - 1;
+            var col = _sr.color;
+            col.a = startAlpha;
+            gsr.color = col;
+
+            ghost.AddComponent<VFXAutoDestroy>().Init(fadeDuration, fadeOut: true, fadeOutRatio: 1f, maxAlpha: startAlpha);
         }
     }
 }
