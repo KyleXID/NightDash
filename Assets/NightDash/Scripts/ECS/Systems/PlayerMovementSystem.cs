@@ -41,6 +41,12 @@ namespace NightDash.ECS.Systems
                 return;
             }
 
+            // Pause: freeze player movement while paused (pause menu / confirm).
+            if (SystemAPI.HasSingleton<GameplayPauseTag>())
+            {
+                return;
+            }
+
             float dt = SystemAPI.Time.DeltaTime;
             StageRuntimeConfig stage = SystemAPI.GetSingleton<StageRuntimeConfig>();
             float2 input = new float2(NightDashPlayerInputRuntime.MoveAxis.x, NightDashPlayerInputRuntime.MoveAxis.y);

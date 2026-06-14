@@ -493,6 +493,16 @@ namespace NightDash.Runtime
                                 go.transform.rotation = Quaternion.Euler(0f, 0f, angle);
                             }
                         }
+                        else if (em.HasComponent<OrbitState>(entity))
+                        {
+                            // Orbiting blades / melee sweep: face outward along the
+                            // orbit angle so the blade visibly swings around the player.
+                            var orbit = em.GetComponentData<OrbitState>(entity);
+                            if (orbit.Radius > 0.01f)
+                            {
+                                go.transform.rotation = Quaternion.Euler(0f, 0f, math.degrees(orbit.Angle));
+                            }
+                        }
                     }
                 }
             }

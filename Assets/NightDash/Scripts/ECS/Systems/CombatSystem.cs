@@ -46,6 +46,13 @@ namespace NightDash.ECS.Systems
                 return;
             }
 
+            // Pause: freeze all combat (enemy movement, projectiles, contact
+            // damage) while a GameplayPauseTag exists (pause menu / confirm).
+            if (SystemAPI.HasSingleton<GameplayPauseTag>())
+            {
+                return;
+            }
+
             Entity playerEntity = Entity.Null;
             float3 playerPosition = float3.zero;
             RefRW<CombatStats> playerStatsRef = default;

@@ -27,6 +27,14 @@ namespace NightDash.ECS.Systems
                 return;
             }
 
+            // Pause: the pause menu (and any overlay) creates a GameplayPauseTag
+            // entity. Freeze weapon firing while it exists so the simulation is
+            // truly halted behind the menu / confirm dialog.
+            if (SystemAPI.HasSingleton<GameplayPauseTag>())
+            {
+                return;
+            }
+
             var registry = DataRegistry.Instance;
             if (registry?.Catalog == null)
             {
@@ -142,7 +150,7 @@ namespace NightDash.ECS.Systems
         // their base weapon's behavior.
         private enum WeaponBehaviorKind
         {
-            Linear, Melee, MeleeArc, Skyfall, Lightning, OrbitRing, OrbitBlades, Barrier, GroundZone
+            Linear, Melee, MeleeSweep, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -156,12 +164,14 @@ namespace NightDash.ECS.Systems
             {
                 case "weapon_starfall":
                 case "weapon_void_starfall": return WeaponBehaviorKind.Skyfall;
-                case "weapon_dark_lightning": return WeaponBehaviorKind.Lightning;
+                case "weapon_dark_lightning": return WeaponBehaviorKind.PiercingBolt;
                 case "weapon_light_ring":     return WeaponBehaviorKind.OrbitRing;
                 case "weapon_spinning_blade": return WeaponBehaviorKind.OrbitBlades;
                 case "weapon_dark_barrier":   return WeaponBehaviorKind.Barrier;
                 case "weapon_abyss_tentacle": return WeaponBehaviorKind.GroundZone;
-                case "weapon_chain_scythe":   return WeaponBehaviorKind.MeleeArc;
+                case "weapon_chain_scythe":
+                case "weapon_demon_greatsword":
+                case "weapon_slash_combo":    return WeaponBehaviorKind.MeleeSweep;
             }
             return type == WeaponType.Melee ? WeaponBehaviorKind.Melee : WeaponBehaviorKind.Linear;
         }
@@ -230,29 +240,28 @@ namespace NightDash.ECS.Systems
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, -FallSpeed) });
                     break;
                 }
-                case WeaponBehaviorKind.Lightning:
+                case WeaponBehaviorKind.PiercingBolt:
                 {
-                    // Lightning bolt: fixed vertical, strikes straight down THROUGH
-                    // enemies (pierces / multi-hit) and lingers briefly before fading.
-                    const float SkyHeight = 3f;
-                    const float FallSpeed = 18f;
-                    float3 spawnPos = new float3(target.x + spawnOffset.x, target.y + SkyHeight, 0f);
+                    // Emanates from the player along the aim direction, travels
+                    // slowly, pierces (multi-hit) every enemy in the straight line,
+                    // and lingers before fading.
+                    const float BoltSpeed = 6f;
                     Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
+                    ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = 0.9f,
+                        Lifetime = 1.4f,
                         IsPlayerOwned = 1,
                         Radius = 0.6f,
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
-                        TickInterval = 0.15f, // pierce: hits every enemy in the path, never consumed
+                        TickInterval = 0.15f, // pierce: damages every enemy along the line, never consumed
                         TickTimer = 0.15f,
-                        AlignToVelocity = 0,  // fixed vertical
+                        AlignToVelocity = 1,  // faces travel direction
                     });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, -FallSpeed) });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * BoltSpeed });
                     break;
                 }
                 case WeaponBehaviorKind.OrbitRing:
@@ -299,28 +308,19 @@ namespace NightDash.ECS.Systems
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
                     break;
                 }
-                case WeaponBehaviorKind.MeleeArc:
+                case WeaponBehaviorKind.MeleeSweep:
                 {
-                    // Wide fan sweep in front of the player — pierces (hits every
-                    // enemy in range) and is NOT consumed on contact; fades by Lifetime.
-                    float arcOffset = math.min(weapon.Range * 0.5f, 1.4f);
-                    float3 pos = origin + new float3(direction.x * arcOffset, direction.y * arcOffset, 0f);
-                    Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(pos));
-                    ecb.AddComponent(e, new ProjectileData
-                    {
-                        Damage = weapon.Damage,
-                        Lifetime = 0.35f,
-                        IsPlayerOwned = 1,
-                        Radius = math.max(1.3f, weapon.Range * 0.55f),
-                        WeaponId = weaponId,
-                        IsMelee = 1,
-                        Behavior = (byte)ProjectileBehavior.Linear,
-                        TickInterval = 0.12f, // pierce / multi-hit, never consumed by a hit
-                        TickTimer = 0.12f,
-                        AlignToVelocity = 0,
-                    });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * 0.5f });
+                    // Swings an arc AROUND the player: a blade anchored to the
+                    // player rotates through ~180° centered on the aim direction
+                    // over a short lifetime — pierces, never consumed by a hit.
+                    float reach = math.max(1.1f, weapon.Range * 0.55f);
+                    float aim = math.atan2(direction.y, direction.x);
+                    const float sweepLife = 0.32f;
+                    const float sweepSpeed = 10f; // rad/s → ~3.2 rad (~183°) across the lifetime
+                    float startAngle = aim - sweepSpeed * sweepLife * 0.5f; // center the sweep on the aim
+                    CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
+                        radius: reach, angularSpeed: sweepSpeed, angle: startAngle,
+                        hitRadius: math.max(0.7f, weapon.Range * 0.3f), tick: 0.08f, knockback: 0f);
                     break;
                 }
                 case WeaponBehaviorKind.Melee:

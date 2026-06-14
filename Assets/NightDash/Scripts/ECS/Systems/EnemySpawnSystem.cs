@@ -45,6 +45,12 @@ namespace NightDash.ECS.Systems
                 return;
             }
 
+            // Pause: stop spawning while paused (pause menu / confirm).
+            if (SystemAPI.HasSingleton<GameplayPauseTag>())
+            {
+                return;
+            }
+
             float3 playerPosition = float3.zero;
             foreach (var transform in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<PlayerTag>())
             {
