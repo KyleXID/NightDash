@@ -85,7 +85,7 @@ namespace NightDash.Runtime
                 { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   2.2f) },
                 { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      1.9f) },
                 { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        2.0f) },
-                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       7.0f) },  // 고리, 캐릭터 둘러쌈 (반투명)
+                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       5.3f) },  // 고리, 캐릭터 둘러쌈 (반투명)
                 { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       1.3f) },
                 { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         1.2f) },
                 { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     1.4f) },

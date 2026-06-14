@@ -242,10 +242,10 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.PiercingBolt:
                 {
-                    // Lightning: emitted FROM the player but always travels straight
-                    // UP in a fixed vertical orientation (never rotates). Slow,
-                    // pierces every enemy in its vertical line, lingers before fading.
-                    const float BoltSpeed = 5f;
+                    // Lightning: emitted from the player TOWARD the target, travels
+                    // slowly, and keeps a FIXED vertical sprite orientation (never
+                    // rotates to lie flat). Pierces every enemy in its path, lingers.
+                    const float BoltSpeed = 2.5f;
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
                     ecb.AddComponent(e, new ProjectileData
@@ -257,18 +257,18 @@ namespace NightDash.ECS.Systems
                         WeaponId = weaponId,
                         IsMelee = 0,
                         Behavior = (byte)ProjectileBehavior.Linear,
-                        TickInterval = 0.15f, // pierce: damages every enemy in the vertical line, never consumed
+                        TickInterval = 0.15f, // pierce: damages every enemy along the path, never consumed
                         TickTimer = 0.15f,
-                        AlignToVelocity = 0,  // fixed vertical orientation (never rotates to horizontal)
+                        AlignToVelocity = 0,  // keep the bolt sprite upright — never rotate it to horizontal
                     });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = new float2(0f, BoltSpeed) });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * BoltSpeed });
                     break;
                 }
                 case WeaponBehaviorKind.OrbitRing:
                 {
                     // Ring centered on the player (slightly raised); damages enemies within the ring radius.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.6f, angle: 0f, hitRadius: 1.6f, tick: 0.4f, knockback: 0f, centerYOffset: 0.5f);
+                        radius: 0f, angularSpeed: 1.6f, angle: 0f, hitRadius: 1.2f, tick: 0.4f, knockback: 0f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.OrbitBlades:
@@ -315,8 +315,8 @@ namespace NightDash.ECS.Systems
                     // over a short lifetime — pierces, never consumed by a hit.
                     float reach = math.max(1.1f, weapon.Range * 0.55f);
                     float aim = math.atan2(direction.y, direction.x);
-                    const float sweepLife = 0.32f;
-                    const float sweepSpeed = 10f; // rad/s → ~3.2 rad (~183°) across the lifetime
+                    const float sweepLife = 0.5f;
+                    const float sweepSpeed = 6.3f; // rad/s → ~3.15 rad (~180°) across the lifetime (slower, readable swing)
                     float startAngle = aim - sweepSpeed * sweepLife * 0.5f; // center the sweep on the aim
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
                         radius: reach, angularSpeed: sweepSpeed, angle: startAngle,
