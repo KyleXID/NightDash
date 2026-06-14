@@ -214,6 +214,17 @@ namespace NightDash.ECS.Systems
                     float r = orbit.Radius;
                     projectileTransform.ValueRW.Position = playerPosition + new float3(math.cos(orbit.Angle) * r, orbit.CenterYOffset + math.sin(orbit.Angle) * r, 0f);
                 }
+                else if (behavior == (byte)ProjectileBehavior.Whip && hasPlayer && SystemAPI.HasComponent<WhipState>(projectileEntity))
+                {
+                    // Rubber-band chain: distance from the player follows sin(π·t),
+                    // shooting out to MaxReach at mid-life then retracting to 0.
+                    WhipState whip = SystemAPI.GetComponent<WhipState>(projectileEntity);
+                    float tt = whip.TotalLifetime > 0.01f
+                        ? math.clamp((whip.TotalLifetime - projectile.ValueRO.Lifetime) / whip.TotalLifetime, 0f, 1f)
+                        : 1f;
+                    float dist = whip.MaxReach * math.sin(math.PI * tt);
+                    projectileTransform.ValueRW.Position = playerPosition + new float3(whip.Direction.x * dist, whip.Direction.y * dist, 0f);
+                }
                 else if (behavior != (byte)ProjectileBehavior.GroundZone)
                 {
                     projectileTransform.ValueRW.Position += new float3(

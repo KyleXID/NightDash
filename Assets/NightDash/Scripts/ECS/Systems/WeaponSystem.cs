@@ -150,7 +150,7 @@ namespace NightDash.ECS.Systems
         // their base weapon's behavior.
         private enum WeaponBehaviorKind
         {
-            Linear, Melee, MeleeSweep, SlashStrike, HammerSlam, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
+            Linear, Melee, MeleeSweep, SlashStrike, HammerSlam, Whip, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -171,7 +171,7 @@ namespace NightDash.ECS.Systems
                 case "weapon_abyss_tentacle": return WeaponBehaviorKind.GroundZone;
                 case "weapon_slash_combo":    return WeaponBehaviorKind.SlashStrike;
                 case "weapon_hell_hammer":    return WeaponBehaviorKind.HammerSlam;
-                case "weapon_chain_scythe":
+                case "weapon_chain_scythe":   return WeaponBehaviorKind.Whip;
                 case "weapon_demon_greatsword": return WeaponBehaviorKind.MeleeSweep;
             }
             return type == WeaponType.Melee ? WeaponBehaviorKind.Melee : WeaponBehaviorKind.Linear;
@@ -337,6 +337,32 @@ namespace NightDash.ECS.Systems
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
                         radius: reach, angularSpeed: dir * sweepSpeed, angle: startAngle,
                         hitRadius: math.max(0.7f, weapon.Range * 0.3f), tick: 0.08f, knockback: 0f);
+                    break;
+                }
+                case WeaponBehaviorKind.Whip:
+                {
+                    // Chain scythe: shoots out from the player toward the target and
+                    // snaps back like a rubber band, damaging everything along the
+                    // path (extend → retract over the lifetime). Pierces.
+                    float maxReach = math.max(2.5f, weapon.Range * 1.2f);
+                    const float whipLife = 0.6f;
+                    Entity e = ecb.CreateEntity();
+                    ecb.AddComponent(e, LocalTransform.FromPosition(origin)); // starts at the player (distance 0)
+                    ecb.AddComponent(e, new ProjectileData
+                    {
+                        Damage = weapon.Damage,
+                        Lifetime = whipLife,
+                        IsPlayerOwned = 1,
+                        Radius = math.max(0.7f, weapon.Range * 0.25f),
+                        WeaponId = weaponId,
+                        IsMelee = 1,
+                        Behavior = (byte)ProjectileBehavior.Whip,
+                        TickInterval = 0.06f, // pierce: repeatedly damages enemies along the path
+                        TickTimer = 0.06f,
+                        AlignToVelocity = 0,
+                    });
+                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
+                    ecb.AddComponent(e, new WhipState { Direction = direction, MaxReach = maxReach, TotalLifetime = whipLife });
                     break;
                 }
                 case WeaponBehaviorKind.SlashStrike:
