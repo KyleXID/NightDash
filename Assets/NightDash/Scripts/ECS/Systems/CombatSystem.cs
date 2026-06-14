@@ -356,7 +356,26 @@ namespace NightDash.ECS.Systems
 
                         if (knockback > 0f && distanceSq > 0.0001f)
                         {
-                            enemyTransform.ValueRW.Position += math.normalize(enemyPos - center) * (knockback * 0.12f);
+                            float3 pushDir;
+                            if (SystemAPI.HasComponent<OrbitState>(projectileEntity))
+                            {
+                                OrbitState ob = SystemAPI.GetComponent<OrbitState>(projectileEntity);
+                                if (ob.Radius > 0.1f)
+                                {
+                                    // Orbiting blade: shove along its rotation (tangential) direction.
+                                    float s = ob.AngularSpeed >= 0f ? 1f : -1f;
+                                    pushDir = new float3(-math.sin(ob.Angle) * s, math.cos(ob.Angle) * s, 0f);
+                                }
+                                else
+                                {
+                                    pushDir = math.normalize(enemyPos - center); // centered barrier → push outward
+                                }
+                            }
+                            else
+                            {
+                                pushDir = math.normalize(enemyPos - center);
+                            }
+                            enemyTransform.ValueRW.Position += pushDir * (knockback * 0.12f);
                         }
 
                         NightDashCombatEvents.FireEnemyDamaged(enemyPos, tickDamage);

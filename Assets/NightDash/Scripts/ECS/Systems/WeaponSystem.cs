@@ -131,10 +131,13 @@ namespace NightDash.ECS.Systems
                             weaponData.weaponType);
                         if (fired)
                         {
-                            // Only consume the cooldown when the weapon actually
-                            // fired (target-seeking weapons hold ready until an
-                            // enemy appears).
-                            ownedWeapon.CooldownRemaining = profile.Cooldown * cooldownMultiplier;
+                            // Persistent orbit weapons (ring/blades/barrier) spawn ONCE
+                            // and never re-fire (CooldownRemaining parked at MaxValue) so
+                            // they don't flicker. Everything else consumes its cooldown
+                            // normally (target-seekers hold ready until an enemy appears).
+                            ownedWeapon.CooldownRemaining = IsPersistentOrbit(ownedWeapon.Id)
+                                ? float.MaxValue
+                                : profile.Cooldown * cooldownMultiplier;
                             firingIndex += 1;
                         }
                     }
@@ -151,6 +154,17 @@ namespace NightDash.ECS.Systems
         private enum WeaponBehaviorKind
         {
             Linear, Melee, MeleeSweep, SlashStrike, HammerSlam, Whip, Skyfall, PiercingBolt, OrbitRing, OrbitBlades, Barrier, GroundZone
+        }
+
+        // Orbit weapons that spawn once and persist (never re-fire) for the run.
+        private static bool IsPersistentOrbit(FixedString64Bytes weaponId)
+        {
+            string baseId = weaponId.ToString();
+            if (baseId.EndsWith("_evolved")) baseId = baseId.Substring(0, baseId.Length - "_evolved".Length);
+            else if (baseId.EndsWith("_abyss")) baseId = baseId.Substring(0, baseId.Length - "_abyss".Length);
+            return baseId == "weapon_light_ring"
+                || baseId == "weapon_spinning_blade"
+                || baseId == "weapon_dark_barrier";
         }
 
         private static WeaponBehaviorKind ResolveBehavior(FixedString64Bytes weaponId, WeaponType type)
@@ -203,9 +217,11 @@ namespace NightDash.ECS.Systems
             float offsetFactor = weaponCount > 1 ? weaponIndex - ((weaponCount - 1) * 0.5f) : 0f;
             float2 spawnOffset = perpendicular * (0.32f * offsetFactor);
 
-            // Persistent (orbit / zone) weapons live ~one cooldown so the next
-            // cast seamlessly replaces them instead of stacking indefinitely.
-            float persistentLife = math.max(0.5f, weapon.Cooldown) * 1.1f;
+            // Orbit weapons (ring / blades / barrier) spawn ONCE and persist for
+            // the whole run (the OnUpdate cooldown gate stops them re-firing), so
+            // they orbit continuously instead of flickering back to angle 0 on
+            // each respawn. RunTeardownBridge clears them at run end.
+            const float persistentLife = 99999f;
 
             WeaponBehaviorKind kind = ResolveBehavior(weaponId, type);
             bool playerCentered = kind == WeaponBehaviorKind.OrbitRing
@@ -285,9 +301,9 @@ namespace NightDash.ECS.Systems
                 {
                     // Two blades orbiting the player on opposite sides.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 1.8f, angularSpeed: 3.6f, angle: 0f, hitRadius: 0.7f, tick: 0.25f, knockback: 0f);
+                        radius: 1.8f, angularSpeed: 3.6f, angle: 0f, hitRadius: 0.7f, tick: 0.25f, knockback: 3f, centerYOffset: 0.5f);
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 1.8f, angularSpeed: 3.6f, angle: math.PI, hitRadius: 0.7f, tick: 0.25f, knockback: 0f);
+                        radius: 1.8f, angularSpeed: 3.6f, angle: math.PI, hitRadius: 0.7f, tick: 0.25f, knockback: 3f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.Barrier:
