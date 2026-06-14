@@ -310,16 +310,22 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.MeleeSweep:
                 {
-                    // Swings an arc AROUND the player: a blade anchored to the
-                    // player rotates through ~180° centered on the aim direction
+                    // Swings an arc AROUND the player, centered on the aim direction,
                     // over a short lifetime — pierces, never consumed by a hit.
-                    float reach = math.max(1.1f, weapon.Range * 0.55f);
+                    string sweepId = weaponId.ToString();
+                    // Greatsword's blade art reads opposite the others, so it swings
+                    // the other way (clockwise) to match its sprite.
+                    float dir = sweepId.Contains("demon_greatsword") ? -1f : 1f;
+                    // Chain scythe sweeps closer to the player's body.
+                    float reach = sweepId.Contains("chain_scythe")
+                        ? math.max(0.6f, weapon.Range * 0.3f)
+                        : math.max(1.1f, weapon.Range * 0.55f);
                     float aim = math.atan2(direction.y, direction.x);
                     const float sweepLife = 0.5f;
-                    const float sweepSpeed = 6.3f; // rad/s → ~3.15 rad (~180°) across the lifetime (slower, readable swing)
-                    float startAngle = aim - sweepSpeed * sweepLife * 0.5f; // center the sweep on the aim
+                    const float sweepSpeed = 6.3f; // rad/s → ~3.15 rad (~180°) across the lifetime
+                    float startAngle = aim - dir * sweepSpeed * sweepLife * 0.5f; // center the sweep on the aim
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
-                        radius: reach, angularSpeed: sweepSpeed, angle: startAngle,
+                        radius: reach, angularSpeed: dir * sweepSpeed, angle: startAngle,
                         hitRadius: math.max(0.7f, weapon.Range * 0.3f), tick: 0.08f, knockback: 0f);
                     break;
                 }
