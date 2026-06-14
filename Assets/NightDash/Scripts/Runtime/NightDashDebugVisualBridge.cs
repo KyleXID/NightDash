@@ -27,6 +27,8 @@ namespace NightDash.Runtime
         private const float DefaultBossScale   = 3.6f;
         private const float ProjectilePlayerScale = 0.8f;
         private const float ProjectileEnemyScale  = 0.6f;
+        // Playback rate for animated weapon-VFX frame sequences (looping).
+        private const float ProjectileVfxFps       = 12f;
 
         // Base sorting orders are well above Stage01 environment sprites
         // (tilesets ~1, cracks ~5, props ~100..150) so Y-sort offsets cannot
@@ -56,17 +58,60 @@ namespace NightDash.Runtime
 
         // ------------------------------------------------------------------ projectile VFX paths (Resources)
         // Kept as Resources for now — VFX SO migration is a follow-up task.
+        // Map value = (base Resources path, render scale). The renderer first
+        // tries an animated frame sequence (<path>_01.._NN); if none exists it
+        // falls back to a single static sprite at <path>. Evolved/abyss weapon
+        // ids ("..._evolved" / "..._abyss") reuse their base entry via
+        // TryResolveWeaponVfx() until dedicated evolution VFX are authored.
         private const string PathProjectile = "NightDash/Art/Stage01/VFX/spr_vfx_demon_orb";
+        private const string VfxDir = "NightDash/Art/Stage01/VFX/";
         private static readonly Dictionary<string, (string path, float scale)> WeaponVfxMap =
             new Dictionary<string, (string, float)>
             {
-                { "weapon_hellflame_slash",       ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.2f) },
-                { "weapon_abyss_hellflame_slash", ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.5f) },
-                { "weapon_demon_greatsword",      ("NightDash/Art/Stage01/VFX/spr_vfx_hellflame_slash",   1.6f) },
-                { "weapon_demon_orb",             ("NightDash/Art/Stage01/VFX/spr_vfx_demon_orb",         0.8f) },
-                { "weapon_starfall",              ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           0.8f) },
-                { "weapon_void_starfall",         ("NightDash/Art/Stage01/VFX/spr_vfx_starfall",           1.0f) },
+                // Legacy / static (no frame sequence on disk → static sprite).
+                { "weapon_hellflame_slash",       (VfxDir + "spr_vfx_hellflame_slash", 1.2f) },
+                { "weapon_abyss_hellflame_slash", (VfxDir + "spr_vfx_hellflame_slash", 1.5f) },
+                { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        0.8f) },
+                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.0f) },
+
+                // Animated weapon VFX (frame sequences spr_vfx_<id>_NN.png).
+                { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 1.4f) },
+                { "weapon_chain_scythe",          (VfxDir + "spr_vfx_chain_scythe",     1.4f) },
+                { "weapon_demon_orb",             (VfxDir + "spr_vfx_demon_orb",        0.9f) },
+                { "weapon_abyss_tentacle",        (VfxDir + "spr_vfx_abyss_tentacle",   1.3f) },
+                { "weapon_dark_barrier",          (VfxDir + "spr_vfx_dark_barrier",     1.2f) },
+                { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   1.2f) },
+                { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      1.2f) },
+                { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        1.3f) },
+                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       1.2f) },
+                { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       0.8f) },
+                { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         0.7f) },
+                { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     0.9f) },
+                { "weapon_slash_combo",           (VfxDir + "spr_vfx_slash_combo",      1.2f) },
+                { "weapon_spear",                 (VfxDir + "spr_vfx_spear",            1.0f) },
+                { "weapon_spinning_blade",        (VfxDir + "spr_vfx_spinning_blade",   1.0f) },
+                { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     0.9f) },
             };
+
+        // Resolves a weapon id to its VFX entry, falling back to the base weapon
+        // for evolution variants ("weapon_x_evolved" / "weapon_x_abyss").
+        // NOTE: only the trailing "_evolved"/"_abyss" segment is stripped, and
+        // only after a direct lookup fails. Base weapons whose id naturally ends
+        // with one of those tokens (e.g. weapon_abyss_tentacle) MUST keep a
+        // direct map entry so the strip path is never reached for them.
+        private static bool TryResolveWeaponVfx(string weaponId, out (string path, float scale) info)
+        {
+            if (WeaponVfxMap.TryGetValue(weaponId, out info)) return true;
+
+            string baseId = null;
+            if (weaponId.EndsWith("_evolved")) baseId = weaponId.Substring(0, weaponId.Length - "_evolved".Length);
+            else if (weaponId.EndsWith("_abyss")) baseId = weaponId.Substring(0, weaponId.Length - "_abyss".Length);
+
+            if (baseId != null && WeaponVfxMap.TryGetValue(baseId, out info)) return true;
+
+            info = default;
+            return false;
+        }
 
         // Exposed for the dash-trail bridge so it can pull the player's
         // current sprite + flip state and clone an afterimage. Returns null
@@ -120,6 +165,9 @@ namespace NightDash.Runtime
 
         // ------------------------------------------------------------------ Resources fallback cache (projectiles only)
         private readonly Dictionary<string, Sprite> _spriteCache = new();
+        // Cache of animated frame sequences keyed by base path. A null value is
+        // cached for paths with no sequence so we don't re-probe Resources.
+        private readonly Dictionary<string, Sprite[]> _frameCache = new();
 
         // ------------------------------------------------------------------ ECS queries
         private EntityQuery _playerQuery;
@@ -389,22 +437,34 @@ namespace NightDash.Runtime
 
                     string weaponId = projectiles[i].WeaponId.ToString();
                     bool isMelee = projectiles[i].IsMelee != 0;
-                    Sprite sprite;
-                    float scale;
 
-                    if (isPlayer && !string.IsNullOrEmpty(weaponId) && WeaponVfxMap.TryGetValue(weaponId, out var vfxInfo))
+                    if (isPlayer && !string.IsNullOrEmpty(weaponId) && TryResolveWeaponVfx(weaponId, out var vfxInfo))
                     {
-                        sprite = LoadSpriteFromResources(vfxInfo.path);
-                        scale = vfxInfo.scale;
                         if (isMelee) tint = new Color(1f, 0.9f, 0.6f, 0.9f);
+
+                        // Prefer an animated frame sequence (spr_vfx_<id>_NN).
+                        var frames = LoadFramesFromResources(vfxInfo.path);
+                        if (frames != null && frames.Length >= 2)
+                        {
+                            go = CreateAnimatedProjectileView("Projectile", frames, vfxInfo.scale, SortProjectile, tint, ProjectileVfxFps);
+                        }
+                        else
+                        {
+                            // A lone "_01" frame is used directly; otherwise load
+                            // the single static sprite at the base path.
+                            var staticSprite = (frames != null && frames.Length == 1)
+                                ? frames[0]
+                                : LoadSpriteFromResources(vfxInfo.path);
+                            go = CreateStaticView("Projectile", staticSprite, vfxInfo.scale, SortProjectile, tint);
+                        }
                     }
                     else
                     {
-                        sprite = LoadSpriteFromResources(PathProjectile);
-                        scale = isPlayer ? ProjectilePlayerScale : ProjectileEnemyScale;
+                        var sprite = LoadSpriteFromResources(PathProjectile);
+                        float scale = isPlayer ? ProjectilePlayerScale : ProjectileEnemyScale;
+                        go = CreateStaticView("Projectile", sprite, scale, SortProjectile, tint);
                     }
 
-                    go = CreateStaticView("Projectile", sprite, scale, SortProjectile, tint);
                     _projectileViews[entity] = go;
                 }
 
@@ -556,6 +616,24 @@ namespace NightDash.Runtime
             return go;
         }
 
+        // Projectile view that plays a looping sprite-frame animation.
+        private static GameObject CreateAnimatedProjectileView(string label, Sprite[] frames, float scale, int sortOrder, Color tint, float fps)
+        {
+            var go = new GameObject($"[View] {label}");
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = frames[0];            // avoid a 1-frame placeholder flash before Start()
+            sr.sortingOrder = sortOrder;
+            sr.color = tint;
+            go.transform.localScale = Vector3.one * scale;
+
+            var anim = go.AddComponent<SpriteAnimator>();
+            anim.frames = frames;
+            anim.fps = fps;
+            anim.loop = true;
+            anim.playOnStart = true;
+            return go;
+        }
+
         private SpriteAnimationSetSO LookupAnimSet(string id)
         {
             if (string.IsNullOrEmpty(id)) return null;
@@ -593,6 +671,27 @@ namespace NightDash.Runtime
 
             _spriteCache[resourcePath] = sprite;
             return sprite;
+        }
+
+        // Loads an animated frame sequence (<basePath>_01, _02, ...) from
+        // Resources, stopping at the first missing frame. Returns null (cached)
+        // when no "_01" frame exists, signalling the caller to use a static sprite.
+        private Sprite[] LoadFramesFromResources(string basePath)
+        {
+            if (_frameCache.TryGetValue(basePath, out var cached))
+                return cached;
+
+            var frames = new List<Sprite>(8);
+            for (int n = 1; ; n++)
+            {
+                var s = Resources.Load<Sprite>($"{basePath}_{n:D2}");
+                if (s == null) break;
+                frames.Add(s);
+            }
+
+            var arr = frames.Count > 0 ? frames.ToArray() : null;
+            _frameCache[basePath] = arr;
+            return arr;
         }
 
         private static Sprite _placeholderSprite;
