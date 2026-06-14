@@ -1,12 +1,14 @@
 name: Smoke Build (manual)
 
 # 주의: 실제 바이너리 빌드는 UNITY_LICENSE 시크릿 설정된 이후 활성화.
-# 수동 트리거 + main 브랜치 주간 스케줄로 실행. PR 게이트에는 포함하지 않음.
+# 시크릿 미설정 상태에서는 주간 schedule이 매주 activation 단계에서 실패하므로
+# 비활성화하고 수동 트리거(workflow_dispatch)만 유지한다. editmode-tests.yml과 동일 정책.
+# 라이선스 시크릿 설정 후 아래 schedule 블록을 주석 해제.
 on:
   workflow_dispatch:
-  schedule:
-    # 매주 월요일 03:00 UTC (한국시간 12:00)
-    - cron: '0 3 * * 1'
+  # schedule:
+  #   # 매주 월요일 03:00 UTC (한국시간 12:00)
+  #   - cron: '0 3 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
