@@ -21,10 +21,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a66256c56f394ee4b7ae370aff17661e, type: 2}
   - {fileID: 11400000, guid: cc643ce4c7c5646548a35240258b29ae, type: 2}
   weapons:
-  - {fileID: 11400000, guid: 01aead015663a4d69849407b62e45a02, type: 2}
-  - {fileID: 11400000, guid: 0408da4d03eef451183d2ef8b5d35f63, type: 2}
   - {fileID: 11400000, guid: 7bcaecd7b5b5b4fe985375cf1285260f, type: 2}
-  - {fileID: 11400000, guid: ad4ecea8cbdc04347a8290e1dc11d497, type: 2}
   - {fileID: 11400000, guid: ccec957f403140b798988541f78d1a6c, type: 2}
   - {fileID: 11400000, guid: e89b9eb2981041c2b651852a81b0a42a, type: 2}
   - {fileID: 11400000, guid: 44ec9279cea94013be2f6e10cdc0c560, type: 2}
@@ -111,7 +108,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ec00b0599fbf42d3987050eaeb017774, type: 2}
   - {fileID: 11400000, guid: 1687dffbaa0f44b48198a50b830e10d9, type: 2}
   evolutions:
-  - {fileID: 11400000, guid: ad650368a4f4d43638c393114d8b2762, type: 2}
   - {fileID: 11400000, guid: 0c755c6ac48a4880a3600437ad166c27, type: 2}
   - {fileID: 11400000, guid: 902c184754d34185822fa004b2e0962b, type: 2}
   - {fileID: 11400000, guid: dc8b691ed52444e7a5e728d2cd1cfd83, type: 2}
