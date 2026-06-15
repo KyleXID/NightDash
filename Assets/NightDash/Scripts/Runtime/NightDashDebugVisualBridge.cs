@@ -174,7 +174,13 @@ namespace NightDash.Runtime
         // Chain-scythe whip: a stretching chain rendered between the player and
         // the flying scythe head. One chain GameObject per whip projectile.
         private readonly Dictionary<Entity, GameObject> _whipChains = new();
-        private const string PathWhipChain = "NightDash/Art/Stage01/VFX/spr_vfx_chain_scythe_chain";
+        private const string ChainVariantPrefix = "NightDash/Art/Stage01/VFX/spr_vfx_chain_scythe_chain_";
+        private Sprite[] _chainVariants; // randomly-mixed chain-link sprites (spr_vfx_chain_scythe_chain_1..N)
+        private const float HeadRingOffset = 0.6f; // world units from the scythe-head center back to its chain ring
+        // Two-tone chain-scythe palette: icy-blue scythe head, dark-navy chain links.
+        // Multiplied onto the (otherwise white) sprite, so values < 1 darken/tint.
+        private static readonly Color ScytheHeadTint  = new Color(0.55f, 0.78f, 1.00f, 1f);
+        private static readonly Color ScytheChainTint = new Color(0.16f, 0.20f, 0.46f, 1f);
 
         // ------------------------------------------------------------------ ECS queries
         private EntityQuery _playerQuery;
@@ -487,16 +493,17 @@ namespace NightDash.Runtime
                     // Shadow arrow leaves a fading afterimage trail as it flies.
                     if (go != null && weaponId.Contains("shadow_arrow")) go.AddComponent<VFXAfterimage>();
 
-                    // Chain scythe: a single chain-link sprite TILED from the player to
-                    // the flying scythe head (tiling, not stretching, so links don't warp).
+                    // Chain scythe: a row of mixed chain-link sprites spanning from the
+                    // player to the flying scythe head. Two-tone palette — the head reads
+                    // icy-blue, the chain links read dark navy.
                     if (go != null && isPlayer && weaponId.Contains("chain_scythe"))
                     {
+                        var headSr = go.GetComponent<SpriteRenderer>();
+                        if (headSr != null) headSr.color = ScytheHeadTint;
+
                         var chainGo = new GameObject("[VFX] WhipChain");
-                        var csr = chainGo.AddComponent<SpriteRenderer>();
-                        csr.sprite = LoadSpriteFromResources(PathWhipChain);
-                        csr.drawMode = SpriteDrawMode.Tiled;
-                        csr.sortingOrder = SortProjectile - 1; // behind the scythe head
-                        csr.color = tint;
+                        var chainRenderer = chainGo.AddComponent<WhipChainRenderer>();
+                        chainRenderer.Init(LoadChainVariants(), SortProjectile - 1, ScytheChainTint);
                         _whipChains[entity] = chainGo;
                     }
 
@@ -505,10 +512,10 @@ namespace NightDash.Runtime
 
                 SetPosition(go, transforms[i].Position, SortProjectile);
 
-                // Stretch the chain-scythe chain from the player to the head.
+                // Orient the scythe head + stretch the chain to its ring.
                 if (_whipChains.TryGetValue(entity, out var whipChain) && whipChain != null)
                 {
-                    UpdateWhipChain(whipChain, go.transform.position);
+                    UpdateWhipChain(whipChain, go);
                 }
 
                 // Projectile rotation toward velocity. Guarded against entities
@@ -815,39 +822,56 @@ namespace NightDash.Runtime
             }
         }
 
-        // Positions / orients / sizes the tiled chain so it spans from the player
-        // to the scythe head (the whip projectile's current position). Tiled
-        // draw mode repeats the single link sprite — links never warp.
-        private void UpdateWhipChain(GameObject chainGo, Vector3 headPos)
+        // Orients the scythe head so its blade points outward (away from the
+        // player, toward where enemies are) and its ring stays on the player
+        // side, then spans the chain from the player up to that ring so the
+        // chain is always physically attached to the head's ring. The per-link
+        // layout — count and randomly-mixed variant per slot — is in WhipChainRenderer.
+        private void UpdateWhipChain(GameObject chainGo, GameObject headGo)
         {
             var playerRenderer = GetAnyPlayerRenderer();
-            if (playerRenderer == null)
+            var chainRenderer = chainGo.GetComponent<WhipChainRenderer>();
+            if (playerRenderer == null || chainRenderer == null)
             {
                 chainGo.SetActive(false);
                 return;
             }
 
-            Vector3 playerPos = playerRenderer.transform.position;
-            playerPos.z = 0f;
-            headPos.z = 0f;
+            Vector3 playerPos = playerRenderer.transform.position; playerPos.z = 0f;
+            Vector3 headPos = headGo.transform.position; headPos.z = 0f;
             Vector3 delta = headPos - playerPos;
             float dist = delta.magnitude;
-            if (dist < 0.05f)
-            {
-                chainGo.SetActive(false);
-                return;
-            }
+            if (dist < 0.05f) { chainGo.SetActive(false); return; }
+
+            Vector3 dir = delta / dist; // player → head = outward / enemy direction
+
+            // Blade faces outward. The sprite is drawn blade-up (+Y), so rotate
+            // its +Y axis onto `dir` (angle(dir) - 90°). The ring (sprite -Y)
+            // then automatically points back along the chain toward the player.
+            float headAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
+            headGo.transform.rotation = Quaternion.Euler(0f, 0f, headAngle);
+
+            // Chain ends at the ring, which sits HeadRingOffset world units back
+            // from the head center along the chain — so the ring is always linked.
+            Vector3 ringPos = headPos - dir * HeadRingOffset;
 
             chainGo.SetActive(true);
-            chainGo.transform.position = (playerPos + headPos) * 0.5f;
-            chainGo.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+            chainRenderer.UpdateChain(playerPos, ringPos);
+        }
 
-            var sr = chainGo.GetComponent<SpriteRenderer>();
-            if (sr != null)
+        // Loads the chain-link variant sprites (spr_vfx_chain_scythe_chain_1..N).
+        private Sprite[] LoadChainVariants()
+        {
+            if (_chainVariants != null) return _chainVariants;
+            var list = new List<Sprite>(8);
+            for (int n = 1; ; n++)
             {
-                float linkHeight = sr.sprite != null ? sr.sprite.bounds.size.y : 0.2f;
-                sr.size = new Vector2(dist, linkHeight); // Tiled: repeats links along the length
+                var s = Resources.Load<Sprite>($"{ChainVariantPrefix}{n}");
+                if (s == null) break;
+                list.Add(s);
             }
+            _chainVariants = list.Count > 0 ? list.ToArray() : null;
+            return _chainVariants;
         }
 
         private void DestroyAllWhipChains()
@@ -937,6 +961,77 @@ namespace NightDash.Runtime
             gsr.color = col;
 
             ghost.AddComponent<VFXAutoDestroy>().Init(fadeDuration, fadeOut: true, fadeOutRatio: 1f, maxAlpha: startAlpha);
+        }
+    }
+
+    // Renders the chain-scythe chain as a row of individual link sprites laid
+    // from the player to the flying scythe head. Each link slot is assigned a
+    // RANDOM variant (stable per slot, so it doesn't flicker) and the link
+    // count grows/shrinks with the distance — the chain "extends" with mixed
+    // links instead of a single stretched/tiled sprite.
+    public sealed class WhipChainRenderer : MonoBehaviour
+    {
+        private const float LinkSpacing = 0.18f; // world units between link centers
+        private const float LinkScale   = 1.8f;  // smaller than the scythe head
+        private const int   MaxLinks    = 96;
+
+        private Sprite[] _variants;
+        private int _sortingOrder;
+        private Color _tint = Color.white;
+        private uint _seed = 1u;
+        private readonly System.Collections.Generic.List<SpriteRenderer> _links = new();
+
+        public void Init(Sprite[] variants, int sortingOrder, Color tint)
+        {
+            _variants = variants;
+            _sortingOrder = sortingOrder;
+            _tint = tint;
+            _seed = (uint)(GetInstanceID() & 0x7fffffff) | 1u;
+        }
+
+        public void UpdateChain(Vector3 playerPos, Vector3 endPos)
+        {
+            if (_variants == null || _variants.Length == 0) { SetActiveCount(0); return; }
+
+            playerPos.z = 0f;
+            endPos.z = 0f;
+            Vector3 delta = endPos - playerPos;
+            float dist = delta.magnitude;
+            if (dist < 0.05f) { SetActiveCount(0); return; }
+
+            Vector3 dir = delta / dist;
+            var rot = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+            int n = Mathf.Clamp(Mathf.RoundToInt(dist / LinkSpacing), 1, MaxLinks);
+
+            while (_links.Count < n)
+            {
+                var go = new GameObject("link");
+                go.transform.SetParent(transform, false);
+                _links.Add(go.AddComponent<SpriteRenderer>());
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                SpriteRenderer lr = _links[i];
+                Transform t = lr.transform;
+                t.position = playerPos + dir * ((i + 0.5f) * LinkSpacing);
+                t.rotation = rot;
+                t.localScale = Vector3.one * LinkScale;
+                uint h = _seed + (uint)i * 2654435761u; // stable pseudo-random variant per slot
+                lr.sprite = _variants[(int)(h % (uint)_variants.Length)];
+                lr.color = _tint;
+                lr.sortingOrder = _sortingOrder;
+            }
+            SetActiveCount(n);
+        }
+
+        private void SetActiveCount(int n)
+        {
+            for (int i = 0; i < _links.Count; i++)
+            {
+                bool on = i < n;
+                if (_links[i].gameObject.activeSelf != on) _links[i].gameObject.SetActive(on);
+            }
         }
     }
 }

@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: b75ea3fa52134a168c69a9e6a88914dd
+guid: 28e49ce761c14e6f8ebaf565a343a042
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 291269286468124434
-    second: spr_vfx_chain_scythe_05
+      213: 836394588760820830
+    second: spr_vfx_chain_scythe_chain_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: spr_vfx_chain_scythe_05
+      name: spr_vfx_chain_scythe_chain_2
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 60
-        height: 60
+        width: 16
+        height: 16
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 47666b9cd6024f459fb87e062b8cd5500000000000000000
-      internalID: 291269286468124434
+      spriteID: f5d0641ec1a64ff49a0f55b8d8f9050b0000000000000000
+      internalID: 836394588760820830
       vertices: []
       indices:
       edges: []
@@ -138,7 +138,7 @@ TextureImporter:
     customData:
     physicsShape: []
     bones: []
-    spriteID: 76addd40e51546be87b9f029af2ba320
+    spriteID: bff7808def89438b81634b15063c5d9f
     internalID: 0
     vertices: []
     indices:
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      spr_vfx_chain_scythe_05: 291269286468124434
+      spr_vfx_chain_scythe_chain_2: 836394588760820830
   mipmapLimitGroupName:
   pSDRemoveMatte: 0
   userData:
