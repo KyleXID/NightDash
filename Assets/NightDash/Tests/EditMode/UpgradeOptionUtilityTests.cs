@@ -265,8 +265,8 @@ namespace NightDash.Tests.EditMode
         public void DrawWeightedOptions_Favors_Passives_Statistically()
         {
             // One weapon + one passive candidate → both are drawn, but the FIRST
-            // pick should favor the passive at roughly PassiveDrawWeight:WeaponDrawWeight
-            // (2:1 ⇒ ~2/3). Large sample keeps this well clear of the bounds.
+            // pick should favor the passive at PassiveDrawWeight:WeaponDrawWeight.
+            // Bounds are derived from the weights so this test tracks tuning changes.
             var candidates = new List<UpgradeOptionElement>
             {
                 new UpgradeOptionElement { Kind = UpgradeKind.Weapon,  Id = new FixedString64Bytes("w1") },
@@ -290,9 +290,12 @@ namespace NightDash.Tests.EditMode
                 }
             }
 
+            double expected = UpgradeOptionUtility.PassiveDrawWeight
+                            / (UpgradeOptionUtility.PassiveDrawWeight + UpgradeOptionUtility.WeaponDrawWeight);
             double ratio = (double)passiveFirst / trials;
-            Assert.That(ratio, Is.GreaterThan(0.55).And.LessThan(0.78),
-                $"first-picked card should favor passives (~2/3); observed {ratio:P1}");
+            Assert.That(ratio, Is.GreaterThan(expected - 0.05).And.LessThan(expected + 0.05),
+                $"first-picked card should favor passives near {expected:P0}; observed {ratio:P1}");
+            Assert.That(ratio, Is.GreaterThan(0.5), "passives must remain the majority of first picks");
         }
     }
 }

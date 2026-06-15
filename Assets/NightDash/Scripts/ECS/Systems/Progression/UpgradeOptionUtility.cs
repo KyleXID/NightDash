@@ -24,7 +24,7 @@ namespace NightDash.ECS.Systems.Progression
         // and passed in by ref, so card draws and rarity rolls are deterministic
         // and unit-testable while still varying per run at runtime.
         internal const float WeaponDrawWeight  = 1.0f;
-        internal const float PassiveDrawWeight = 2.0f;
+        internal const float PassiveDrawWeight = 1.5f;
 
         // -------------------------------------------------------------------------
         // Public entry points called by the split ISystem types
