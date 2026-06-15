@@ -182,6 +182,16 @@ namespace NightDash.Runtime
         private static readonly Color ScytheHeadTint  = new Color(0.55f, 0.78f, 1.00f, 1f);
         private static readonly Color ScytheChainTint = new Color(0.16f, 0.20f, 0.46f, 1f);
 
+        // Melee weapon range indicators: a faint dotted ring + icon around the
+        // player showing each melee weapon's reach. Keyed by weapon id; built on
+        // first sight, then just repositioned. Range is approximated from the
+        // weapon's baseRange (RangeMultiplier / level scaling not reflected).
+        private EntityQuery _ownedWeaponQuery;
+        private readonly Dictionary<string, WeaponRangeIndicator> _rangeIndicators = new();
+        private static readonly string[] RangeIndicatorWeapons = { "weapon_slash_combo", "weapon_hell_hammer" };
+        private const int SortRangeIndicator = 160; // above Stage01 props (~150), well below characters
+        private static Sprite _rangeDotSprite;
+
         // ------------------------------------------------------------------ ECS queries
         private EntityQuery _playerQuery;
         private EntityQuery _enemyQuery;
@@ -235,6 +245,7 @@ namespace NightDash.Runtime
             SyncEnemies(dt);
             SyncBosses(dt);
             SyncProjectiles();
+            SyncWeaponRangeIndicators();
             CleanupAnimationState();
         }
 
@@ -245,6 +256,7 @@ namespace NightDash.Runtime
             DestroyAllViews(_bossViews);
             DestroyAllProjectiles(_projectileViews);
             DestroyAllWhipChains();
+            DestroyAllRangeIndicators();
         }
 
         // Clears every spawned view GameObject. Called by Title/Lobby UI when
@@ -257,6 +269,7 @@ namespace NightDash.Runtime
             DestroyAllViews(_bossViews);
             DestroyAllProjectiles(_projectileViews);
             DestroyAllWhipChains();
+            DestroyAllRangeIndicators();
             _lastPositions.Clear();
         }
 
@@ -295,6 +308,9 @@ namespace NightDash.Runtime
 
             _runSelectionQuery = em.CreateEntityQuery(
                 ComponentType.ReadOnly<RunSelection>());
+
+            _ownedWeaponQuery = em.CreateEntityQuery(
+                ComponentType.ReadOnly<OwnedWeaponElement>());
 
             NightDashLog.Info("[VisualBridge] Queries initialised.");
             return true;
@@ -883,6 +899,103 @@ namespace NightDash.Runtime
             _whipChains.Clear();
         }
 
+        // Draws/repositions a translucent dotted range ring (+ weapon icon) around
+        // the player for each owned melee weapon in RangeIndicatorWeapons. Built
+        // once per weapon, then just repositioned each frame.
+        private void SyncWeaponRangeIndicators()
+        {
+            var playerRenderer = GetAnyPlayerRenderer();
+            if (playerRenderer == null || _ownedWeaponQuery.IsEmptyIgnoreFilter)
+            {
+                foreach (var kvp in _rangeIndicators)
+                    if (kvp.Value != null) kvp.Value.gameObject.SetActive(false);
+                return;
+            }
+
+            var em = _world.EntityManager;
+            // OwnedWeaponElement lives on the progression singleton (not the player).
+            Entity ownerEntity = _ownedWeaponQuery.GetSingletonEntity();
+            if (!em.HasBuffer<OwnedWeaponElement>(ownerEntity))
+            {
+                foreach (var kvp in _rangeIndicators)
+                    if (kvp.Value != null) kvp.Value.gameObject.SetActive(false);
+                return;
+            }
+            DynamicBuffer<OwnedWeaponElement> owned = em.GetBuffer<OwnedWeaponElement>(ownerEntity, true);
+
+            Vector3 center = playerRenderer.transform.position;
+            var registry = DataRegistry.Instance;
+
+            for (int t = 0; t < RangeIndicatorWeapons.Length; t++)
+            {
+                string id = RangeIndicatorWeapons[t];
+                FixedString64Bytes idFs = id; // implicit, alloc-free struct conversion
+
+                bool ownedNow = false;
+                for (int i = 0; i < owned.Length; i++)
+                {
+                    if (owned[i].Id == idFs) { ownedNow = true; break; }
+                }
+
+                if (!ownedNow)
+                {
+                    if (_rangeIndicators.TryGetValue(id, out var hidden) && hidden != null)
+                        hidden.gameObject.SetActive(false);
+                    continue;
+                }
+
+                if (!_rangeIndicators.TryGetValue(id, out var indicator) || indicator == null)
+                {
+                    // Approximated from baseRange — matches WeaponSystem's max(2.5, range)
+                    // shape but does not reflect RangeMultiplier / level scaling.
+                    float radius = 2.5f;
+                    if (registry != null && registry.TryGetWeapon(id, out var wd) && wd != null)
+                        radius = math.max(2.5f, wd.baseRange);
+
+                    var go = new GameObject($"[VFX] RangeIndicator {id}");
+                    indicator = go.AddComponent<WeaponRangeIndicator>();
+                    Sprite icon = LoadSpriteFromResources(
+                        $"NightDash/UI/Icons/Weapons/nd_ui_icon_weapon_{StripWeaponPrefix(id)}_default");
+                    indicator.Init(GetRangeDotSprite(), icon, radius, RangeRingColor(id),
+                        new Color(1f, 1f, 1f, 0.55f), SortRangeIndicator);
+                    _rangeIndicators[id] = indicator;
+                }
+
+                indicator.gameObject.SetActive(true);
+                indicator.SetCenter(center);
+            }
+        }
+
+        private static string StripWeaponPrefix(string id)
+            => id.StartsWith("weapon_") ? id.Substring("weapon_".Length) : id;
+
+        private static Color RangeRingColor(string id)
+            => id.Contains("hell_hammer")
+                ? new Color(1.0f, 0.45f, 0.35f, 0.28f)  // ember red
+                : new Color(1.0f, 0.88f, 0.45f, 0.28f); // slash gold
+
+        // 1×1 white sprite reused for every ring dot.
+        private static Sprite GetRangeDotSprite()
+        {
+            if (_rangeDotSprite != null) return _rangeDotSprite;
+            // Dedicated 1×1 white texture (Texture2D.whiteTexture is read-only and can
+            // throw "not readable" inside Sprite.Create on some platforms/builds).
+            var tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
+            // PPU 1 so the 1×1 texture maps to a 1-world-unit sprite; DotScale then
+            // controls the dot size directly in world units.
+            _rangeDotSprite = Sprite.Create(tex, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+            return _rangeDotSprite;
+        }
+
+        private void DestroyAllRangeIndicators()
+        {
+            foreach (var kvp in _rangeIndicators)
+                if (kvp.Value != null) Destroy(kvp.Value.gameObject);
+            _rangeIndicators.Clear();
+        }
+
         private void RemoveStaleProjectiles(Dictionary<Entity, GameObject> views, HashSet<Entity> alive)
         {
             _staleScratch.Clear();
@@ -1032,6 +1145,52 @@ namespace NightDash.Runtime
                 bool on = i < n;
                 if (_links[i].gameObject.activeSelf != on) _links[i].gameObject.SetActive(on);
             }
+        }
+    }
+
+    // Draws a faint dotted ring at a melee weapon's max range around the player,
+    // with the weapon's icon pinned at the top of the ring. Pure readability aid —
+    // kept translucent and sorted below characters so it never obscures gameplay.
+    // The ring geometry is built once in Init(); SetCenter() just follows the player.
+    public sealed class WeaponRangeIndicator : MonoBehaviour
+    {
+        private const int   DotCount  = 48;
+        private const float DotScale  = 0.12f; // dot diameter in world units (PPU-1 dot sprite)
+        private const float IconScale = 0.8f;
+
+        public void Init(Sprite dot, Sprite icon, float radius, Color ringColor, Color iconColor, int sortingOrder)
+        {
+            if (transform.childCount > 0) return; // already built; Init is one-shot
+            for (int i = 0; i < DotCount; i++)
+            {
+                float ang = (2f * Mathf.PI * i) / DotCount;
+                var go = new GameObject("dot");
+                go.transform.SetParent(transform, false);
+                go.transform.localPosition = new Vector3(Mathf.Cos(ang) * radius, Mathf.Sin(ang) * radius, 0f);
+                go.transform.localScale = Vector3.one * DotScale;
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = dot;
+                sr.color = ringColor;
+                sr.sortingOrder = sortingOrder;
+            }
+
+            if (icon != null)
+            {
+                var iconGo = new GameObject("icon");
+                iconGo.transform.SetParent(transform, false);
+                iconGo.transform.localPosition = new Vector3(0f, radius, 0f);
+                iconGo.transform.localScale = Vector3.one * IconScale;
+                var isr = iconGo.AddComponent<SpriteRenderer>();
+                isr.sprite = icon;
+                isr.color = iconColor;
+                isr.sortingOrder = sortingOrder + 1;
+            }
+        }
+
+        public void SetCenter(Vector3 center)
+        {
+            center.z = 0f;
+            transform.position = center;
         }
     }
 }
