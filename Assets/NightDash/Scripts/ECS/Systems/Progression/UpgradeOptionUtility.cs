@@ -18,10 +18,13 @@ namespace NightDash.ECS.Systems.Progression
     /// </summary>
     internal static class UpgradeOptionUtility
     {
-        // Per-card rarity roll. Seeded so debug runs are repeatable; advances
-        // across rolls. 70% Common / 25% Rare / 5% Legendary.
-        private static Unity.Mathematics.Random _rarityRng =
-            Unity.Mathematics.Random.CreateFromIndex(0x9E3B_7711u);
+        // Relative likelihood of each card kind being drawn. Passives are
+        // intentionally more likely than weapons (designer request 2026-06-15).
+        // The RNG itself is owned/seeded by the caller (UpgradeOptionGeneratorSystem)
+        // and passed in by ref, so card draws and rarity rolls are deterministic
+        // and unit-testable while still varying per run at runtime.
+        internal const float WeaponDrawWeight  = 1.0f;
+        internal const float PassiveDrawWeight = 2.0f;
 
         // -------------------------------------------------------------------------
         // Public entry points called by the split ISystem types
@@ -39,7 +42,7 @@ namespace NightDash.ECS.Systems.Progression
             DynamicBuffer<AvailableWeaponElement> availableWeapons,
             DynamicBuffer<AvailablePassiveElement> availablePassives,
             PlayerProgressionState progression,
-            GameLoopState loop,
+            ref Unity.Mathematics.Random rng,
             bool preferFreshOptions)
         {
             var previousOptions = new List<UpgradeOptionElement>(options.Length);
@@ -142,27 +145,17 @@ namespace NightDash.ECS.Systems.Progression
                 }
             }
 
-            int preferredOffset = candidatePool.Count > 0
-                ? (loop.Level + loop.PendingLevelUps + (preferFreshOptions ? previousOptions.Count + 1 : 0)) % candidatePool.Count
-                : 0;
-
-            if (preferFreshOptions)
-            {
-                AddPreferredOptions(ref options, candidatePool, previousOptions, preferredOffset, includePrevious: false);
-            }
-
-            AddPreferredOptions(ref options, candidatePool, previousOptions, preferredOffset, includePrevious: true);
-            EnsureFreshUnlockPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Weapon);
-            EnsureFreshUnlockPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Passive);
-            EnsureOptionKindPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Weapon);
-            EnsureOptionKindPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Passive);
+            // Weighted random draw: pick up to 3 distinct cards from the pool.
+            // Passives carry a higher weight (PassiveDrawWeight) than weapons,
+            // so passive cards appear more often than weapon cards.
+            DrawWeightedOptions(ref options, candidatePool, previousOptions, ref rng, preferFreshOptions);
 
             // Roll a rarity per offered card (70% Common / 25% Rare / 5% Legendary).
             // Higher rarity grants bonus levels when the card is picked (ApplySelection).
             for (int i = 0; i < options.Length; i++)
             {
                 UpgradeOptionElement o = options[i];
-                float roll = _rarityRng.NextFloat();
+                float roll = rng.NextFloat();
                 o.Rarity = roll < 0.70f ? (byte)0 : (roll < 0.95f ? (byte)1 : (byte)2);
                 options[i] = o;
             }
@@ -330,129 +323,72 @@ namespace NightDash.ECS.Systems.Progression
             candidates.Add(candidate);
         }
 
-        internal static void AddPreferredOptions(
+        internal static float DrawWeight(UpgradeKind kind)
+            => kind == UpgradeKind.Passive ? PassiveDrawWeight : WeaponDrawWeight;
+
+        /// <summary>
+        /// Picks up to 3 distinct cards from <paramref name="candidates"/> via a
+        /// weighted random draw (passives weighted higher than weapons). On a
+        /// reroll it first tries to exclude the previously-shown cards. The caller
+        /// owns/advances <paramref name="rng"/>, so successive level-ups and runs
+        /// surface a genuinely random set — no more level-indexed fixed ordering.
+        /// </summary>
+        internal static void DrawWeightedOptions(
             ref DynamicBuffer<UpgradeOptionElement> options,
             List<UpgradeOptionElement> candidates,
             List<UpgradeOptionElement> previousOptions,
-            int offset,
-            bool includePrevious)
+            ref Unity.Mathematics.Random rng,
+            bool preferFreshOptions)
         {
             if (candidates.Count == 0)
             {
                 return;
             }
 
-            for (int i = 0; i < candidates.Count && options.Length < 3; i++)
+            // Working pool we draw from without replacement. On reroll, prefer
+            // cards that weren't shown last time; if that leaves too few to fill
+            // the slots, fall back to the full candidate set.
+            var pool = new List<UpgradeOptionElement>(candidates.Count);
+            for (int i = 0; i < candidates.Count; i++)
             {
-                UpgradeOptionElement candidate = candidates[(offset + i) % candidates.Count];
-                bool existedPreviously = ContainsOption(previousOptions, candidate);
-                if (!includePrevious && existedPreviously && previousOptions.Count < candidates.Count)
+                if (preferFreshOptions && ContainsOption(previousOptions, candidates[i]))
                 {
                     continue;
                 }
 
-                if (!ContainsOption(options, candidate.Id))
+                pool.Add(candidates[i]);
+            }
+
+            if (pool.Count < math.min(3, candidates.Count))
+            {
+                pool.Clear();
+                pool.AddRange(candidates);
+            }
+
+            int target = math.min(3, pool.Count);
+            while (options.Length < target && pool.Count > 0)
+            {
+                float total = 0f;
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    options.Add(candidate);
+                    total += DrawWeight(pool[i].Kind);
                 }
-            }
-        }
 
-        internal static void EnsureOptionKindPresence(
-            ref DynamicBuffer<UpgradeOptionElement> options,
-            List<UpgradeOptionElement> candidates,
-            List<UpgradeOptionElement> previousOptions,
-            int offset,
-            UpgradeKind requiredKind)
-        {
-            if (HasOptionKind(options, requiredKind))
-            {
-                return;
-            }
-
-            int replacementIndex = FindCandidateIndex(candidates, previousOptions, offset, requiredKind, includePrevious: false);
-            if (replacementIndex < 0)
-            {
-                replacementIndex = FindCandidateIndex(candidates, previousOptions, offset, requiredKind, includePrevious: true);
-            }
-
-            if (replacementIndex < 0)
-            {
-                return;
-            }
-
-            UpgradeOptionElement replacement = candidates[replacementIndex];
-            if (ContainsOption(options, replacement))
-            {
-                return;
-            }
-
-            if (options.Length < 3)
-            {
-                options.Add(replacement);
-                return;
-            }
-
-            for (int i = options.Length - 1; i >= 0; i--)
-            {
-                if (options[i].Kind != requiredKind)
+                float r = rng.NextFloat(0f, total);
+                int picked = pool.Count - 1;
+                float acc = 0f;
+                for (int i = 0; i < pool.Count; i++)
                 {
-                    options[i] = replacement;
-                    return;
+                    acc += DrawWeight(pool[i].Kind);
+                    if (r < acc)
+                    {
+                        picked = i;
+                        break;
+                    }
                 }
-            }
-        }
 
-        internal static void EnsureFreshUnlockPresence(
-            ref DynamicBuffer<UpgradeOptionElement> options,
-            List<UpgradeOptionElement> candidates,
-            List<UpgradeOptionElement> previousOptions,
-            int offset,
-            UpgradeKind requiredKind)
-        {
-            if (HasFreshUnlock(options, requiredKind))
-            {
-                return;
-            }
-
-            int replacementIndex = FindCandidateIndex(
-                candidates,
-                previousOptions,
-                offset,
-                requiredKind,
-                includePrevious: false,
-                requireFreshUnlock: true);
-
-            if (replacementIndex < 0)
-            {
-                replacementIndex = FindCandidateIndex(
-                    candidates,
-                    previousOptions,
-                    offset,
-                    requiredKind,
-                    includePrevious: true,
-                    requireFreshUnlock: true);
-            }
-
-            if (replacementIndex < 0)
-            {
-                return;
-            }
-
-            UpgradeOptionElement replacement = candidates[replacementIndex];
-            if (ContainsOption(options, replacement))
-            {
-                return;
-            }
-
-            if (TryReplaceOption(ref options, replacement, preferReplaceFreshUnlock: false))
-            {
-                return;
-            }
-
-            if (options.Length < 3)
-            {
-                options.Add(replacement);
+                options.Add(pool[picked]);
+                pool.RemoveAt(picked);
             }
         }
 
@@ -516,32 +452,6 @@ namespace NightDash.ECS.Systems.Progression
                 {
                     return true;
                 }
-            }
-
-            return false;
-        }
-
-        internal static bool TryReplaceOption(
-            ref DynamicBuffer<UpgradeOptionElement> options,
-            UpgradeOptionElement replacement,
-            bool preferReplaceFreshUnlock)
-        {
-            for (int i = options.Length - 1; i >= 0; i--)
-            {
-                UpgradeOptionElement existing = options[i];
-                bool existingIsFreshUnlock = existing.CurrentLevel == 0;
-                if (!preferReplaceFreshUnlock && existingIsFreshUnlock)
-                {
-                    continue;
-                }
-
-                if (existing.Kind == replacement.Kind && existingIsFreshUnlock == (replacement.CurrentLevel == 0))
-                {
-                    continue;
-                }
-
-                options[i] = replacement;
-                return true;
             }
 
             return false;

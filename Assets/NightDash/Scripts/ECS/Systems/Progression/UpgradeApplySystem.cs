@@ -16,8 +16,13 @@ namespace NightDash.ECS.Systems.Progression
     [UpdateAfter(typeof(UpgradeOptionGeneratorSystem))]
     public partial struct UpgradeApplySystem : ISystem
     {
+        // Independent card-draw RNG for the chained-level-up regeneration path.
+        // XOR-offset from wall-clock so it won't mirror the generator's seed.
+        private Unity.Mathematics.Random _rng;
+
         public void OnCreate(ref SystemState state)
         {
+            _rng = Unity.Mathematics.Random.CreateFromIndex((uint)System.DateTime.Now.Ticks ^ 0x9E3779B9u);
             state.RequireForUpdate<GameLoopState>();
             state.RequireForUpdate<PlayerProgressionState>();
             state.RequireForUpdate<UpgradeSelectionRequest>();
@@ -90,7 +95,7 @@ namespace NightDash.ECS.Systems.Progression
                     availableWeapons,
                     availablePassives,
                     progression.ValueRO,
-                    loop.ValueRO,
+                    ref _rng,
                     preferFreshOptions: false);
             }
             else

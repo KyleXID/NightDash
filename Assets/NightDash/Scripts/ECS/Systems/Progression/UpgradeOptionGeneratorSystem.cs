@@ -17,8 +17,14 @@ namespace NightDash.ECS.Systems.Progression
     [UpdateAfter(typeof(LevelUpSelectionGateSystem))]
     public partial struct UpgradeOptionGeneratorSystem : ISystem
     {
+        // Owns the card-draw RNG so UpgradeOptionUtility stays a pure, testable
+        // helper. Seeded from wall-clock time at world creation so each play
+        // session surfaces a different sequence; advances on every BuildOptions.
+        private Unity.Mathematics.Random _rng;
+
         public void OnCreate(ref SystemState state)
         {
+            _rng = Unity.Mathematics.Random.CreateFromIndex((uint)System.DateTime.Now.Ticks);
             state.RequireForUpdate<GameLoopState>();
             state.RequireForUpdate<PlayerProgressionState>();
             state.RequireForUpdate<UpgradeSelectionRequest>();
@@ -68,7 +74,7 @@ namespace NightDash.ECS.Systems.Progression
                         availableWeapons,
                         availablePassives,
                         progression.ValueRO,
-                        loop.ValueRO,
+                        ref _rng,
                         preferFreshOptions: true);
                 }
             }
@@ -84,7 +90,7 @@ namespace NightDash.ECS.Systems.Progression
                     availableWeapons,
                     availablePassives,
                     progression.ValueRO,
-                    loop.ValueRO,
+                    ref _rng,
                     preferFreshOptions: false);
             }
 
@@ -102,7 +108,7 @@ namespace NightDash.ECS.Systems.Progression
                         availableWeapons,
                         availablePassives,
                         progression.ValueRO,
-                        loop.ValueRO,
+                        ref _rng,
                         preferFreshOptions: false);
                 }
                 else

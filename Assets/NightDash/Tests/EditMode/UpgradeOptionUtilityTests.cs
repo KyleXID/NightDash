@@ -206,5 +206,93 @@ namespace NightDash.Tests.EditMode
 
             Assert.That(index, Is.EqualTo(1), "only candidate with CurrentLevel==0 qualifies as fresh unlock");
         }
+
+        // --- DrawWeightedOptions (weighted random draw) -----------------------
+
+        [Test]
+        public void DrawWeight_Passive_Is_Higher_Than_Weapon()
+        {
+            Assert.That(UpgradeOptionUtility.DrawWeight(UpgradeKind.Passive),
+                Is.GreaterThan(UpgradeOptionUtility.DrawWeight(UpgradeKind.Weapon)),
+                "passives must be more likely to be offered than weapons");
+        }
+
+        [Test]
+        public void DrawWeightedOptions_Draws_Three_Distinct_Cards_From_Larger_Pool()
+        {
+            var options = _world.EntityManager.GetBuffer<UpgradeOptionElement>(_entity);
+            var candidates = new List<UpgradeOptionElement>
+            {
+                new UpgradeOptionElement { Kind = UpgradeKind.Weapon,  Id = new FixedString64Bytes("w1") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Weapon,  Id = new FixedString64Bytes("w2") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Passive, Id = new FixedString64Bytes("p1") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Passive, Id = new FixedString64Bytes("p2") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Passive, Id = new FixedString64Bytes("p3") },
+            };
+
+            var rng = Unity.Mathematics.Random.CreateFromIndex(12345u);
+            UpgradeOptionUtility.DrawWeightedOptions(
+                ref options, candidates, new List<UpgradeOptionElement>(), ref rng, preferFreshOptions: false);
+
+            Assert.That(options.Length, Is.EqualTo(3), "should fill 3 slots from a 5-candidate pool");
+
+            var seen = new HashSet<string>();
+            for (int i = 0; i < options.Length; i++)
+            {
+                Assert.That(seen.Add(options[i].Kind + ":" + options[i].Id), Is.True,
+                    "drawn cards must be distinct (no duplicates)");
+            }
+        }
+
+        [Test]
+        public void DrawWeightedOptions_Caps_At_Candidate_Count_When_Fewer_Than_Three()
+        {
+            var options = _world.EntityManager.GetBuffer<UpgradeOptionElement>(_entity);
+            var candidates = new List<UpgradeOptionElement>
+            {
+                new UpgradeOptionElement { Kind = UpgradeKind.Passive, Id = new FixedString64Bytes("p1") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Weapon,  Id = new FixedString64Bytes("w1") },
+            };
+
+            var rng = Unity.Mathematics.Random.CreateFromIndex(777u);
+            UpgradeOptionUtility.DrawWeightedOptions(
+                ref options, candidates, new List<UpgradeOptionElement>(), ref rng, preferFreshOptions: false);
+
+            Assert.That(options.Length, Is.EqualTo(2), "cannot offer more cards than candidates");
+        }
+
+        [Test]
+        public void DrawWeightedOptions_Favors_Passives_Statistically()
+        {
+            // One weapon + one passive candidate → both are drawn, but the FIRST
+            // pick should favor the passive at roughly PassiveDrawWeight:WeaponDrawWeight
+            // (2:1 ⇒ ~2/3). Large sample keeps this well clear of the bounds.
+            var candidates = new List<UpgradeOptionElement>
+            {
+                new UpgradeOptionElement { Kind = UpgradeKind.Weapon,  Id = new FixedString64Bytes("w1") },
+                new UpgradeOptionElement { Kind = UpgradeKind.Passive, Id = new FixedString64Bytes("p1") },
+            };
+            var previous = new List<UpgradeOptionElement>();
+            var rng = Unity.Mathematics.Random.CreateFromIndex(0xABCDEFu);
+
+            const int trials = 3000;
+            int passiveFirst = 0;
+            for (int t = 0; t < trials; t++)
+            {
+                var options = _world.EntityManager.GetBuffer<UpgradeOptionElement>(_entity);
+                options.Clear();
+                UpgradeOptionUtility.DrawWeightedOptions(
+                    ref options, candidates, previous, ref rng, preferFreshOptions: false);
+
+                if (options.Length > 0 && options[0].Kind == UpgradeKind.Passive)
+                {
+                    passiveFirst++;
+                }
+            }
+
+            double ratio = (double)passiveFirst / trials;
+            Assert.That(ratio, Is.GreaterThan(0.55).And.LessThan(0.78),
+                $"first-picked card should favor passives (~2/3); observed {ratio:P1}");
+        }
     }
 }
