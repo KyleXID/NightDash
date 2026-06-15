@@ -454,7 +454,24 @@ namespace NightDash.ECS.Systems
 
             // Drain the status-effect queue now that the hit foreach has
             // released its iterator — structural changes are safe here.
-            FlushStatusQueue(ref state);
+            if (FlushStatusQueue(ref state))
+            {
+                // ApplyEffect performed EntityManager structural changes, which
+                // invalidate EVERY component handle / singleton RefRW captured
+                // earlier this frame. Re-acquire the ones still used below.
+                loop = SystemAPI.GetSingletonRW<GameLoopState>();
+                result = SystemAPI.GetSingletonRW<RunResultStats>();
+
+                hasPlayer = false;
+                playerStatsRef = default;
+                foreach (var (stats, entity) in SystemAPI.Query<RefRW<CombatStats>>().WithAll<PlayerTag>().WithEntityAccess())
+                {
+                    playerStatsRef = stats;
+                    playerEntity = entity;
+                    hasPlayer = true;
+                    break;
+                }
+            }
 
             if (hasPlayer && playerEntity != Entity.Null && contactDamage > 0f)
             {
@@ -618,9 +635,11 @@ namespace NightDash.ECS.Systems
             _statusQueueScratch.Add((target, mask, isBoss));
         }
 
-        private void FlushStatusQueue(ref SystemState state)
+        // Returns true if it applied any effects (i.e. performed EntityManager
+        // structural changes) — callers must re-acquire invalidated handles then.
+        private bool FlushStatusQueue(ref SystemState state)
         {
-            if (_statusQueueScratch == null || _statusQueueScratch.Count == 0) return;
+            if (_statusQueueScratch == null || _statusQueueScratch.Count == 0) return false;
             StatusEffectConfig cfg = SystemAPI.GetSingleton<StatusEffectConfig>();
             EntityManager em = state.EntityManager;
             for (int i = 0; i < _statusQueueScratch.Count; i++)
@@ -637,6 +656,7 @@ namespace NightDash.ECS.Systems
                     StatusEffectSystem.ApplyEffect(em, target, StatusEffectKind.Stun, cfg, isBoss);
             }
             _statusQueueScratch.Clear();
+            return true;
         }
     }
 }
