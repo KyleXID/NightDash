@@ -216,13 +216,30 @@ namespace NightDash.ECS.Systems
                 }
                 else if (behavior == (byte)ProjectileBehavior.Whip && hasPlayer && SystemAPI.HasComponent<WhipState>(projectileEntity))
                 {
-                    // Rubber-band chain: distance from the player follows sin(π·t),
-                    // shooting out to MaxReach at mid-life then retracting to 0.
+                    // Rubber-band chain in three phases over the lifetime: extend
+                    // out to MaxReach, DWELL there, then retract to 0. The dwell
+                    // keeps the scythe head planted at full reach for a beat before
+                    // snapping back, instead of bouncing straight off the peak.
+                    const float ExtendRatio = 0.25f; // 0 → MaxReach
+                    const float HoldRatio   = 0.50f; // dwell at MaxReach (retract = remainder)
                     WhipState whip = SystemAPI.GetComponent<WhipState>(projectileEntity);
                     float tt = whip.TotalLifetime > 0.01f
                         ? math.clamp((whip.TotalLifetime - projectile.ValueRO.Lifetime) / whip.TotalLifetime, 0f, 1f)
                         : 1f;
-                    float dist = whip.MaxReach * math.sin(math.PI * tt);
+                    float dist;
+                    if (tt < ExtendRatio)
+                    {
+                        dist = whip.MaxReach * math.sin(0.5f * math.PI * (tt / ExtendRatio));      // ease-out 0 → Max
+                    }
+                    else if (tt < ExtendRatio + HoldRatio)
+                    {
+                        dist = whip.MaxReach;                                                      // dwell at full reach
+                    }
+                    else
+                    {
+                        float p = (tt - ExtendRatio - HoldRatio) / (1f - ExtendRatio - HoldRatio);
+                        dist = whip.MaxReach * math.cos(0.5f * math.PI * p);                       // ease-in Max → 0
+                    }
                     projectileTransform.ValueRW.Position = playerPosition + new float3(whip.Direction.x * dist, whip.Direction.y * dist, 0f);
                 }
                 else if (behavior != (byte)ProjectileBehavior.GroundZone)

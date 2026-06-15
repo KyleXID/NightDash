@@ -357,11 +357,12 @@ namespace NightDash.ECS.Systems
                 }
                 case WeaponBehaviorKind.Whip:
                 {
-                    // Chain scythe: shoots out from the player toward the target and
-                    // snaps back like a rubber band, damaging everything along the
-                    // path (extend → retract over the lifetime). Pierces.
+                    // Chain scythe: shoots out from the player toward the target,
+                    // DWELLS at full reach, then snaps back like a rubber band,
+                    // damaging everything along the path (extend → hold → retract
+                    // over the lifetime; the phase split lives in CombatSystem). Pierces.
                     float maxReach = math.max(2.5f, weapon.Range * 1.2f);
-                    const float whipLife = 0.6f;
+                    const float whipLife = 1.0f; // longer than before so the mid-life dwell is visible
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(origin)); // starts at the player (distance 0)
                     ecb.AddComponent(e, new ProjectileData
