@@ -65,6 +65,7 @@ namespace NightDash.ECS.Components
         public int CurrentLevel;
         public int NextLevel;
         public int MaxLevel;
+        public byte Rarity; // UpgradeRarity: 0 Common / 1 Rare / 2 Legendary (rolled per card)
     }
 
     [InternalBufferCapacity(16)]

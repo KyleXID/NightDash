@@ -82,10 +82,10 @@ namespace NightDash.Runtime
             _cardSpriteLegendary = Resources.Load<Sprite>("NightDash/UI/Frames/nd_ui_card_legendary");
         }
 
-        private Sprite ResolveCardSprite(int slotIndex)
+        private Sprite ResolveCardSprite(int rarity)
         {
-            // Temporary mapping until UpgradeOptionElement gains a Rarity field.
-            switch (slotIndex)
+            // 0 Common / 1 Rare / 2 Legendary — UpgradeOptionElement.Rarity.
+            switch (rarity)
             {
                 case 0: return _cardSpriteCommon;
                 case 1: return _cardSpriteRare;
@@ -623,6 +623,11 @@ namespace NightDash.Runtime
 
                 UpgradeOptionElement option = options[i];
                 _optionButtons[i].interactable = true;
+                // Card frame now reflects the rolled rarity (0/1/2 = common/rare/legendary).
+                if (_optionCardImages[i] != null)
+                {
+                    _optionCardImages[i].sprite = ResolveCardSprite(option.Rarity);
+                }
                 string body = BuildOptionText(option);
                 _optionTexts[i].text = body;
                 _optionTexts[i].fontSize = FontSizeForBody(body);

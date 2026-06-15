@@ -12,6 +12,16 @@ namespace NightDash.Data
         Summon,
     }
 
+    // Level-up card rarity. Rolled per offered card; higher rarity grants
+    // bonus levels on pick (and, once items are tiered, gates which items
+    // can appear). Values match the card-frame sprite order.
+    public enum UpgradeRarity : byte
+    {
+        Common = 0,
+        Rare = 1,
+        Legendary = 2,
+    }
+
     public enum PassiveCategory
     {
         Stat,

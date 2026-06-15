@@ -18,6 +18,11 @@ namespace NightDash.ECS.Systems.Progression
     /// </summary>
     internal static class UpgradeOptionUtility
     {
+        // Per-card rarity roll. Seeded so debug runs are repeatable; advances
+        // across rolls. 70% Common / 25% Rare / 5% Legendary.
+        private static Unity.Mathematics.Random _rarityRng =
+            Unity.Mathematics.Random.CreateFromIndex(0x9E3B_7711u);
+
         // -------------------------------------------------------------------------
         // Public entry points called by the split ISystem types
         // -------------------------------------------------------------------------
@@ -151,6 +156,16 @@ namespace NightDash.ECS.Systems.Progression
             EnsureFreshUnlockPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Passive);
             EnsureOptionKindPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Weapon);
             EnsureOptionKindPresence(ref options, candidatePool, previousOptions, preferredOffset, UpgradeKind.Passive);
+
+            // Roll a rarity per offered card (70% Common / 25% Rare / 5% Legendary).
+            // Higher rarity grants bonus levels when the card is picked (ApplySelection).
+            for (int i = 0; i < options.Length; i++)
+            {
+                UpgradeOptionElement o = options[i];
+                float roll = _rarityRng.NextFloat();
+                o.Rarity = roll < 0.70f ? (byte)0 : (roll < 0.95f ? (byte)1 : (byte)2);
+                options[i] = o;
+            }
         }
 
         /// <summary>
@@ -164,6 +179,9 @@ namespace NightDash.ECS.Systems.Progression
             ref DynamicBuffer<OwnedWeaponElement> ownedWeapons,
             ref DynamicBuffer<OwnedPassiveElement> ownedPassives)
         {
+            // Higher-rarity cards grant bonus levels on top of the normal +1.
+            int bonus = option.Rarity >= 2 ? 2 : (option.Rarity == 1 ? 1 : 0);
+
             if (option.Kind == UpgradeKind.Weapon)
             {
                 for (int i = 0; i < ownedWeapons.Length; i++)
@@ -174,7 +192,7 @@ namespace NightDash.ECS.Systems.Progression
                     }
 
                     OwnedWeaponElement upgraded = ownedWeapons[i];
-                    upgraded.Level = math.min(upgraded.MaxLevel, upgraded.Level + 1);
+                    upgraded.Level = math.min(upgraded.MaxLevel, upgraded.Level + 1 + bonus);
                     ownedWeapons[i] = upgraded;
                     return;
                 }
@@ -187,7 +205,7 @@ namespace NightDash.ECS.Systems.Progression
                 ownedWeapons.Add(new OwnedWeaponElement
                 {
                     Id = option.Id,
-                    Level = 1,
+                    Level = math.min(option.MaxLevel, 1 + bonus),
                     MaxLevel = option.MaxLevel,
                     CooldownRemaining = 0f
                 });
@@ -207,7 +225,7 @@ namespace NightDash.ECS.Systems.Progression
                 }
 
                 OwnedPassiveElement upgraded = ownedPassives[i];
-                upgraded.Level = math.min(upgraded.MaxLevel, upgraded.Level + 1);
+                upgraded.Level = math.min(upgraded.MaxLevel, upgraded.Level + 1 + bonus);
                 ownedPassives[i] = upgraded;
                 return;
             }
@@ -225,7 +243,7 @@ namespace NightDash.ECS.Systems.Progression
             ownedPassives.Add(new OwnedPassiveElement
             {
                 Id = option.Id,
-                Level = 1,
+                Level = math.min(math.max(1, passive.maxLevel), 1 + bonus),
                 MaxLevel = math.max(1, passive.maxLevel)
             });
         }
