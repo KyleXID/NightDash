@@ -171,6 +171,11 @@ namespace NightDash.Runtime
         // cached for paths with no sequence so we don't re-probe Resources.
         private readonly Dictionary<string, Sprite[]> _frameCache = new();
 
+        // Chain-scythe whip: a stretching chain rendered between the player and
+        // the flying scythe head. One chain GameObject per whip projectile.
+        private readonly Dictionary<Entity, GameObject> _whipChains = new();
+        private const string PathWhipChain = "NightDash/Art/Stage01/VFX/spr_vfx_chain_scythe_chain";
+
         // ------------------------------------------------------------------ ECS queries
         private EntityQuery _playerQuery;
         private EntityQuery _enemyQuery;
@@ -233,6 +238,7 @@ namespace NightDash.Runtime
             DestroyAllViews(_enemyViews);
             DestroyAllViews(_bossViews);
             DestroyAllProjectiles(_projectileViews);
+            DestroyAllWhipChains();
         }
 
         // Clears every spawned view GameObject. Called by Title/Lobby UI when
@@ -244,6 +250,7 @@ namespace NightDash.Runtime
             DestroyAllViews(_enemyViews);
             DestroyAllViews(_bossViews);
             DestroyAllProjectiles(_projectileViews);
+            DestroyAllWhipChains();
             _lastPositions.Clear();
         }
 
@@ -480,10 +487,29 @@ namespace NightDash.Runtime
                     // Shadow arrow leaves a fading afterimage trail as it flies.
                     if (go != null && weaponId.Contains("shadow_arrow")) go.AddComponent<VFXAfterimage>();
 
+                    // Chain scythe: a single chain-link sprite TILED from the player to
+                    // the flying scythe head (tiling, not stretching, so links don't warp).
+                    if (go != null && isPlayer && weaponId.Contains("chain_scythe"))
+                    {
+                        var chainGo = new GameObject("[VFX] WhipChain");
+                        var csr = chainGo.AddComponent<SpriteRenderer>();
+                        csr.sprite = LoadSpriteFromResources(PathWhipChain);
+                        csr.drawMode = SpriteDrawMode.Tiled;
+                        csr.sortingOrder = SortProjectile - 1; // behind the scythe head
+                        csr.color = tint;
+                        _whipChains[entity] = chainGo;
+                    }
+
                     _projectileViews[entity] = go;
                 }
 
                 SetPosition(go, transforms[i].Position, SortProjectile);
+
+                // Stretch the chain-scythe chain from the player to the head.
+                if (_whipChains.TryGetValue(entity, out var whipChain) && whipChain != null)
+                {
+                    UpdateWhipChain(whipChain, go.transform.position);
+                }
 
                 // Projectile rotation toward velocity. Guarded against entities
                 // destroyed earlier this frame by CombatSystem.
@@ -789,6 +815,50 @@ namespace NightDash.Runtime
             }
         }
 
+        // Positions / orients / sizes the tiled chain so it spans from the player
+        // to the scythe head (the whip projectile's current position). Tiled
+        // draw mode repeats the single link sprite — links never warp.
+        private void UpdateWhipChain(GameObject chainGo, Vector3 headPos)
+        {
+            var playerRenderer = GetAnyPlayerRenderer();
+            if (playerRenderer == null)
+            {
+                chainGo.SetActive(false);
+                return;
+            }
+
+            Vector3 playerPos = playerRenderer.transform.position;
+            playerPos.z = 0f;
+            headPos.z = 0f;
+            Vector3 delta = headPos - playerPos;
+            float dist = delta.magnitude;
+            if (dist < 0.05f)
+            {
+                chainGo.SetActive(false);
+                return;
+            }
+
+            chainGo.SetActive(true);
+            chainGo.transform.position = (playerPos + headPos) * 0.5f;
+            chainGo.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(delta.y, delta.x) * Mathf.Rad2Deg);
+
+            var sr = chainGo.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                float linkHeight = sr.sprite != null ? sr.sprite.bounds.size.y : 0.2f;
+                sr.size = new Vector2(dist, linkHeight); // Tiled: repeats links along the length
+            }
+        }
+
+        private void DestroyAllWhipChains()
+        {
+            foreach (var kvp in _whipChains)
+            {
+                if (kvp.Value != null) Destroy(kvp.Value);
+            }
+            _whipChains.Clear();
+        }
+
         private void RemoveStaleProjectiles(Dictionary<Entity, GameObject> views, HashSet<Entity> alive)
         {
             _staleScratch.Clear();
@@ -802,6 +872,13 @@ namespace NightDash.Runtime
                 var key = _staleScratch[i];
                 if (views.TryGetValue(key, out var go) && go != null) Destroy(go);
                 views.Remove(key);
+
+                // Tear down the matching whip chain, if any.
+                if (_whipChains.TryGetValue(key, out var chain))
+                {
+                    if (chain != null) Destroy(chain);
+                    _whipChains.Remove(key);
+                }
             }
         }
 
