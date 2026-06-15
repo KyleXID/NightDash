@@ -17,9 +17,15 @@ namespace NightDash.Runtime
     public sealed class NightDashVFXBridge : MonoBehaviour
     {
         // ------------------------------------------------------------------ VFX tuning
-        private const float HitDuration   = 0.15f;
-        private const float HitScale      = 0.30f;
-        private const int   HitSortOrder  = 110;
+        // Hit VFX: 5-frame animation with fade-in/out envelope to reduce
+        // visual clutter when many enemies are hit simultaneously.
+        private const float HitDuration       = 0.18f;
+        private const float HitScale          = 0.25f;
+        private const int   HitSortOrder      = 110;
+        private const int   HitFrameCount     = 5;
+        private const float HitFadeInRatio    = 0.20f;  // first 20% fade-in
+        private const float HitFadeOutRatio   = 0.55f;  // last 55% fade-out
+        private const float HitMaxAlpha       = 0.80f;  // overall softness
 
         private const float DeathDuration    = 0.40f;
         private const float DeathScaleStart  = 0.30f;
@@ -27,7 +33,9 @@ namespace NightDash.Runtime
         private const int   DeathSortOrder   = 105;
 
         // ------------------------------------------------------------------ sprite paths
+        // PathHit = single-frame fallback. PathHitFmt loads numbered frames.
         private const string PathHit       = "NightDash/Art/Stage01/VFX/spr_vfx_enemy_hit";
+        private const string PathHitFmt    = "NightDash/Art/Stage01/VFX/spr_vfx_enemy_hit_{0:D2}";
         private const string PathDeath     = "NightDash/Art/Stage01/VFX/spr_vfx_enemy_death";
         private const string PathBossAtk   = "NightDash/Art/Stage01/VFX/spr_vfx_boss_attack";
 
@@ -42,8 +50,9 @@ namespace NightDash.Runtime
         private readonly HashSet<Entity> _aliveBuffer = new();
         private readonly List<Entity> _deadBuffer = new();
 
-        private Sprite _hitSprite;
-        private Sprite _deathSprite;
+        private Sprite   _hitSprite;
+        private Sprite[] _hitFrames;
+        private Sprite   _deathSprite;
 
         // XP drop callback - set by NightDashXPDropBridge
         public static System.Action<Vector3> OnEnemyDeath;
@@ -155,9 +164,21 @@ namespace NightDash.Runtime
 
             _hitSprite   = LoadSprite(PathHit);
             _deathSprite = LoadSprite(PathDeath);
+            _hitFrames   = LoadHitFrames();
 
             NightDashLog.Info("[VFXBridge] Queries initialised.");
             return true;
+        }
+
+        private static Sprite[] LoadHitFrames()
+        {
+            var arr = new Sprite[HitFrameCount];
+            for (int i = 0; i < HitFrameCount; i++)
+            {
+                arr[i] = Resources.Load<Sprite>(string.Format(PathHitFmt, i + 1));
+                if (arr[i] == null) return null; // missing frame → fall back to single sprite
+            }
+            return arr;
         }
 
         // ====================================================================
@@ -170,11 +191,31 @@ namespace NightDash.Runtime
             go.transform.localScale = Vector3.one * HitScale;
 
             var sr = go.AddComponent<SpriteRenderer>();
-            sr.sprite       = _hitSprite;
-            sr.sortingOrder  = HitSortOrder;
-            sr.color         = new Color(1f, 1f, 0.7f, 1f); // white-yellow flash
+            sr.sortingOrder = HitSortOrder;
+            sr.color        = new Color(1f, 1f, 0.95f, 0f); // start at alpha 0 for fade-in
 
-            go.AddComponent<VFXAutoDestroy>().Init(HitDuration, fadeOut: true);
+            if (_hitFrames != null)
+            {
+                // SpriteAnimator.Play() (called via playOnStart) initialises
+                // sr.sprite from frames[0], so no pre-assignment needed.
+                var anim = go.AddComponent<SpriteAnimator>();
+                anim.frames      = _hitFrames;
+                anim.fps         = HitFrameCount / HitDuration;
+                anim.loop        = false;
+                anim.playOnStart = true;
+            }
+            else
+            {
+                sr.sprite = _hitSprite;
+            }
+
+            go.AddComponent<VFXAutoDestroy>().Init(
+                HitDuration,
+                fadeIn:  true,
+                fadeOut: true,
+                fadeInRatio:  HitFadeInRatio,
+                fadeOutRatio: HitFadeOutRatio,
+                maxAlpha:     HitMaxAlpha);
         }
 
         private void SpawnDeathEffect(float3 pos)
@@ -188,8 +229,12 @@ namespace NightDash.Runtime
             sr.sortingOrder  = DeathSortOrder;
             sr.color         = new Color(1f, 0.6f, 0.2f, 1f); // warm ember colour
 
-            go.AddComponent<VFXAutoDestroy>().Init(DeathDuration, fadeOut: true,
-                scaleFrom: DeathScaleStart, scaleTo: DeathScaleEnd);
+            go.AddComponent<VFXAutoDestroy>().Init(
+                DeathDuration,
+                fadeOut:      true,
+                fadeOutRatio: 1.0f,  // preserve original linear fade from t=0
+                scaleFrom:    DeathScaleStart,
+                scaleTo:      DeathScaleEnd);
         }
 
         // ====================================================================
@@ -225,19 +270,41 @@ namespace NightDash.Runtime
     {
         private float _duration;
         private float _elapsed;
+        private bool  _fadeIn;
         private bool  _fadeOut;
+        private float _fadeInRatio;
+        private float _fadeOutRatio;
+        private float _maxAlpha;
         private float _scaleFrom;
         private float _scaleTo;
         private SpriteRenderer _sr;
 
-        public void Init(float duration, bool fadeOut = false,
-                         float scaleFrom = -1f, float scaleTo = -1f)
+        public void Init(float duration,
+                         bool  fadeIn       = false,
+                         bool  fadeOut      = false,
+                         float fadeInRatio  = 0.20f,
+                         float fadeOutRatio = 0.50f,
+                         float maxAlpha     = 1f,
+                         float scaleFrom    = -1f,
+                         float scaleTo      = -1f)
         {
-            _duration  = duration;
-            _fadeOut    = fadeOut;
-            _scaleFrom = scaleFrom;
-            _scaleTo   = scaleTo;
-            _sr        = GetComponent<SpriteRenderer>();
+            _duration     = duration;
+            _fadeIn       = fadeIn;
+            _fadeOut      = fadeOut;
+            _fadeInRatio  = Mathf.Clamp01(fadeInRatio);
+            _fadeOutRatio = Mathf.Clamp01(fadeOutRatio);
+            // If the two ratios overlap (sum > 1), proportionally shrink so
+            // fade-in and fade-out never compete for the same t window.
+            float ratioSum = _fadeInRatio + _fadeOutRatio;
+            if (ratioSum > 1f)
+            {
+                _fadeInRatio  /= ratioSum;
+                _fadeOutRatio /= ratioSum;
+            }
+            _maxAlpha     = Mathf.Clamp01(maxAlpha);
+            _scaleFrom    = scaleFrom;
+            _scaleTo      = scaleTo;
+            _sr           = GetComponent<SpriteRenderer>();
         }
 
         private void Update()
@@ -245,11 +312,23 @@ namespace NightDash.Runtime
             _elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(_elapsed / _duration);
 
-            // Fade alpha
-            if (_fadeOut && _sr != null)
+            // Composite alpha envelope: fade-in for first _fadeInRatio,
+            // hold at _maxAlpha through the middle, fade-out for last _fadeOutRatio.
+            // Either flag alone is honored; both = full envelope.
+            if ((_fadeIn || _fadeOut) && _sr != null)
             {
+                float alpha = _maxAlpha;
+                if (_fadeIn && _fadeInRatio > 0f && t < _fadeInRatio)
+                {
+                    alpha = _maxAlpha * (t / _fadeInRatio);
+                }
+                else if (_fadeOut && _fadeOutRatio > 0f && t > 1f - _fadeOutRatio)
+                {
+                    float fadeOutT = (t - (1f - _fadeOutRatio)) / _fadeOutRatio;
+                    alpha = _maxAlpha * (1f - fadeOutT);
+                }
                 var c = _sr.color;
-                c.a = 1f - t;
+                c.a = alpha;
                 _sr.color = c;
             }
 
