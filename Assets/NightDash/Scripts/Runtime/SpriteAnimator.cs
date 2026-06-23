@@ -9,6 +9,10 @@ namespace NightDash.Runtime
         public float fps = 12f;
         public bool loop = true;
         public bool playOnStart = true;
+        // When looping, the frame to jump back to after the FIRST full play-through.
+        // 0 = loop the whole clip (default). >0 = play 0..end once as an intro, then
+        // loop loopStartFrame..end (e.g. an eruption that settles into a writhe).
+        public int loopStartFrame = 0;
 
         SpriteRenderer spriteRenderer;
         int currentFrame;
@@ -48,7 +52,7 @@ namespace NightDash.Runtime
                 currentFrame++;
                 if (currentFrame >= frames.Length)
                 {
-                    if (loop) currentFrame = 0;
+                    if (loop) currentFrame = Mathf.Clamp(loopStartFrame, 0, frames.Length - 1); // intro plays once, then loop the tail
                     else { currentFrame = frames.Length - 1; isPlaying = false; }
                 }
                 spriteRenderer.sprite = frames[currentFrame];

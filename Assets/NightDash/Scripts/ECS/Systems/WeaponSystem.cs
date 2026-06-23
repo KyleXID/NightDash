@@ -64,9 +64,14 @@ namespace NightDash.ECS.Systems
             Entity targetEnemy = Entity.Null;
             float nearestDistanceSq = float.MaxValue;
             float3 targetPosition = float3.zero;
+            // Also collect every enemy position so multi-target weapons (e.g. the
+            // evolved meteor shower) can land ON actual enemies instead of empty ground.
+            var enemyPositions = new Unity.Collections.NativeList<float3>(Allocator.Temp);
             foreach (var (transform, entity) in SystemAPI.Query<RefRO<LocalTransform>>().WithAll<EnemyTag>().WithEntityAccess())
             {
-                float distanceSq = math.lengthsq(transform.ValueRO.Position - playerPosition);
+                float3 ePos = transform.ValueRO.Position;
+                enemyPositions.Add(ePos);
+                float distanceSq = math.lengthsq(ePos - playerPosition);
                 if (distanceSq >= nearestDistanceSq)
                 {
                     continue;
@@ -74,7 +79,7 @@ namespace NightDash.ECS.Systems
 
                 nearestDistanceSq = distanceSq;
                 targetEnemy = entity;
-                targetPosition = transform.ValueRO.Position;
+                targetPosition = ePos;
             }
 
             // NOTE: do NOT early-return when there is no enemy. Player-centered
@@ -133,7 +138,8 @@ namespace NightDash.ECS.Systems
                             firingIndex,
                             ownedWeapons.Length,
                             ownedWeapon.Id,
-                            weaponData.weaponType);
+                            weaponData.weaponType,
+                            enemyPositions);
                         if (fired)
                         {
                             // Persistent orbit weapons (ring/blades/barrier) spawn ONCE
@@ -150,6 +156,8 @@ namespace NightDash.ECS.Systems
                     ownedWeapons[i] = ownedWeapon;
                 }
             }
+
+            enemyPositions.Dispose();
         }
 
         // Per-weapon in-game archetype. Default falls back to weaponType
@@ -209,7 +217,8 @@ namespace NightDash.ECS.Systems
             int weaponIndex,
             int weaponCount,
             FixedString64Bytes weaponId,
-            WeaponType type)
+            WeaponType type,
+            Unity.Collections.NativeList<float3> enemyPositions)
         {
             float3 direction3 = target - origin;
             direction3.z = 0f;
@@ -260,16 +269,23 @@ namespace NightDash.ECS.Systems
                     int meteors = evolved ? 3 : 1;
                     float splashRadius = evolved ? 2.4f : 1.8f;
                     float splashFactor = evolved ? 0.6f : 0.5f;
-                    const float ScatterRadius = 3.5f; // evolved meteors rain on random spots around the target
                     for (int m = 0; m < meteors; m++)
                     {
-                        // Evolved: each meteor lands at its OWN random spot around the
-                        // target (a 3-strike shower), not stacked at one point.
-                        float2 scatter = meteors > 1
-                            ? new float2(_skyfallRng.NextFloat(-ScatterRadius, ScatterRadius),
-                                         _skyfallRng.NextFloat(-ScatterRadius, ScatterRadius))
-                            : float2.zero;
-                        float3 aimPos = new float3(target.x + scatter.x, target.y + scatter.y, 0f);
+                        // Always land ON an enemy (never empty ground): the FIRST meteor
+                        // hits the initial target; the rest hit OTHER random enemies (a
+                        // shower), falling back to the target when there aren't enough.
+                        float3 aimPos;
+                        if (m == 0 || enemyPositions.Length == 0)
+                        {
+                            aimPos = new float3(target.x, target.y, 0f);
+                        }
+                        else
+                        {
+                            float3 pick = enemyPositions[_skyfallRng.NextInt(0, enemyPositions.Length)];
+                            // small jitter so several meteors on the same enemy don't perfectly stack
+                            aimPos = new float3(pick.x + _skyfallRng.NextFloat(-0.7f, 0.7f),
+                                                pick.y + _skyfallRng.NextFloat(-0.7f, 0.7f), 0f);
+                        }
                         float3 spawnPos = new float3(aimPos.x + DiagDist + spawnOffset.x, aimPos.y + DiagDist + spawnOffset.y, 0f);
                         float2 dir = math.normalize(new float2(aimPos.x - spawnPos.x, aimPos.y - spawnPos.y));
                         // Lifetime = exact travel time to the target so the (non-looping)
@@ -328,6 +344,11 @@ namespace NightDash.ECS.Systems
                         });
                         ecb.AddComponent(e, new PhysicsVelocity2D { Value = bdir * BoltSpeed });
                         ecb.AddBuffer<PierceHitElement>(e); // reliable pierce: track already-hit enemies
+                        if (evolved)
+                        {
+                            // Chain lightning: each struck enemy arcs reduced damage to nearby ones.
+                            ecb.AddComponent(e, new ChainLightningState { Radius = 2.5f, Factor = 0.5f });
+                        }
                     }
                     break;
                 }
@@ -337,17 +358,21 @@ namespace NightDash.ECS.Systems
                     // (no longer a static protective aura). Each "arm" orbits the
                     // player while its radius grows, tracing a spiral, then expires.
                     // Evolved: more arms, spinning faster and reaching farther.
-                    int arms = evolved ? 4 : 2;
+                    // Tuned DOWN from the first pass (was overpowered: too many arms
+                    // sweeping the whole screen with fast multi-hit ticks). Fewer arms,
+                    // smaller hitbox, slower tick cadence, and they start further out so
+                    // they don't melt enemies hugging the player.
+                    int arms = evolved ? 3 : 2;
                     const float ringLife = 2.4f;
-                    const float startRadius = 0.3f;
-                    float growth = evolved ? 4.2f : 3.4f;  // world units/sec the ring travels outward
-                    float spin = evolved ? 5.0f : 4.0f;    // rad/sec spin (spiral tightness)
+                    const float startRadius = 0.6f;
+                    float growth = evolved ? 5.0f : 4.2f;  // world units/sec the ring travels outward (faster = less dwell per enemy)
+                    float spin = evolved ? 4.6f : 3.8f;    // rad/sec spin (spiral tightness)
                     for (int a = 0; a < arms; a++)
                     {
                         float ang = (2f * math.PI / arms) * a;
                         CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, ringLife,
-                            radius: startRadius, angularSpeed: spin, angle: ang, hitRadius: 0.7f,
-                            tick: 0.18f, knockback: 0f, centerYOffset: 0.5f, radiusGrowth: growth);
+                            radius: startRadius, angularSpeed: spin, angle: ang, hitRadius: 0.5f,
+                            tick: 0.3f, knockback: 0f, centerYOffset: 0.5f, radiusGrowth: growth);
                     }
                     break;
                 }
@@ -552,10 +577,11 @@ namespace NightDash.ECS.Systems
                     // Base: a single straight shot consumed on first hit. Evolved
                     // gives each ranged weapon a distinct upgrade — multi-shot
                     // spread (rapid/split) and/or pierce (shadow/spear/orb/wave/…).
-                    ResolveLinearEvolution(weaponId, evolved, out int shots, out float spreadDeg, out float linRadius, out float pierceTick);
+                    ResolveLinearEvolution(weaponId, evolved, out int shots, out float spreadDeg, out float linRadius, out float pierceTick, out int bounces);
                     float spread = math.radians(spreadDeg);
                     float speed = math.max(2f, weapon.ProjectileSpeed);
-                    float life = math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed));
+                    // Bouncing orbs need to live long enough to ricochet between targets.
+                    float life = bounces > 0 ? 3.5f : math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed));
                     for (int s = 0; s < shots; s++)
                     {
                         float a = shots > 1 ? (s - (shots - 1) * 0.5f) * (spread / math.max(1, shots - 1)) : 0f;
@@ -571,7 +597,7 @@ namespace NightDash.ECS.Systems
                             WeaponId = weaponId,
                             IsMelee = 0,
                             Behavior = (byte)ProjectileBehavior.Linear,
-                            TickInterval = pierceTick, // >0 = pierce (hit each enemy once); 0 = single hit (consumed)
+                            TickInterval = pierceTick, // >0 = pierce (hit each enemy once); 0 = single hit / bounce
                             TickTimer = pierceTick,
                             AlignToVelocity = 1, // bullets/arrows/spears face their travel direction
                         });
@@ -579,6 +605,12 @@ namespace NightDash.ECS.Systems
                         if (pierceTick > 0f)
                         {
                             ecb.AddBuffer<PierceHitElement>(e); // reliable pierce: track already-hit enemies
+                        }
+                        if (bounces > 0)
+                        {
+                            // Ricochet: hit one enemy, then redirect to the next nearest un-hit one.
+                            ecb.AddComponent(e, new BounceState { Remaining = bounces, Range = 5.5f });
+                            ecb.AddBuffer<PierceHitElement>(e); // track already-hit enemies (no repeats)
                         }
                     }
                     break;
@@ -594,9 +626,9 @@ namespace NightDash.ECS.Systems
         // TickInterval > 0 as "damage along the whole path, never consumed").
         private static void ResolveLinearEvolution(
             FixedString64Bytes weaponId, bool evolved,
-            out int shots, out float spreadDeg, out float radius, out float pierceTick)
+            out int shots, out float spreadDeg, out float radius, out float pierceTick, out int bounces)
         {
-            shots = 1; spreadDeg = 0f; radius = 0.35f; pierceTick = 0f;
+            shots = 1; spreadDeg = 0f; radius = 0.35f; pierceTick = 0f; bounces = 0;
             if (!evolved) return;
 
             string baseId = weaponId.ToString();
@@ -609,8 +641,8 @@ namespace NightDash.ECS.Systems
                 case "weapon_revolver":     shots = 1; spreadDeg = 0f;  radius = 0.35f; pierceTick = 0.08f; break; // soulshooter pierce
                 case "weapon_shadow_arrow": shots = 1; spreadDeg = 0f;  radius = 0.50f; pierceTick = 0.10f; break; // void-piercing arrow
                 case "weapon_spear":        shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.10f; break; // dimension-piercing spear
-                case "weapon_demon_orb":    shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.12f; break; // abyssal orb
-                case "weapon_holy_wave":    shots = 1; spreadDeg = 0f;  radius = 0.65f; pierceTick = 0.10f; break; // golden sacred wave
+                case "weapon_demon_orb":    shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0f; bounces = 5; break; // abyssal orb — ricochets across 5 enemies
+                case "weapon_holy_wave":    shots = 1; spreadDeg = 0f;  radius = 0.85f; pierceTick = 0.10f; break; // golden sacred wave (larger)
                 default:                    shots = 1; spreadDeg = 0f;  radius = 0.40f; pierceTick = 0.10f; break; // generic: pierce
             }
         }

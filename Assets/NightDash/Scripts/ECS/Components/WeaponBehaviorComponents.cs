@@ -35,6 +35,23 @@ namespace NightDash.ECS.Components
         public float TotalLifetime;  // full extend+retract duration (drives the sin phase)
     }
 
+    // Present on a chain-lightning projectile (evolved dark lightning / 암흑번개).
+    // Each enemy the bolt damages also arcs reduced damage to nearby enemies.
+    public struct ChainLightningState : IComponentData
+    {
+        public float Radius; // arc reach from each struck enemy
+        public float Factor; // fraction of the bolt's damage dealt to arced enemies (0..1)
+    }
+
+    // Present on a ricocheting projectile (evolved demon orb / 심연파열구). On
+    // contact it damages one enemy, then redirects toward the next nearest enemy
+    // it has not hit yet, until Remaining hits are spent or none is in Range.
+    public struct BounceState : IComponentData
+    {
+        public int Remaining; // remaining enemies it can still hit (incl. the current one)
+        public float Range;   // max distance to seek the next bounce target
+    }
+
     public struct OrbitState : IComponentData
     {
         public float Radius;        // distance from the player, in world units

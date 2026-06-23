@@ -106,7 +106,7 @@ namespace NightDash.Runtime
                 { "weapon_demon_greatsword", (VfxDir + "spr_vfx_evolution_demon_greatsword", 2.0f) },
                 { "weapon_demon_orb",        (VfxDir + "spr_vfx_evolution_demon_orb",        1.4f) },
                 { "weapon_starfall",         (VfxDir + "spr_vfx_evolution_void_starfall",    1.6f) }, // 공허의 별낙하 (starfall_evolved)
-                { "weapon_holy_wave",        (VfxDir + "spr_vfx_evolution_holy_wave",        2.0f) },
+                { "weapon_holy_wave",        (VfxDir + "spr_vfx_evolution_holy_wave",        2.5f) },
                 { "weapon_light_ring",       (VfxDir + "spr_vfx_evolution_light_ring",       1.4f) },
                 { "weapon_rapid_shot",       (VfxDir + "spr_vfx_evolution_rapid_shot",       1.3f) },
                 { "weapon_revolver",         (VfxDir + "spr_vfx_evolution_revolver",         1.2f) },
@@ -210,6 +210,9 @@ namespace NightDash.Runtime
         // Chain-scythe whip: a stretching chain rendered between the player and
         // the flying scythe head. One chain GameObject per whip projectile.
         private readonly Dictionary<Entity, GameObject> _whipChains = new();
+        // Evolved meteor entities — used to fire an icy sparkle burst when they land
+        // (i.e. when their projectile view is removed on lifetime end).
+        private readonly HashSet<Entity> _meteorEntities = new();
         private const string ChainVariantPrefix = "NightDash/Art/Stage01/VFX/spr_vfx_chain_scythe_chain_";
         private const string ChainVariantEvolvedPrefix = "NightDash/Art/Stage01/VFX/spr_vfx_evolution_chain_scythe_chain_";
         private Sprite[] _chainVariants;        // base chain-link sprites (spr_vfx_chain_scythe_chain_1..N)
@@ -295,6 +298,7 @@ namespace NightDash.Runtime
             DestroyAllProjectiles(_projectileViews);
             DestroyAllWhipChains();
             DestroyAllRangeIndicators();
+            _meteorEntities.Clear();
         }
 
         // Clears every spawned view GameObject. Called by Title/Lobby UI when
@@ -308,6 +312,7 @@ namespace NightDash.Runtime
             DestroyAllProjectiles(_projectileViews);
             DestroyAllWhipChains();
             DestroyAllRangeIndicators();
+            _meteorEntities.Clear();
             _lastPositions.Clear();
         }
 
@@ -549,10 +554,22 @@ namespace NightDash.Runtime
                     if (go != null && (weaponId.Contains("shadow_arrow") || weaponId.Contains("holy_wave")))
                         go.AddComponent<VFXAfterimage>();
 
+                    // Abyss tentacle: play the eruption once, then loop only the tail
+                    // (settled writhe) frames instead of re-erupting from frame 1.
+                    if (go != null && weaponId.Contains("abyss_tentacle"))
+                    {
+                        var tentAnim = go.GetComponent<SpriteAnimator>();
+                        if (tentAnim != null && tentAnim.frames != null && tentAnim.frames.Length > 3)
+                            tentAnim.loopStartFrame = tentAnim.frames.Length - 3; // loop last 3 frames
+                    }
+
                     // Evolved star-fall (void starfall): a twinkling glint pinned to the
-                    // comet's star head as it descends.
+                    // comet's star head as it descends + an icy sparkle burst on landing.
                     if (go != null && (weaponId.Contains("void_starfall") || weaponId.Contains("starfall_evolved")))
+                    {
                         AttachStarTwinkle(go);
+                        _meteorEntities.Add(entity);
+                    }
 
                     // Chain scythe: a row of mixed chain-link sprites spanning from the
                     // player to the flying scythe head. Two-tone palette — the head reads
@@ -1092,7 +1109,13 @@ namespace NightDash.Runtime
             for (int i = 0; i < _staleScratch.Count; i++)
             {
                 var key = _staleScratch[i];
-                if (views.TryGetValue(key, out var go) && go != null) Destroy(go);
+                bool wasMeteor = _meteorEntities.Remove(key);
+                if (views.TryGetValue(key, out var go) && go != null)
+                {
+                    // Meteor reached lifetime end (landed) → icy sparkle burst at impact.
+                    if (wasMeteor) SpawnMeteorLandingBurst(go.transform.position);
+                    Destroy(go);
+                }
                 views.Remove(key);
 
                 // Tear down the matching whip chain, if any.
@@ -1101,6 +1124,38 @@ namespace NightDash.Runtime
                     if (chain != null) Destroy(chain);
                     _whipChains.Remove(key);
                 }
+            }
+        }
+
+        // Bursts a small ring of icy sparkles at a landed meteor's impact point.
+        private void SpawnMeteorLandingBurst(Vector3 pos)
+        {
+            if (_sparkleSprite == null) _sparkleSprite = Resources.Load<Sprite>(SparklePath);
+            if (_sparkleSprite == null) return;
+            pos.z = 0f;
+
+            // Central expanding flash.
+            var core = new GameObject("[VFX] MeteorBurst");
+            core.transform.position = pos;
+            var csr = core.AddComponent<SpriteRenderer>();
+            csr.sprite = _sparkleSprite;
+            csr.sortingOrder = SortProjectile + 2;
+            csr.color = new Color(0.85f, 0.95f, 1f, 1f);
+            core.AddComponent<VFXAutoDestroy>().Init(0.3f, fadeOut: true, fadeOutRatio: 1f, maxAlpha: 1f, scaleFrom: 0.35f, scaleTo: 1.2f);
+
+            // Ring of imploding glints around it.
+            const int n = 6;
+            var icy = new Color(0.7f, 0.9f, 1f, 1f);
+            for (int i = 0; i < n; i++)
+            {
+                float ang = (2f * Mathf.PI / n) * i;
+                var g = new GameObject("[VFX] MeteorBurst");
+                g.transform.position = pos + new Vector3(Mathf.Cos(ang) * 0.45f, Mathf.Sin(ang) * 0.45f, 0f);
+                var sr = g.AddComponent<SpriteRenderer>();
+                sr.sprite = _sparkleSprite;
+                sr.sortingOrder = SortProjectile + 2;
+                sr.color = icy;
+                g.AddComponent<VFXAutoDestroy>().Init(0.35f, fadeOut: true, fadeOutRatio: 1f, maxAlpha: 1f, scaleFrom: 0.55f, scaleTo: 0.12f);
             }
         }
 

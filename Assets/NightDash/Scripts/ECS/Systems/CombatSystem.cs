@@ -196,7 +196,7 @@ namespace NightDash.ECS.Systems
             }
 
             foreach (var (projectileTransform, projectile, velocity, projectileEntity) in SystemAPI
-                         .Query<RefRW<LocalTransform>, RefRW<ProjectileData>, RefRO<PhysicsVelocity2D>>()
+                         .Query<RefRW<LocalTransform>, RefRW<ProjectileData>, RefRW<PhysicsVelocity2D>>()
                          .WithEntityAccess())
             {
                 projectile.ValueRW.Lifetime -= dt;
@@ -339,6 +339,15 @@ namespace NightDash.ECS.Systems
                         float pierceRadiusSq = projectile.ValueRO.Radius * projectile.ValueRO.Radius;
                         float3 pierceCenter = projectileTransform.ValueRO.Position;
 
+                        // Chain lightning (evolved dark lightning): collect each freshly
+                        // struck enemy so we can arc reduced damage to their neighbours
+                        // after the hit loop (a nested CombatStats write here would alias).
+                        bool isChain = SystemAPI.HasComponent<ChainLightningState>(projectileEntity);
+                        ChainLightningState chain = isChain
+                            ? SystemAPI.GetComponent<ChainLightningState>(projectileEntity)
+                            : default;
+                        NativeList<float3> chainSources = isChain ? new NativeList<float3>(Allocator.Temp) : default;
+
                         foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
                                      .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
                                      .WithAll<EnemyTag>()
@@ -381,6 +390,7 @@ namespace NightDash.ECS.Systems
                             }
 
                             NightDashCombatEvents.FireEnemyDamaged(enemyPos, pierceDamage);
+                            if (isChain) chainSources.Add(enemyPos);
 
                             if (pierceEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
                             {
@@ -388,6 +398,47 @@ namespace NightDash.ECS.Systems
                                 deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
                                 deadEnemyPositions.Add(enemyPos);
                             }
+                        }
+
+                        // Arc reduced damage from each struck enemy to nearby (non-pierced)
+                        // enemies — the VFX bridge auto-spawns a hit spark on each as its
+                        // health drops, reading as a chain-lightning crackle.
+                        if (isChain)
+                        {
+                            float arcRadiusSq = chain.Radius * chain.Radius;
+                            float arcDamage = projectile.ValueRO.Damage * chain.Factor;
+                            for (int si = 0; si < chainSources.Length; si++)
+                            {
+                                float3 src = chainSources[si];
+                                foreach (var (arcTransform, arcStats, arcEntity) in SystemAPI
+                                             .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
+                                             .WithAll<EnemyTag>()
+                                             .WithEntityAccess())
+                                {
+                                    float3 arcPos = arcTransform.ValueRO.Position;
+                                    float ad = math.lengthsq(arcPos - src);
+                                    if (ad > arcRadiusSq || ad < 0.04f) continue; // out of arc range / the source itself
+
+                                    bool wasPierced = false;
+                                    for (int h = 0; h < pierced.Length; h++)
+                                    {
+                                        if (pierced[h].Value == arcEntity) { wasPierced = true; break; }
+                                    }
+                                    if (wasPierced) continue; // already took the full bolt hit
+
+                                    CombatStats arcEnemy = arcStats.ValueRO;
+                                    arcEnemy.CurrentHealth = math.max(0f, arcEnemy.CurrentHealth - arcDamage);
+                                    arcStats.ValueRW = arcEnemy;
+                                    NightDashCombatEvents.FireEnemyDamaged(arcPos, arcDamage);
+                                    if (arcEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, arcEntity))
+                                    {
+                                        deadEnemies.Add(arcEntity);
+                                        deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(arcEntity) ? 1 : 0));
+                                        deadEnemyPositions.Add(arcPos);
+                                    }
+                                }
+                            }
+                            chainSources.Dispose();
                         }
 
                         continue;
@@ -468,6 +519,126 @@ namespace NightDash.ECS.Systems
                             deadEnemies.Add(enemyEntity);
                             deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
                             deadEnemyPositions.Add(enemyPos);
+                        }
+                    }
+
+                    continue;
+                }
+
+                // Bounce / ricochet (evolved demon orb / 심연파열구): on contact damage
+                // ONE enemy, then redirect toward the next nearest enemy not yet hit,
+                // until Remaining hits run out or none is within Range. Tracked via the
+                // PierceHitElement buffer so it never bounces back to the same enemy.
+                if (projectile.ValueRO.Behavior == (byte)ProjectileBehavior.Linear &&
+                    SystemAPI.HasComponent<BounceState>(projectileEntity))
+                {
+                    BounceState bounce = SystemAPI.GetComponent<BounceState>(projectileEntity);
+                    bool hasHitList = SystemAPI.HasBuffer<PierceHitElement>(projectileEntity);
+                    DynamicBuffer<PierceHitElement> hitList = hasHitList
+                        ? SystemAPI.GetBuffer<PierceHitElement>(projectileEntity)
+                        : default;
+                    float bounceRadiusSq = projectile.ValueRO.Radius * projectile.ValueRO.Radius;
+                    float3 orbPos = projectileTransform.ValueRO.Position;
+
+                    bool didHit = false;
+                    foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
+                                 .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
+                                 .WithAll<EnemyTag>()
+                                 .WithEntityAccess())
+                    {
+                        float3 enemyPos = enemyTransform.ValueRO.Position;
+                        if (math.lengthsq(enemyPos - orbPos) > bounceRadiusSq)
+                        {
+                            continue;
+                        }
+                        if (hasHitList)
+                        {
+                            bool seen = false;
+                            for (int h = 0; h < hitList.Length; h++)
+                            {
+                                if (hitList[h].Value == enemyEntity) { seen = true; break; }
+                            }
+                            if (seen) continue;
+                        }
+
+                        CombatStats bounceEnemy = enemyStats.ValueRO;
+                        float bounceDamage = projectile.ValueRO.Damage;
+                        if (hasPlayer)
+                        {
+                            CombatStats playerForCrit = playerStatsRef.ValueRO;
+                            if (playerForCrit.CritChance > 0f && playerForCrit.CritMultiplier > 1f &&
+                                _critRng.NextFloat() < playerForCrit.CritChance)
+                            {
+                                bounceDamage *= playerForCrit.CritMultiplier;
+                            }
+                        }
+                        bounceEnemy.CurrentHealth = math.max(0f, bounceEnemy.CurrentHealth - bounceDamage);
+                        enemyStats.ValueRW = bounceEnemy;
+                        if (hasHitList) hitList.Add(new PierceHitElement { Value = enemyEntity });
+
+                        if (SystemAPI.HasSingleton<StatusEffectConfig>())
+                        {
+                            QueueStatusOnHit(enemyEntity, SystemAPI.HasComponent<BossTag>(enemyEntity));
+                        }
+                        NightDashCombatEvents.FireEnemyDamaged(enemyPos, bounceDamage);
+                        if (bounceEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
+                        {
+                            deadEnemies.Add(enemyEntity);
+                            deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
+                            deadEnemyPositions.Add(enemyPos);
+                        }
+                        didHit = true;
+                        break;
+                    }
+
+                    if (didHit)
+                    {
+                        bounce.Remaining -= 1;
+                        if (bounce.Remaining <= 0)
+                        {
+                            ecb.DestroyEntity(projectileEntity);
+                            continue;
+                        }
+
+                        // Redirect toward the nearest not-yet-hit enemy within Range.
+                        Entity nextTarget = Entity.Null;
+                        float bestSq = bounce.Range * bounce.Range;
+                        float3 nextPos = float3.zero;
+                        foreach (var (nt, ne) in SystemAPI
+                                     .Query<RefRO<LocalTransform>>()
+                                     .WithAll<EnemyTag>()
+                                     .WithEntityAccess())
+                        {
+                            if (hasHitList)
+                            {
+                                bool seen = false;
+                                for (int h = 0; h < hitList.Length; h++)
+                                {
+                                    if (hitList[h].Value == ne) { seen = true; break; }
+                                }
+                                if (seen) continue;
+                            }
+                            float3 ep = nt.ValueRO.Position;
+                            float dsq = math.lengthsq(ep - orbPos);
+                            if (dsq < bestSq)
+                            {
+                                bestSq = dsq;
+                                nextTarget = ne;
+                                nextPos = ep;
+                            }
+                        }
+
+                        if (nextTarget != Entity.Null)
+                        {
+                            float spd = math.length(velocity.ValueRO.Value);
+                            if (spd < 0.01f) spd = 8f;
+                            float2 ndir = math.normalize((nextPos - orbPos).xy);
+                            velocity.ValueRW.Value = ndir * spd;
+                            SystemAPI.SetComponent(projectileEntity, bounce);
+                        }
+                        else
+                        {
+                            ecb.DestroyEntity(projectileEntity);
                         }
                     }
 
