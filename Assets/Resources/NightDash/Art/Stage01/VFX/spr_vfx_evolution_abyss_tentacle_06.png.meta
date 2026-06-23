@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: e836b8a6a0b5bf9916570b71765536d6
+guid: a96f239cdff26b1c18063bf288e7ef69
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 621667678595994873
-    second: spr_vfx_evolution_dark_lightning_07
+      213: 234598525467112890
+    second: spr_vfx_evolution_abyss_tentacle_06
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -83,37 +83,11 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: Standalone
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-  - serializedVersion: 4
-    buildTarget: WebGL
-    maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 1
-    compressionQuality: 50
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    overridden: 0
-    ignorePlatformSupport: 0
-    androidETC2FallbackOverride: 0
-    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: spr_vfx_evolution_dark_lightning_07
+      name: spr_vfx_evolution_abyss_tentacle_06
       rect:
         serializedVersion: 2
         x: 0
@@ -123,13 +97,12 @@ TextureImporter:
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d1da91be5399e4c9742b274939af49430000000000000000
-      internalID: 621667678595994873
+      spriteID: daf9860be92738315f5a31fcae8399860000000000000000
+      internalID: 234598525467112890
       vertices: []
       indices:
       edges: []
@@ -138,17 +111,10 @@ TextureImporter:
     customData:
     physicsShape: []
     bones: []
-    spriteID: 71969bb1d16b649528fb83de60a4f1b7
+    spriteID: b49a722dddf48dc58113d6d95b4fafe7
     internalID: 0
-    vertices: []
-    indices:
-    edges: []
-    weights: []
-    secondaryTextures: []
-    spriteCustomMetadata:
-      entries: []
     nameFileIdTable:
-      spr_vfx_evolution_dark_lightning_07: 621667678595994873
+      spr_vfx_evolution_abyss_tentacle_06: 234598525467112890
   mipmapLimitGroupName:
   pSDRemoveMatte: 0
   userData:

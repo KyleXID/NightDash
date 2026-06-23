@@ -582,7 +582,11 @@ namespace NightDash.Runtime
 
                         var chainGo = new GameObject("[VFX] WhipChain");
                         var chainRenderer = chainGo.AddComponent<WhipChainRenderer>();
-                        chainRenderer.Init(LoadChainVariants(IsEvolved(weaponId)), SortProjectile - 1, ScytheChainTint);
+                        bool evoChain = IsEvolved(weaponId);
+                        // Evolution links are drawn as diagonal ovals — pin them upright
+                        // (vertical) instead of letting them rotate along the chain.
+                        float linkAngle = evoChain ? 45f : float.NaN;
+                        chainRenderer.Init(LoadChainVariants(evoChain), SortProjectile - 1, ScytheChainTint, linkAngle);
                         _whipChains[entity] = chainGo;
                     }
 
@@ -1272,13 +1276,17 @@ namespace NightDash.Runtime
         private int _sortingOrder;
         private Color _tint = Color.white;
         private uint _seed = 1u;
+        // NaN = links rotate to follow the chain direction (base). A value pins every
+        // link to that fixed world angle instead (evolution links stand vertical).
+        private float _linkAngleDeg = float.NaN;
         private readonly System.Collections.Generic.List<SpriteRenderer> _links = new();
 
-        public void Init(Sprite[] variants, int sortingOrder, Color tint)
+        public void Init(Sprite[] variants, int sortingOrder, Color tint, float linkAngleDeg = float.NaN)
         {
             _variants = variants;
             _sortingOrder = sortingOrder;
             _tint = tint;
+            _linkAngleDeg = linkAngleDeg;
             _seed = (uint)(GetInstanceID() & 0x7fffffff) | 1u;
         }
 
@@ -1293,7 +1301,10 @@ namespace NightDash.Runtime
             if (dist < 0.05f) { SetActiveCount(0); return; }
 
             Vector3 dir = delta / dist;
-            var rot = Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg);
+            // Links follow the chain by default; a fixed angle pins them upright.
+            var rot = float.IsNaN(_linkAngleDeg)
+                ? Quaternion.Euler(0f, 0f, Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg)
+                : Quaternion.Euler(0f, 0f, _linkAngleDeg);
             int n = Mathf.Clamp(Mathf.RoundToInt(dist / LinkSpacing), 1, MaxLinks);
 
             while (_links.Count < n)

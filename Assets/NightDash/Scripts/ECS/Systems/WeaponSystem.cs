@@ -316,17 +316,22 @@ namespace NightDash.ECS.Systems
                     // Lightning: emitted from the player TOWARD the target, travels
                     // slowly, and keeps a FIXED vertical sprite orientation (never
                     // rotates to lie flat). Pierces every enemy in its path, lingers.
-                    // Evolved (hell thunder): three forked bolts in a small fan,
-                    // wider hit radius and a faster pierce cadence.
+                    // Evolved (hell thunder): three bolts struck SIMULTANEOUSLY, each
+                    // aimed at a different enemy (not a single-direction fan).
                     const float BoltSpeed = 2.5f;
                     int bolts = evolved ? 3 : 1;
-                    float forkSpread = math.radians(15f);
                     float boltRadius = evolved ? 0.75f : 0.6f;
                     float boltTick = evolved ? 0.1f : 0.15f;
                     for (int b = 0; b < bolts; b++)
                     {
-                        float a = bolts > 1 ? (b - (bolts - 1) * 0.5f) * forkSpread : 0f;
-                        float2 bdir = Rotate2(direction, a);
+                        // First bolt → the nearest target; the rest → other random enemies.
+                        float2 bdir = direction;
+                        if (b > 0 && enemyPositions.Length > 0)
+                        {
+                            float3 pick = enemyPositions[_skyfallRng.NextInt(0, enemyPositions.Length)];
+                            float2 toEnemy = new float2(pick.x - origin.x, pick.y - origin.y);
+                            if (math.lengthsq(toEnemy) > 0.0001f) bdir = math.normalize(toEnemy);
+                        }
                         Entity e = ecb.CreateEntity();
                         ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
                         ecb.AddComponent(e, new ProjectileData
@@ -370,9 +375,13 @@ namespace NightDash.ECS.Systems
                     for (int a = 0; a < arms; a++)
                     {
                         float ang = (2f * math.PI / arms) * a;
+                        // hitOnce: each arm damages an enemy once as it sweeps past
+                        // (reliable — a tick cadence skips enemies at the high tangential
+                        // speed a spiral reaches at large radius). tick value is just the
+                        // gate into the hit path; hit-once ignores its cadence.
                         CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, ringLife,
-                            radius: startRadius, angularSpeed: spin, angle: ang, hitRadius: 0.5f,
-                            tick: 0.3f, knockback: 0f, centerYOffset: 0.5f, radiusGrowth: growth);
+                            radius: startRadius, angularSpeed: spin, angle: ang, hitRadius: 0.65f,
+                            tick: 0.2f, knockback: 0f, centerYOffset: 0.5f, radiusGrowth: growth, hitOnce: true);
                     }
                     break;
                 }
@@ -671,7 +680,8 @@ namespace NightDash.ECS.Systems
             float tick,
             float knockback,
             float centerYOffset = 0f,
-            float radiusGrowth = 0f)
+            float radiusGrowth = 0f,
+            bool hitOnce = false)
         {
             Entity e = ecb.CreateEntity();
             float3 pos = playerPos + new float3(math.cos(angle) * radius, centerYOffset + math.sin(angle) * radius, 0f);
@@ -691,6 +701,12 @@ namespace NightDash.ECS.Systems
             });
             ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
             ecb.AddComponent(e, new OrbitState { Radius = radius, AngularSpeed = angularSpeed, Angle = angle, CenterYOffset = centerYOffset, RadiusGrowth = radiusGrowth });
+            if (hitOnce)
+            {
+                // Spiralling sweep that hits each enemy once (reliable, balanced) —
+                // see CombatSystem's hit-once branch.
+                ecb.AddBuffer<PierceHitElement>(e);
+            }
         }
     }
 }

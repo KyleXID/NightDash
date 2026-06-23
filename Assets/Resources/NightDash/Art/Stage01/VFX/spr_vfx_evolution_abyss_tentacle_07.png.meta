@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: fff32a6b36f0e41238c7409a0535979a
+guid: af5f6a405eb959f0ab4456d1272cfdac
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 752517321742513546
-    second: spr_vfx_evolution_dark_lightning_04
+      213: 641643980625920243
+    second: spr_vfx_evolution_abyss_tentacle_07
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -87,13 +87,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: spr_vfx_evolution_dark_lightning_04
+      name: spr_vfx_evolution_abyss_tentacle_07
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 55
-        height: 71
+        width: 68
+        height: 89
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -101,8 +101,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 98bc88b932e5f6bf592051dda2089d610000000000000000
-      internalID: 752517321742513546
+      spriteID: 9917e8e312b051934bde34bfed413e8a0000000000000000
+      internalID: 641643980625920243
       vertices: []
       indices:
       edges: []
@@ -111,10 +111,10 @@ TextureImporter:
     customData:
     physicsShape: []
     bones: []
-    spriteID: 9831dc496e066dae331e752a33909ba7
+    spriteID: cf487b20cf32cc7c703cf7b1b14938e8
     internalID: 0
     nameFileIdTable:
-      spr_vfx_evolution_dark_lightning_04: 752517321742513546
+      spr_vfx_evolution_abyss_tentacle_07: 641643980625920243
   mipmapLimitGroupName:
   pSDRemoveMatte: 0
   userData:

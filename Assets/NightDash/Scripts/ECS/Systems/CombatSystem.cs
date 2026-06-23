@@ -328,12 +328,13 @@ namespace NightDash.ECS.Systems
                 // them. Knockback shoves contacted enemies outward (barrier).
                 if (projectile.ValueRO.TickInterval > 0f)
                 {
-                    // Linear pierce (arrows / bolts / waves): hit each enemy at most
-                    // ONCE as it passes through, checked EVERY frame (not on a tick
-                    // cadence that a fast projectile could skip between), tracked via
-                    // the PierceHitElement buffer. Never consumed; only Lifetime ends it.
-                    if (projectile.ValueRO.Behavior == (byte)ProjectileBehavior.Linear &&
-                        SystemAPI.HasBuffer<PierceHitElement>(projectileEntity))
+                    // Hit-once sweep (pierce arrows/bolts/waves + the spiralling light
+                    // ring): damage each enemy at most ONCE as it passes through,
+                    // checked EVERY frame (not on a tick cadence a fast projectile could
+                    // skip between), tracked via the PierceHitElement buffer. Never
+                    // consumed; only Lifetime ends it. Applies to ANY projectile carrying
+                    // the buffer (Linear pierce OR the Orbit spiral arms).
+                    if (SystemAPI.HasBuffer<PierceHitElement>(projectileEntity))
                     {
                         DynamicBuffer<PierceHitElement> pierced = SystemAPI.GetBuffer<PierceHitElement>(projectileEntity);
                         float pierceRadiusSq = projectile.ValueRO.Radius * projectile.ValueRO.Radius;
