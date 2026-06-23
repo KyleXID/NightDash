@@ -554,9 +554,10 @@ namespace NightDash.Runtime
                     if (go != null && (weaponId.Contains("shadow_arrow") || weaponId.Contains("holy_wave")))
                         go.AddComponent<VFXAfterimage>();
 
-                    // Abyss tentacle: play the eruption once, then loop only the tail
-                    // (settled writhe) frames instead of re-erupting from frame 1.
-                    if (go != null && weaponId.Contains("abyss_tentacle"))
+                    // Abyss tentacle EVOLUTION only: play the eruption once, then loop
+                    // just the tail (settled writhe) frames instead of re-erupting from
+                    // frame 1. The base tentacle keeps looping its full clip as before.
+                    if (go != null && weaponId.Contains("abyss_tentacle") && IsEvolved(weaponId))
                     {
                         var tentAnim = go.GetComponent<SpriteAnimator>();
                         if (tentAnim != null && tentAnim.frames != null && tentAnim.frames.Length > 3)
