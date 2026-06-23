@@ -159,6 +159,12 @@ namespace NightDash.ECS.Systems.Progression
                 o.Rarity = roll < 0.70f ? (byte)0 : (roll < 0.95f ? (byte)1 : (byte)2);
                 options[i] = o;
             }
+
+            // Inject evolution cards for eligible weapons. Done LAST (after the
+            // rarity roll) so a guaranteed evolution can replace a normal slot and
+            // keeps its own legendary framing. Guaranteed (EvolutionOffer==1) cards
+            // always appear; probabilistic (==2) cards appear by chance.
+            EvolutionUtility.InjectEvolutionOptions(registry, ref options, ownedWeapons, ref rng);
         }
 
         /// <summary>
@@ -172,6 +178,13 @@ namespace NightDash.ECS.Systems.Progression
             ref DynamicBuffer<OwnedWeaponElement> ownedWeapons,
             ref DynamicBuffer<OwnedPassiveElement> ownedPassives)
         {
+            // Evolution card: swap the matching base weapon to its evolved form.
+            if (option.Kind == UpgradeKind.Evolution)
+            {
+                EvolutionUtility.ApplyEvolutionCard(registry, ref ownedWeapons, option.Id);
+                return;
+            }
+
             // Higher-rarity cards grant bonus levels on top of the normal +1.
             int bonus = option.Rarity >= 2 ? 2 : (option.Rarity == 1 ? 1 : 0);
 

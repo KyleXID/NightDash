@@ -11,7 +11,6 @@ namespace NightDash.ECS.Systems
     [UpdateAfter(typeof(CombatSystem))]
     public partial struct EvolutionSystem : ISystem
     {
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<EvolutionState>();
@@ -39,6 +38,27 @@ namespace NightDash.ECS.Systems
             DifficultyState difficulty = SystemAPI.GetSingleton<DifficultyState>();
             GameLoopState loop = SystemAPI.GetSingleton<GameLoopState>();
 
+            // Debug (F8, dev builds): force every owned weapon to its evolved form
+            // immediately, ignoring the normal level-up-card conditions. Normal
+            // evolution flows through the level-up cards (see EvolutionUtility +
+            // UpgradeOptionUtility / UpgradeApplySystem).
+            if (loop.Status == RunStatus.Playing && EvolutionDebug.ConsumeForceRequest())
+            {
+                DynamicBuffer<OwnedWeaponElement> weapons = SystemAPI.GetSingletonBuffer<OwnedWeaponElement>();
+                if (EvolutionUtility.ForceEvolveAll(registry, ref weapons))
+                {
+                    EntityCommandBuffer ecb = SystemAPI
+                        .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+                        .CreateCommandBuffer(state.WorldUnmanaged);
+                    EvolutionUtility.CleanupOrphanOrbits(ref state, weapons, ecb);
+                }
+            }
+
+            // ----------------------------------------------------------------
+            // Boss reward flow (chest + UI flags). Weapon evolution itself is now
+            // delivered through level-up cards, so this only drives the boss chest
+            // and the cosmetic "evolution available" flags.
+            // ----------------------------------------------------------------
             if (bossState.ValueRO.BossKilled == 0 || bossReward.ValueRO.HasPendingReward == 0)
             {
                 return;
@@ -67,6 +87,10 @@ namespace NightDash.ECS.Systems
             bossState.ValueRW.ChestOpened = 1;
         }
 
+        // -------------------------------------------------------------------
+        // Boss-reward UI flags. Sets HasNormal/HasAbyssEvolution so the result
+        // screen can show "evolution available".
+        // -------------------------------------------------------------------
         private static void TryApplyBossRewardEvolution(
             DataRegistry registry,
             DynamicBuffer<OwnedWeaponElement> ownedWeapons,

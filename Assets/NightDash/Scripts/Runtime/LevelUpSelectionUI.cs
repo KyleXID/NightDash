@@ -768,6 +768,7 @@ namespace NightDash.Runtime
                 switch (option.Kind)
                 {
                     case UpgradeKind.Weapon:
+                    case UpgradeKind.Evolution: // result id is an evolved weapon id
                         if (registry.TryGetWeapon(id, out NightDash.Data.WeaponData wd) && wd != null && wd.icon != null)
                             sprite = wd.icon;
                         if (sprite == null)
@@ -786,9 +787,9 @@ namespace NightDash.Runtime
             {
                 // Placeholder per category — keeps the slot from looking
                 // empty until the real PixelLab art lands.
-                string fallbackKey = option.Kind == UpgradeKind.Weapon
-                    ? NightDash.Runtime.UI.NightDashUIIcons.Reroll       // sword-ish swap icon
-                    : NightDash.Runtime.UI.NightDashUIIcons.UnlockRelic; // generic relic for passive
+                string fallbackKey = option.Kind == UpgradeKind.Passive
+                    ? NightDash.Runtime.UI.NightDashUIIcons.UnlockRelic  // generic relic for passive
+                    : NightDash.Runtime.UI.NightDashUIIcons.Reroll;      // sword-ish swap icon (weapon / evolution)
                 sprite = NightDash.Runtime.UI.NightDashUIIcons.Get(fallbackKey);
             }
 
@@ -799,9 +800,9 @@ namespace NightDash.Runtime
                 // Last-resort visual: solid dark block tinted with category
                 // color so the card still reads as "icon here".
                 img.enabled = true;
-                img.color = option.Kind == UpgradeKind.Weapon
-                    ? new Color(0.42f, 0.20f, 0.20f, 0.9f)
-                    : new Color(0.30f, 0.22f, 0.34f, 0.9f);
+                img.color = option.Kind == UpgradeKind.Passive
+                    ? new Color(0.30f, 0.22f, 0.34f, 0.9f)
+                    : new Color(0.42f, 0.20f, 0.20f, 0.9f);
             }
             else
             {
@@ -831,7 +832,7 @@ namespace NightDash.Runtime
 
             if (registry != null)
             {
-                if (option.Kind == UpgradeKind.Weapon &&
+                if ((option.Kind == UpgradeKind.Weapon || option.Kind == UpgradeKind.Evolution) &&
                     registry.TryGetWeapon(option.Id.ToString(), out WeaponData weapon) &&
                     weapon != null)
                 {
@@ -857,7 +858,11 @@ namespace NightDash.Runtime
             //   Splitting the title out for the level-up case keeps long
             //   Korean names from getting elbowed by the level chip.
             string headerLine;
-            if (option.CurrentLevel == 0)
+            if (option.Kind == UpgradeKind.Evolution)
+            {
+                headerLine = $"EVOLVE\n{title}";
+            }
+            else if (option.CurrentLevel == 0)
             {
                 string prefix = option.Kind == UpgradeKind.Weapon ? "Unlock" : "Gain";
                 headerLine = $"{prefix} {title}";

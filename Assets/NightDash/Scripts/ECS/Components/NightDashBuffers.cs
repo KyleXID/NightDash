@@ -47,6 +47,13 @@ namespace NightDash.ECS.Components
         public int Level;
         public int MaxLevel;
         public float CooldownRemaining;
+
+        // Evolution level-up card state (set by UpgradeApplySystem once this weapon
+        // is at max level AND all of an evolution's required passives are maxed):
+        //   0 = not eligible
+        //   1 = eligible, GUARANTEED in the very next level-up card set
+        //   2 = eligible but the guaranteed offer passed → now appears by chance
+        public byte EvolutionOffer;
     }
 
     [InternalBufferCapacity(8)]

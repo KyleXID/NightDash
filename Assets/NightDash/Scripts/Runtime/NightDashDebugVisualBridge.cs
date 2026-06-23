@@ -74,7 +74,7 @@ namespace NightDash.Runtime
                 { "weapon_hellflame_slash",       (VfxDir + "spr_vfx_hellflame_slash", 1.2f) },
                 { "weapon_abyss_hellflame_slash", (VfxDir + "spr_vfx_hellflame_slash", 1.5f) },
                 { "weapon_starfall",              (VfxDir + "spr_vfx_starfall",        1.5f) },
-                { "weapon_void_starfall",         (VfxDir + "spr_vfx_starfall",        1.5f) },
+                { "weapon_void_starfall",         (VfxDir + "spr_vfx_evolution_void_starfall", 1.6f) }, // 공허의 별낙하 (별의 낙하 진화 결과)
 
                 // Animated weapon VFX (frame sequences spr_vfx_<id>_NN.png).
                 { "weapon_demon_greatsword",      (VfxDir + "spr_vfx_demon_greatsword", 2.0f) },
@@ -95,8 +95,37 @@ namespace NightDash.Runtime
                 { "weapon_split_bullet",          (VfxDir + "spr_vfx_split_bullet",     1.4f) },
             };
 
-        // Resolves a weapon id to its VFX entry, falling back to the base weapon
-        // for evolution variants ("weapon_x_evolved" / "weapon_x_abyss").
+        // Dedicated VFX for FIRST-tier evolution weapons ("weapon_x_evolved").
+        // Keyed by BASE id (suffix stripped). The evolution sprites read as
+        // bigger / brighter than base (Notion "Evolution 17종"). Abyss variants
+        // are intentionally NOT here — they keep falling back to the base VFX.
+        // Note: starfall's evolution is the "void starfall" visual.
+        private static readonly Dictionary<string, (string path, float scale)> WeaponEvolvedVfxMap =
+            new Dictionary<string, (string, float)>
+            {
+                { "weapon_demon_greatsword", (VfxDir + "spr_vfx_evolution_demon_greatsword", 2.0f) },
+                { "weapon_demon_orb",        (VfxDir + "spr_vfx_evolution_demon_orb",        1.4f) },
+                { "weapon_starfall",         (VfxDir + "spr_vfx_evolution_void_starfall",    1.6f) }, // 공허의 별낙하 (starfall_evolved)
+                { "weapon_holy_wave",        (VfxDir + "spr_vfx_evolution_holy_wave",        2.0f) },
+                { "weapon_light_ring",       (VfxDir + "spr_vfx_evolution_light_ring",       5.3f) },
+                { "weapon_rapid_shot",       (VfxDir + "spr_vfx_evolution_rapid_shot",       1.3f) },
+                { "weapon_revolver",         (VfxDir + "spr_vfx_evolution_revolver",         1.2f) },
+                { "weapon_hell_hammer",      (VfxDir + "spr_vfx_evolution_hell_hammer",      1.9f) },
+                { "weapon_slash_combo",      (VfxDir + "spr_vfx_evolution_slash_combo",      1.9f) },
+                { "weapon_shadow_arrow",     (VfxDir + "spr_vfx_evolution_shadow_arrow",     1.4f) },
+                { "weapon_spear",            (VfxDir + "spr_vfx_evolution_spear",            1.6f) },
+                { "weapon_split_bullet",     (VfxDir + "spr_vfx_evolution_split_bullet",     1.4f) },
+                { "weapon_spinning_blade",   (VfxDir + "spr_vfx_evolution_spinning_blade",   3.0f) },
+                { "weapon_dark_barrier",     (VfxDir + "spr_vfx_evolution_dark_barrier",     5.5f) },
+                { "weapon_chain_scythe",     (VfxDir + "spr_vfx_evolution_chain_scythe",     3.2f) },
+                { "weapon_dark_lightning",   (VfxDir + "spr_vfx_evolution_dark_lightning",   2.2f) },
+                { "weapon_abyss_tentacle",   (VfxDir + "spr_vfx_evolution_abyss_tentacle",   3.6f) },
+            };
+
+        // Resolves a weapon id to its VFX entry. First-tier evolution variants
+        // ("weapon_x_evolved") prefer their dedicated evolution VFX, then fall
+        // back to the base weapon entry. Abyss variants ("weapon_x_abyss") strip
+        // straight to the base VFX (no dedicated abyss art yet).
         // NOTE: only the trailing "_evolved"/"_abyss" segment is stripped, and
         // only after a direct lookup fails. Base weapons whose id naturally ends
         // with one of those tokens (e.g. weapon_abyss_tentacle) MUST keep a
@@ -106,7 +135,11 @@ namespace NightDash.Runtime
             if (WeaponVfxMap.TryGetValue(weaponId, out info)) return true;
 
             string baseId = null;
-            if (weaponId.EndsWith("_evolved")) baseId = weaponId.Substring(0, weaponId.Length - "_evolved".Length);
+            if (weaponId.EndsWith("_evolved"))
+            {
+                baseId = weaponId.Substring(0, weaponId.Length - "_evolved".Length);
+                if (WeaponEvolvedVfxMap.TryGetValue(baseId, out info)) return true; // dedicated evolution VFX
+            }
             else if (weaponId.EndsWith("_abyss")) baseId = weaponId.Substring(0, weaponId.Length - "_abyss".Length);
 
             if (baseId != null && WeaponVfxMap.TryGetValue(baseId, out info)) return true;
@@ -114,6 +147,9 @@ namespace NightDash.Runtime
             info = default;
             return false;
         }
+
+        // True when a weapon id is a first-tier evolution ("..._evolved").
+        private static bool IsEvolved(string weaponId) => weaponId.EndsWith("_evolved");
 
         // Exposed for the dash-trail bridge so it can pull the player's
         // current sprite + flip state and clone an afterimage. Returns null
@@ -175,7 +211,9 @@ namespace NightDash.Runtime
         // the flying scythe head. One chain GameObject per whip projectile.
         private readonly Dictionary<Entity, GameObject> _whipChains = new();
         private const string ChainVariantPrefix = "NightDash/Art/Stage01/VFX/spr_vfx_chain_scythe_chain_";
-        private Sprite[] _chainVariants; // randomly-mixed chain-link sprites (spr_vfx_chain_scythe_chain_1..N)
+        private const string ChainVariantEvolvedPrefix = "NightDash/Art/Stage01/VFX/spr_vfx_evolution_chain_scythe_chain_";
+        private Sprite[] _chainVariants;        // base chain-link sprites (spr_vfx_chain_scythe_chain_1..N)
+        private Sprite[] _chainVariantsEvolved; // evolution chain-link sprites (spr_vfx_evolution_chain_scythe_chain_1..N)
         private const float HeadRingOffset = 0.6f; // world units from the scythe-head center back to its chain ring
         // Two-tone chain-scythe palette: icy-blue scythe head, dark-navy chain links.
         // Multiplied onto the (otherwise white) sprite, so values < 1 darken/tint.
@@ -519,7 +557,7 @@ namespace NightDash.Runtime
 
                         var chainGo = new GameObject("[VFX] WhipChain");
                         var chainRenderer = chainGo.AddComponent<WhipChainRenderer>();
-                        chainRenderer.Init(LoadChainVariants(), SortProjectile - 1, ScytheChainTint);
+                        chainRenderer.Init(LoadChainVariants(IsEvolved(weaponId)), SortProjectile - 1, ScytheChainTint);
                         _whipChains[entity] = chainGo;
                     }
 
@@ -875,19 +913,29 @@ namespace NightDash.Runtime
             chainRenderer.UpdateChain(playerPos, ringPos);
         }
 
-        // Loads the chain-link variant sprites (spr_vfx_chain_scythe_chain_1..N).
-        private Sprite[] LoadChainVariants()
+        // Loads the chain-link variant sprites — evolution set
+        // (spr_vfx_evolution_chain_scythe_chain_1..N) for evolved scythes,
+        // otherwise the base set (spr_vfx_chain_scythe_chain_1..N).
+        private Sprite[] LoadChainVariants(bool evolved)
         {
-            if (_chainVariants != null) return _chainVariants;
+            if (evolved && _chainVariantsEvolved != null) return _chainVariantsEvolved;
+            if (!evolved && _chainVariants != null) return _chainVariants;
+
+            string prefix = evolved ? ChainVariantEvolvedPrefix : ChainVariantPrefix;
             var list = new List<Sprite>(8);
             for (int n = 1; ; n++)
             {
-                var s = Resources.Load<Sprite>($"{ChainVariantPrefix}{n}");
+                var s = Resources.Load<Sprite>($"{prefix}{n}");
                 if (s == null) break;
                 list.Add(s);
             }
-            _chainVariants = list.Count > 0 ? list.ToArray() : null;
-            return _chainVariants;
+            var arr = list.Count > 0 ? list.ToArray() : null;
+            // Evolution art is optional — fall back to the base links if absent.
+            if (arr == null && evolved) arr = LoadChainVariants(false);
+
+            if (evolved) _chainVariantsEvolved = arr;
+            else _chainVariants = arr;
+            return arr;
         }
 
         private void DestroyAllWhipChains()

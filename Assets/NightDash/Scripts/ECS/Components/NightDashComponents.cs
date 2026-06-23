@@ -19,7 +19,8 @@ namespace NightDash.ECS.Components
     {
         None = 0,
         Weapon = 1,
-        Passive = 2
+        Passive = 2,
+        Evolution = 3 // upgrade card that evolves an owned weapon to its "_evolved" form
     }
 
     public enum RunNavigationAction : byte

@@ -217,6 +217,14 @@ namespace NightDash.ECS.Systems
             float offsetFactor = weaponCount > 1 ? weaponIndex - ((weaponCount - 1) * 0.5f) : 0f;
             float2 spawnOffset = perpendicular * (0.32f * offsetFactor);
 
+            // First-tier evolution ("..._evolved"): every evolved weapon gets a
+            // BEHAVIOR upgrade over its base — more projectiles, pierce, wider
+            // area, extra blades/zones, faster ticks. Raw stat boosts (damage /
+            // speed) already live in the evolved WeaponData; this is the on-field
+            // mechanical step-up the player feels. Abyss variants reuse the base
+            // behavior for now (no dedicated tuning yet).
+            bool evolved = weaponId.ToString().EndsWith("_evolved");
+
             // Orbit weapons (ring / blades / barrier) spawn ONCE and persist for
             // the whole run (the OnUpdate cooldown gate stops them re-firing), so
             // they orbit continuously instead of flickering back to angle 0 on
@@ -240,30 +248,40 @@ namespace NightDash.ECS.Systems
                     // target (the star's tail is drawn diagonal, so it must come from
                     // the upper-right). Spawns a good distance away so the descent
                     // reads, and keeps its drawn orientation (no velocity rotation).
+                    // Evolved (void starfall): a 3-meteor shower with a wider splash.
                     const float DiagDist = 3.0f; // up-right offset from the target
                     const float FallSpeed = 7f;
-                    float3 spawnPos = new float3(target.x + DiagDist + spawnOffset.x, target.y + DiagDist + spawnOffset.y, 0f);
-                    float2 dir = math.normalize(new float2(target.x - spawnPos.x, target.y - spawnPos.y));
-                    // Lifetime = exact travel time to the target so the (non-looping)
-                    // VFX animation finishes right as the star lands.
-                    float travelTime = math.distance(new float2(spawnPos.x, spawnPos.y), new float2(target.x, target.y)) / FallSpeed;
-                    Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
-                    ecb.AddComponent(e, new ProjectileData
+                    int meteors = evolved ? 3 : 1;
+                    float splashRadius = evolved ? 2.4f : 1.8f;
+                    float splashFactor = evolved ? 0.6f : 0.5f;
+                    for (int m = 0; m < meteors; m++)
                     {
-                        Damage = weapon.Damage,
-                        Lifetime = math.max(0.2f, travelTime),
-                        IsPlayerOwned = 1,
-                        Radius = 0f,          // no mid-flight hit — damage is dealt as a landing AoE
-                        WeaponId = weaponId,
-                        IsMelee = 0,
-                        Behavior = (byte)ProjectileBehavior.Linear,
-                        AlignToVelocity = 0,  // keep the star's drawn diagonal tail orientation
-                        PlayOnce = 1,         // play the fall animation once, finishing on impact
-                        SplashRadius = 1.8f,  // landing AoE: full to the target, reduced to nearby
-                        SplashFactor = 0.5f,  // 50% splash damage to enemies outside the core
-                    });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = dir * FallSpeed });
+                        // Spread the extra meteors around the target so they don't stack.
+                        float2 scatter = meteors > 1 ? perpendicular * ((m - (meteors - 1) * 0.5f) * 1.4f) : float2.zero;
+                        float3 aimPos = new float3(target.x + scatter.x, target.y + scatter.y, 0f);
+                        float3 spawnPos = new float3(aimPos.x + DiagDist + spawnOffset.x, aimPos.y + DiagDist + spawnOffset.y, 0f);
+                        float2 dir = math.normalize(new float2(aimPos.x - spawnPos.x, aimPos.y - spawnPos.y));
+                        // Lifetime = exact travel time to the target so the (non-looping)
+                        // VFX animation finishes right as the star lands.
+                        float travelTime = math.distance(new float2(spawnPos.x, spawnPos.y), new float2(aimPos.x, aimPos.y)) / FallSpeed;
+                        Entity e = ecb.CreateEntity();
+                        ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
+                        ecb.AddComponent(e, new ProjectileData
+                        {
+                            Damage = weapon.Damage,
+                            Lifetime = math.max(0.2f, travelTime),
+                            IsPlayerOwned = 1,
+                            Radius = 0f,          // no mid-flight hit — damage is dealt as a landing AoE
+                            WeaponId = weaponId,
+                            IsMelee = 0,
+                            Behavior = (byte)ProjectileBehavior.Linear,
+                            AlignToVelocity = 0,  // keep the star's drawn diagonal tail orientation
+                            PlayOnce = 1,         // play the fall animation once, finishing on impact
+                            SplashRadius = splashRadius, // landing AoE: full to the target, reduced to nearby
+                            SplashFactor = splashFactor,
+                        });
+                        ecb.AddComponent(e, new PhysicsVelocity2D { Value = dir * FallSpeed });
+                    }
                     break;
                 }
                 case WeaponBehaviorKind.PiercingBolt:
@@ -271,88 +289,128 @@ namespace NightDash.ECS.Systems
                     // Lightning: emitted from the player TOWARD the target, travels
                     // slowly, and keeps a FIXED vertical sprite orientation (never
                     // rotates to lie flat). Pierces every enemy in its path, lingers.
+                    // Evolved (hell thunder): three forked bolts in a small fan,
+                    // wider hit radius and a faster pierce cadence.
                     const float BoltSpeed = 2.5f;
-                    Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
-                    ecb.AddComponent(e, new ProjectileData
+                    int bolts = evolved ? 3 : 1;
+                    float forkSpread = math.radians(15f);
+                    float boltRadius = evolved ? 0.75f : 0.6f;
+                    float boltTick = evolved ? 0.1f : 0.15f;
+                    for (int b = 0; b < bolts; b++)
                     {
-                        Damage = weapon.Damage,
-                        Lifetime = 1.4f,
-                        IsPlayerOwned = 1,
-                        Radius = 0.6f,
-                        WeaponId = weaponId,
-                        IsMelee = 0,
-                        Behavior = (byte)ProjectileBehavior.Linear,
-                        TickInterval = 0.15f, // pierce: damages every enemy along the path, never consumed
-                        TickTimer = 0.15f,
-                        AlignToVelocity = 0,  // keep the bolt sprite upright — never rotate it to horizontal
-                    });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * BoltSpeed });
+                        float a = bolts > 1 ? (b - (bolts - 1) * 0.5f) * forkSpread : 0f;
+                        float2 bdir = Rotate2(direction, a);
+                        Entity e = ecb.CreateEntity();
+                        ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
+                        ecb.AddComponent(e, new ProjectileData
+                        {
+                            Damage = weapon.Damage,
+                            Lifetime = evolved ? 1.5f : 1.4f,
+                            IsPlayerOwned = 1,
+                            Radius = boltRadius,
+                            WeaponId = weaponId,
+                            IsMelee = 0,
+                            Behavior = (byte)ProjectileBehavior.Linear,
+                            TickInterval = boltTick, // pierce: damages every enemy along the path, never consumed
+                            TickTimer = boltTick,
+                            AlignToVelocity = 0,  // keep the bolt sprite upright — never rotate it to horizontal
+                        });
+                        ecb.AddComponent(e, new PhysicsVelocity2D { Value = bdir * BoltSpeed });
+                    }
                     break;
                 }
                 case WeaponBehaviorKind.OrbitRing:
                 {
                     // Ring centered on the player (slightly raised); damages enemies within the ring radius.
+                    // Evolved (dual holy ring): wider reach, faster ticks, and it now shoves on contact.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.6f, angle: 0f, hitRadius: 1.2f, tick: 0.4f, knockback: 0f, centerYOffset: 0.5f);
+                        radius: 0f, angularSpeed: 1.6f, angle: 0f,
+                        hitRadius: evolved ? 1.6f : 1.2f, tick: evolved ? 0.3f : 0.4f,
+                        knockback: evolved ? 3f : 0f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.OrbitBlades:
                 {
-                    // Two blades orbiting the player on opposite sides.
-                    CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 1.8f, angularSpeed: 3.6f, angle: 0f, hitRadius: 0.7f, tick: 0.25f, knockback: 3f, centerYOffset: 0.5f);
-                    CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 1.8f, angularSpeed: 3.6f, angle: math.PI, hitRadius: 0.7f, tick: 0.25f, knockback: 3f, centerYOffset: 0.5f);
+                    // Blades orbiting the player on opposite sides. Evolved (abyssal
+                    // vortex): twice the blades, faster spin and heavier knockback.
+                    int blades = evolved ? 4 : 2;
+                    float bladeSpeed = evolved ? 4.6f : 3.6f;
+                    float bladeKnock = evolved ? 5f : 3f;
+                    float bladeTick = evolved ? 0.18f : 0.25f;
+                    for (int b = 0; b < blades; b++)
+                    {
+                        float a = (2f * math.PI / blades) * b;
+                        CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
+                            radius: 1.8f, angularSpeed: bladeSpeed, angle: a, hitRadius: 0.7f,
+                            tick: bladeTick, knockback: bladeKnock, centerYOffset: 0.5f);
+                    }
                     break;
                 }
                 case WeaponBehaviorKind.Barrier:
                 {
                     // Protective shield centered on the player (slightly raised); knocks enemies back on contact.
+                    // Evolved (tainted sanctuary): larger guard radius, harder knockback, faster pulses.
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.2f, angle: 0f, hitRadius: 1.0f, tick: 0.3f, knockback: 6f, centerYOffset: 0.5f);
+                        radius: 0f, angularSpeed: 1.2f, angle: 0f,
+                        hitRadius: evolved ? 1.4f : 1.0f, tick: evolved ? 0.22f : 0.3f,
+                        knockback: evolved ? 10f : 6f, centerYOffset: 0.5f);
                     break;
                 }
                 case WeaponBehaviorKind.GroundZone:
                 {
                     // Erupts from the ground at the target spot, lingers and damages on contact.
-                    float3 spawnPos = new float3(target.x, target.y, 0f);
-                    Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
-                    ecb.AddComponent(e, new ProjectileData
+                    // Evolved (great abyss): three tentacle zones around the target,
+                    // bigger radius and a longer, faster-ticking dwell.
+                    int zones = evolved ? 3 : 1;
+                    float zoneRadius = evolved ? 1.3f : 1.1f;
+                    float zoneLife = evolved ? 3.0f : 2.5f;
+                    float zoneTick = evolved ? 0.3f : 0.4f;
+                    for (int z = 0; z < zones; z++)
                     {
-                        Damage = weapon.Damage,
-                        Lifetime = 2.5f,
-                        IsPlayerOwned = 1,
-                        Radius = 1.1f,
-                        WeaponId = weaponId,
-                        IsMelee = 0,
-                        Behavior = (byte)ProjectileBehavior.GroundZone,
-                        TickInterval = 0.4f,
-                        TickTimer = 0.4f,
-                    });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
+                        float2 scatter = zones > 1 ? perpendicular * ((z - (zones - 1) * 0.5f) * 1.2f) : float2.zero;
+                        float3 spawnPos = new float3(target.x + scatter.x, target.y + scatter.y, 0f);
+                        Entity e = ecb.CreateEntity();
+                        ecb.AddComponent(e, LocalTransform.FromPosition(spawnPos));
+                        ecb.AddComponent(e, new ProjectileData
+                        {
+                            Damage = weapon.Damage,
+                            Lifetime = zoneLife,
+                            IsPlayerOwned = 1,
+                            Radius = zoneRadius,
+                            WeaponId = weaponId,
+                            IsMelee = 0,
+                            Behavior = (byte)ProjectileBehavior.GroundZone,
+                            TickInterval = zoneTick,
+                            TickTimer = zoneTick,
+                        });
+                        ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
+                    }
                     break;
                 }
                 case WeaponBehaviorKind.MeleeSweep:
                 {
                     // Swings an arc AROUND the player, centered on the aim direction,
                     // over a short lifetime — pierces, never consumed by a hit.
+                    // Evolved (hellfire arc): longer reach, wider/faster swing,
+                    // bigger hit radius and knockback.
                     string sweepId = weaponId.ToString();
                     // Greatsword's blade art reads opposite the others, so it swings
                     // the other way (clockwise) to match its sprite.
                     float dir = sweepId.Contains("demon_greatsword") ? -1f : 1f;
                     // Chain scythe sweeps closer to the player's body.
+                    float reachMul = sweepId.Contains("chain_scythe") ? 0.3f : 0.55f;
+                    if (evolved) reachMul += 0.15f;
                     float reach = sweepId.Contains("chain_scythe")
-                        ? math.max(0.6f, weapon.Range * 0.3f)
-                        : math.max(1.1f, weapon.Range * 0.55f);
+                        ? math.max(0.6f, weapon.Range * reachMul)
+                        : math.max(1.1f, weapon.Range * reachMul);
                     float aim = math.atan2(direction.y, direction.x);
-                    const float sweepLife = 0.5f;
-                    const float sweepSpeed = 6.3f; // rad/s → ~3.15 rad (~180°) across the lifetime
+                    float sweepLife = evolved ? 0.55f : 0.5f;
+                    float sweepSpeed = evolved ? 7.5f : 6.3f; // rad/s → wider arc when evolved
                     float startAngle = aim - dir * sweepSpeed * sweepLife * 0.5f; // center the sweep on the aim
                     CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, sweepLife,
                         radius: reach, angularSpeed: dir * sweepSpeed, angle: startAngle,
-                        hitRadius: math.max(0.7f, weapon.Range * 0.3f), tick: 0.08f, knockback: 0f);
+                        hitRadius: math.max(0.7f, weapon.Range * (evolved ? 0.4f : 0.3f)),
+                        tick: evolved ? 0.06f : 0.08f, knockback: evolved ? 4f : 0f);
                     break;
                 }
                 case WeaponBehaviorKind.Whip:
@@ -361,8 +419,12 @@ namespace NightDash.ECS.Systems
                     // DWELLS at full reach, then snaps back like a rubber band,
                     // damaging everything along the path (extend → hold → retract
                     // over the lifetime; the phase split lives in CombatSystem). Pierces.
-                    float maxReach = math.max(1.8f, weapon.Range * 0.8f);
-                    const float whipLife = 1.0f; // longer than before so the mid-life dwell is visible
+                    // Stays a single scythe head + a chain of 5 randomly-mixed links
+                    // (rendered in the visual bridge). Evolved: longer reach, wider
+                    // hit, faster pierce cadence and knockback on the chain.
+                    float maxReach = math.max(1.8f, weapon.Range * (evolved ? 1.05f : 0.8f));
+                    float whipLife = evolved ? 1.1f : 1.0f; // dwell at full reach is visible
+                    float whipTick = evolved ? 0.045f : 0.06f;
                     Entity e = ecb.CreateEntity();
                     ecb.AddComponent(e, LocalTransform.FromPosition(origin)); // starts at the player (distance 0)
                     ecb.AddComponent(e, new ProjectileData
@@ -370,12 +432,13 @@ namespace NightDash.ECS.Systems
                         Damage = weapon.Damage,
                         Lifetime = whipLife,
                         IsPlayerOwned = 1,
-                        Radius = math.max(0.7f, weapon.Range * 0.25f),
+                        Radius = math.max(0.7f, weapon.Range * (evolved ? 0.34f : 0.25f)),
                         WeaponId = weaponId,
                         IsMelee = 1,
                         Behavior = (byte)ProjectileBehavior.Whip,
-                        TickInterval = 0.06f, // pierce: repeatedly damages enemies along the path
-                        TickTimer = 0.06f,
+                        TickInterval = whipTick, // pierce: repeatedly damages enemies along the path
+                        TickTimer = whipTick,
+                        Knockback = evolved ? 3f : 0f,
                         AlignToVelocity = 0,
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
@@ -387,6 +450,7 @@ namespace NightDash.ECS.Systems
                     // Continuous slashing: when an enemy is within range, the slash
                     // effect spawns ON the enemy (stationary) and rapidly multi-hits
                     // for a moment. Skips (holds cooldown) if no enemy is close.
+                    // Evolved (frenzy flurry): bigger reach + radius, faster multi-hit.
                     float distToTarget = math.length(target - origin);
                     float strikeRange = math.max(2.5f, weapon.Range);
                     if (distToTarget > strikeRange)
@@ -398,14 +462,14 @@ namespace NightDash.ECS.Systems
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = 0.4f,
+                        Lifetime = evolved ? 0.55f : 0.4f,
                         IsPlayerOwned = 1,
-                        Radius = 0.7f,
+                        Radius = evolved ? 1.0f : 0.7f,
                         WeaponId = weaponId,
                         IsMelee = 1,
                         Behavior = (byte)ProjectileBehavior.GroundZone, // stays on the spot it struck
-                        TickInterval = 0.1f, // rapid multi-hit ("난도질"), never consumed
-                        TickTimer = 0.1f,
+                        TickInterval = evolved ? 0.06f : 0.1f, // rapid multi-hit ("난도질"), never consumed
+                        TickTimer = evolved ? 0.06f : 0.1f,
                         AlignToVelocity = 0,
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
@@ -416,6 +480,7 @@ namespace NightDash.ECS.Systems
                     // Heavy bludgeon: like SlashStrike (lands ON a nearby enemy) but
                     // SLOW and WEIGHTY — wide impact, knockback, few hard hits.
                     // (Contrast vs SlashStrike: bigger radius, slower tick, knockback.)
+                    // Evolved (doom smash): much wider crater, heavier knockback.
                     float distToTarget = math.length(target - origin);
                     float strikeRange = math.max(2.5f, weapon.Range);
                     if (distToTarget > strikeRange)
@@ -427,15 +492,15 @@ namespace NightDash.ECS.Systems
                     ecb.AddComponent(e, new ProjectileData
                     {
                         Damage = weapon.Damage,
-                        Lifetime = 0.45f,
+                        Lifetime = evolved ? 0.55f : 0.45f,
                         IsPlayerOwned = 1,
-                        Radius = 1.3f,        // wide, heavy impact area
+                        Radius = evolved ? 1.9f : 1.3f, // wide, heavy impact area
                         WeaponId = weaponId,
                         IsMelee = 1,
                         Behavior = (byte)ProjectileBehavior.GroundZone, // stays on the spot it struck
-                        TickInterval = 0.35f, // slow, weighty cadence (few hard hits)
-                        TickTimer = 0.35f,
-                        Knockback = 6f,       // 묵직: knocks enemies back
+                        TickInterval = evolved ? 0.3f : 0.35f, // slow, weighty cadence (few hard hits)
+                        TickTimer = evolved ? 0.3f : 0.35f,
+                        Knockback = evolved ? 10f : 6f,       // 묵직: knocks enemies back
                         AlignToVelocity = 0,
                     });
                     ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
@@ -452,7 +517,7 @@ namespace NightDash.ECS.Systems
                         Damage = weapon.Damage,
                         Lifetime = 0.25f,
                         IsPlayerOwned = 1,
-                        Radius = math.max(0.6f, weapon.Range * 0.35f),
+                        Radius = math.max(0.6f, weapon.Range * (evolved ? 0.5f : 0.35f)),
                         WeaponId = weaponId,
                         IsMelee = 1,
                         Behavior = (byte)ProjectileBehavior.Linear,
@@ -462,25 +527,74 @@ namespace NightDash.ECS.Systems
                 }
                 default: // Linear straight projectile
                 {
-                    Entity e = ecb.CreateEntity();
-                    ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
-                    ecb.AddComponent(e, new ProjectileData
+                    // Base: a single straight shot consumed on first hit. Evolved
+                    // gives each ranged weapon a distinct upgrade — multi-shot
+                    // spread (rapid/split) and/or pierce (shadow/spear/orb/wave/…).
+                    ResolveLinearEvolution(weaponId, evolved, out int shots, out float spreadDeg, out float linRadius, out float pierceTick);
+                    float spread = math.radians(spreadDeg);
+                    float speed = math.max(2f, weapon.ProjectileSpeed);
+                    float life = math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed));
+                    for (int s = 0; s < shots; s++)
                     {
-                        Damage = weapon.Damage,
-                        Lifetime = math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed)),
-                        IsPlayerOwned = 1,
-                        Radius = 0.35f,
-                        WeaponId = weaponId,
-                        IsMelee = 0,
-                        Behavior = (byte)ProjectileBehavior.Linear,
-                        AlignToVelocity = 1, // bullets/arrows/spears face their travel direction
-                    });
-                    ecb.AddComponent(e, new PhysicsVelocity2D { Value = direction * math.max(2f, weapon.ProjectileSpeed) });
+                        float a = shots > 1 ? (s - (shots - 1) * 0.5f) * (spread / math.max(1, shots - 1)) : 0f;
+                        float2 sdir = Rotate2(direction, a);
+                        Entity e = ecb.CreateEntity();
+                        ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
+                        ecb.AddComponent(e, new ProjectileData
+                        {
+                            Damage = weapon.Damage,
+                            Lifetime = life,
+                            IsPlayerOwned = 1,
+                            Radius = linRadius,
+                            WeaponId = weaponId,
+                            IsMelee = 0,
+                            Behavior = (byte)ProjectileBehavior.Linear,
+                            TickInterval = pierceTick, // >0 = pierce (never consumed); 0 = single hit
+                            TickTimer = pierceTick,
+                            AlignToVelocity = 1, // bullets/arrows/spears face their travel direction
+                        });
+                        ecb.AddComponent(e, new PhysicsVelocity2D { Value = sdir * speed });
+                    }
                     break;
                 }
             }
 
             return true;
+        }
+
+        // Per-weapon evolution config for the straight-projectile (Linear) family.
+        // Non-evolved weapons always return the base single-shot, single-hit values.
+        // pierceTick > 0 turns a shot into a piercing projectile (CombatSystem treats
+        // TickInterval > 0 as "damage along the whole path, never consumed").
+        private static void ResolveLinearEvolution(
+            FixedString64Bytes weaponId, bool evolved,
+            out int shots, out float spreadDeg, out float radius, out float pierceTick)
+        {
+            shots = 1; spreadDeg = 0f; radius = 0.35f; pierceTick = 0f;
+            if (!evolved) return;
+
+            string baseId = weaponId.ToString();
+            if (baseId.EndsWith("_evolved")) baseId = baseId.Substring(0, baseId.Length - "_evolved".Length);
+
+            switch (baseId)
+            {
+                case "weapon_rapid_shot":   shots = 3; spreadDeg = 22f; radius = 0.40f; pierceTick = 0.12f; break; // storm triple-arrow
+                case "weapon_split_bullet": shots = 5; spreadDeg = 52f; radius = 0.35f; pierceTick = 0.10f; break; // hell shotgun fan
+                case "weapon_revolver":     shots = 1; spreadDeg = 0f;  radius = 0.35f; pierceTick = 0.08f; break; // soulshooter pierce
+                case "weapon_shadow_arrow": shots = 1; spreadDeg = 0f;  radius = 0.50f; pierceTick = 0.10f; break; // void-piercing arrow
+                case "weapon_spear":        shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.10f; break; // dimension-piercing spear
+                case "weapon_demon_orb":    shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.12f; break; // abyssal orb
+                case "weapon_holy_wave":    shots = 1; spreadDeg = 0f;  radius = 0.65f; pierceTick = 0.10f; break; // golden sacred wave
+                default:                    shots = 1; spreadDeg = 0f;  radius = 0.40f; pierceTick = 0.10f; break; // generic: pierce
+            }
+        }
+
+        // Rotates a 2D vector by `radians` (CCW).
+        private static float2 Rotate2(float2 v, float radians)
+        {
+            float c = math.cos(radians);
+            float s = math.sin(radians);
+            return new float2(v.x * c - v.y * s, v.x * s + v.y * c);
         }
 
         // Creates one orbiting weapon entity attached to the player. The orbit

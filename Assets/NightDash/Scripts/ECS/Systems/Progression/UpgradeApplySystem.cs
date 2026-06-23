@@ -72,12 +72,30 @@ namespace NightDash.ECS.Systems.Progression
 
             string classId = SystemAPI.GetSingleton<RunSelection>().ClassId.ToString();
 
+            UpgradeOptionElement selected = options[optionIndex];
             UpgradeOptionUtility.ApplySelection(
                 registry,
-                options[optionIndex],
+                selected,
                 progression.ValueRO,
                 ref ownedWeapons,
                 ref ownedPassives);
+
+            // Evolution bookkeeping (all owned-weapon mutations BEFORE the runtime
+            // refresh, which may do structural changes):
+            //  1) an evolution swap can orphan a persistent orbit → clean it up,
+            //  2) a guaranteed offer shown this level-up but not taken → demote to
+            //     a chance card,
+            //  3) this level-up may have maxed the last requirement → flag any
+            //     newly-eligible weapon GUARANTEED for the next card set.
+            if (selected.Kind == UpgradeKind.Evolution)
+            {
+                EntityCommandBuffer ecb = SystemAPI
+                    .GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
+                    .CreateCommandBuffer(state.WorldUnmanaged);
+                EvolutionUtility.CleanupOrphanOrbits(ref state, ownedWeapons, ecb);
+            }
+            EvolutionUtility.DemoteShownGuaranteedOffers(registry, ref ownedWeapons, options);
+            EvolutionUtility.RefreshEvolutionOffers(registry, ref ownedWeapons, ownedPassives);
 
             // Single call site for stat recalculation — never called from M2 (reroll has no ownership change).
             RuntimeBalanceUtility.RefreshPlayerRuntime(ref state, registry, classId);
