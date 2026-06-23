@@ -545,8 +545,14 @@ namespace NightDash.Runtime
                         go = CreateStaticView("Projectile", sprite, scale, SortProjectile, tint);
                     }
 
-                    // Shadow arrow leaves a fading afterimage trail as it flies.
-                    if (go != null && weaponId.Contains("shadow_arrow")) go.AddComponent<VFXAfterimage>();
+                    // Shadow arrow + (evolved) holy wave leave a fading afterimage trail.
+                    if (go != null && (weaponId.Contains("shadow_arrow") || weaponId.Contains("holy_wave")))
+                        go.AddComponent<VFXAfterimage>();
+
+                    // Evolved star-fall (void starfall): a twinkling glint pinned to the
+                    // comet's star head as it descends.
+                    if (go != null && (weaponId.Contains("void_starfall") || weaponId.Contains("starfall_evolved")))
+                        AttachStarTwinkle(go);
 
                     // Chain scythe: a row of mixed chain-link sprites spanning from the
                     // player to the flying scythe head. Two-tone palette — the head reads
@@ -914,6 +920,36 @@ namespace NightDash.Runtime
             chainRenderer.UpdateChain(playerPos, ringPos);
         }
 
+        // Twinkling glint sprite pinned to the void-starfall comet head.
+        private const string SparklePath = "NightDash/Art/Stage01/VFX/spr_vfx_sparkle";
+        private static Sprite _sparkleSprite;
+
+        // Pins a small twinkling 4-point glint to the comet's star head (lower-left
+        // of the sprite, since the head leads the down-left fall after the art's
+        // 180° rotation). VFXSparkle pulses its scale/alpha so it sparkles.
+        private void AttachStarTwinkle(GameObject meteorGo)
+        {
+            var headSr = meteorGo.GetComponent<SpriteRenderer>();
+            if (headSr == null) return;
+            if (_sparkleSprite == null) _sparkleSprite = Resources.Load<Sprite>(SparklePath);
+            if (_sparkleSprite == null) return;
+
+            var sparkGo = new GameObject("[VFX] StarTwinkle");
+            sparkGo.transform.SetParent(meteorGo.transform, false);
+            if (headSr.sprite != null)
+            {
+                Bounds b = headSr.sprite.bounds;
+                sparkGo.transform.localPosition = new Vector3(b.min.x + b.size.x * 0.28f, b.min.y + b.size.y * 0.24f, 0f);
+            }
+            sparkGo.transform.localScale = Vector3.one * 0.6f;
+
+            var ssr = sparkGo.AddComponent<SpriteRenderer>();
+            ssr.sprite = _sparkleSprite;
+            ssr.sortingOrder = headSr.sortingOrder + 1;
+            ssr.color = new Color(0.85f, 0.95f, 1f, 1f); // icy tint matching the comet head
+            sparkGo.AddComponent<VFXSparkle>();
+        }
+
         // Loads the chain-link variant sprites — evolution set
         // (spr_vfx_evolution_chain_scythe_chain_1..N) for evolved scythes,
         // otherwise the base set (spr_vfx_chain_scythe_chain_1..N).
@@ -1123,6 +1159,45 @@ namespace NightDash.Runtime
             gsr.color = col;
 
             ghost.AddComponent<VFXAutoDestroy>().Init(fadeDuration, fadeOut: true, fadeOutRatio: 1f, maxAlpha: startAlpha);
+        }
+    }
+
+    // Twinkles a glint sprite by pulsing its scale + alpha (and slowly spinning),
+    // so the star head reads as sparkling. Phase is offset per-instance so multiple
+    // meteors don't twinkle in lockstep.
+    public sealed class VFXSparkle : MonoBehaviour
+    {
+        public float speed = 9f;       // pulse rate
+        public float minScale = 0.35f; // local-scale floor (relative to set localScale)
+        public float maxScale = 1.0f;
+        public float spinDegPerSec = 80f;
+
+        private SpriteRenderer _sr;
+        private float _t;
+        private float _phase;
+        private float _baseScale;
+        private float _baseAlpha;
+
+        private void Awake()
+        {
+            _sr = GetComponent<SpriteRenderer>();
+            _phase = (GetInstanceID() & 15) * 0.41f; // de-sync instances
+            _baseScale = transform.localScale.x;
+            _baseAlpha = _sr != null ? _sr.color.a : 1f;
+        }
+
+        private void LateUpdate()
+        {
+            if (_sr == null) return;
+            _t += Time.deltaTime * speed;
+            // Sharp-ish peaks so it glints rather than slowly throbs.
+            float s01 = Mathf.Pow(Mathf.Sin(_t + _phase) * 0.5f + 0.5f, 2f);
+            float scale = _baseScale * Mathf.Lerp(minScale, maxScale, s01);
+            transform.localScale = new Vector3(scale, scale, 1f);
+            transform.Rotate(0f, 0f, spinDegPerSec * Time.deltaTime);
+            var c = _sr.color;
+            c.a = _baseAlpha * Mathf.Lerp(0.3f, 1f, s01);
+            _sr.color = c;
         }
     }
 
