@@ -13,6 +13,11 @@ namespace NightDash.ECS.Systems
     [UpdateAfter(typeof(EnemySpawnSystem))]
     public partial struct WeaponSystem : ISystem
     {
+        // Drives random scatter for the evolved star-fall meteor shower. Static so
+        // the static SpawnWeapon can advance it (OnUpdate is managed, not Burst).
+        private static Unity.Mathematics.Random _skyfallRng =
+            Unity.Mathematics.Random.CreateFromIndex(0x5EED_1234u);
+
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameLoopState>();
@@ -162,8 +167,9 @@ namespace NightDash.ECS.Systems
             string baseId = weaponId.ToString();
             if (baseId.EndsWith("_evolved")) baseId = baseId.Substring(0, baseId.Length - "_evolved".Length);
             else if (baseId.EndsWith("_abyss")) baseId = baseId.Substring(0, baseId.Length - "_abyss".Length);
-            return baseId == "weapon_light_ring"
-                || baseId == "weapon_spinning_blade"
+            // light_ring is NO LONGER persistent — it now fires spiralling ring
+            // projectiles on cooldown (see OrbitRing case).
+            return baseId == "weapon_spinning_blade"
                 || baseId == "weapon_dark_barrier";
         }
 
@@ -254,10 +260,15 @@ namespace NightDash.ECS.Systems
                     int meteors = evolved ? 3 : 1;
                     float splashRadius = evolved ? 2.4f : 1.8f;
                     float splashFactor = evolved ? 0.6f : 0.5f;
+                    const float ScatterRadius = 3.5f; // evolved meteors rain on random spots around the target
                     for (int m = 0; m < meteors; m++)
                     {
-                        // Spread the extra meteors around the target so they don't stack.
-                        float2 scatter = meteors > 1 ? perpendicular * ((m - (meteors - 1) * 0.5f) * 1.4f) : float2.zero;
+                        // Evolved: each meteor lands at its OWN random spot around the
+                        // target (a 3-strike shower), not stacked at one point.
+                        float2 scatter = meteors > 1
+                            ? new float2(_skyfallRng.NextFloat(-ScatterRadius, ScatterRadius),
+                                         _skyfallRng.NextFloat(-ScatterRadius, ScatterRadius))
+                            : float2.zero;
                         float3 aimPos = new float3(target.x + scatter.x, target.y + scatter.y, 0f);
                         float3 spawnPos = new float3(aimPos.x + DiagDist + spawnOffset.x, aimPos.y + DiagDist + spawnOffset.y, 0f);
                         float2 dir = math.normalize(new float2(aimPos.x - spawnPos.x, aimPos.y - spawnPos.y));
@@ -311,22 +322,33 @@ namespace NightDash.ECS.Systems
                             WeaponId = weaponId,
                             IsMelee = 0,
                             Behavior = (byte)ProjectileBehavior.Linear,
-                            TickInterval = boltTick, // pierce: damages every enemy along the path, never consumed
+                            TickInterval = boltTick, // pierce marker (Linear + tick>0 → hit each enemy once)
                             TickTimer = boltTick,
                             AlignToVelocity = 0,  // keep the bolt sprite upright — never rotate it to horizontal
                         });
                         ecb.AddComponent(e, new PhysicsVelocity2D { Value = bdir * BoltSpeed });
+                        ecb.AddBuffer<PierceHitElement>(e); // reliable pierce: track already-hit enemies
                     }
                     break;
                 }
                 case WeaponBehaviorKind.OrbitRing:
                 {
-                    // Ring centered on the player (slightly raised); damages enemies within the ring radius.
-                    // Evolved (dual holy ring): wider reach, faster ticks, and it now shoves on contact.
-                    CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, persistentLife,
-                        radius: 0f, angularSpeed: 1.6f, angle: 0f,
-                        hitRadius: evolved ? 1.6f : 1.2f, tick: evolved ? 0.3f : 0.4f,
-                        knockback: evolved ? 3f : 0f, centerYOffset: 0.5f);
+                    // Light ring: small rings that SPIRAL OUTWARD from the caster
+                    // (no longer a static protective aura). Each "arm" orbits the
+                    // player while its radius grows, tracing a spiral, then expires.
+                    // Evolved: more arms, spinning faster and reaching farther.
+                    int arms = evolved ? 4 : 2;
+                    const float ringLife = 2.4f;
+                    const float startRadius = 0.3f;
+                    float growth = evolved ? 4.2f : 3.4f;  // world units/sec the ring travels outward
+                    float spin = evolved ? 5.0f : 4.0f;    // rad/sec spin (spiral tightness)
+                    for (int a = 0; a < arms; a++)
+                    {
+                        float ang = (2f * math.PI / arms) * a;
+                        CreateOrbit(ref ecb, origin, weaponId, weapon.Damage, ringLife,
+                            radius: startRadius, angularSpeed: spin, angle: ang, hitRadius: 0.7f,
+                            tick: 0.18f, knockback: 0f, centerYOffset: 0.5f, radiusGrowth: growth);
+                    }
                     break;
                 }
                 case WeaponBehaviorKind.OrbitBlades:
@@ -549,11 +571,15 @@ namespace NightDash.ECS.Systems
                             WeaponId = weaponId,
                             IsMelee = 0,
                             Behavior = (byte)ProjectileBehavior.Linear,
-                            TickInterval = pierceTick, // >0 = pierce (never consumed); 0 = single hit
+                            TickInterval = pierceTick, // >0 = pierce (hit each enemy once); 0 = single hit (consumed)
                             TickTimer = pierceTick,
                             AlignToVelocity = 1, // bullets/arrows/spears face their travel direction
                         });
                         ecb.AddComponent(e, new PhysicsVelocity2D { Value = sdir * speed });
+                        if (pierceTick > 0f)
+                        {
+                            ecb.AddBuffer<PierceHitElement>(e); // reliable pierce: track already-hit enemies
+                        }
                     }
                     break;
                 }
@@ -578,8 +604,8 @@ namespace NightDash.ECS.Systems
 
             switch (baseId)
             {
-                case "weapon_rapid_shot":   shots = 3; spreadDeg = 22f; radius = 0.40f; pierceTick = 0.12f; break; // storm triple-arrow
-                case "weapon_split_bullet": shots = 5; spreadDeg = 52f; radius = 0.35f; pierceTick = 0.10f; break; // hell shotgun fan
+                case "weapon_rapid_shot":   shots = 3; spreadDeg = 24f; radius = 0.45f; pierceTick = 0f; break;    // storm triple-arrow (3 separate hits)
+                case "weapon_split_bullet": shots = 5; spreadDeg = 56f; radius = 0.45f; pierceTick = 0f; break;    // hell shotgun (5 separate pellets)
                 case "weapon_revolver":     shots = 1; spreadDeg = 0f;  radius = 0.35f; pierceTick = 0.08f; break; // soulshooter pierce
                 case "weapon_shadow_arrow": shots = 1; spreadDeg = 0f;  radius = 0.50f; pierceTick = 0.10f; break; // void-piercing arrow
                 case "weapon_spear":        shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.10f; break; // dimension-piercing spear
@@ -612,7 +638,8 @@ namespace NightDash.ECS.Systems
             float hitRadius,
             float tick,
             float knockback,
-            float centerYOffset = 0f)
+            float centerYOffset = 0f,
+            float radiusGrowth = 0f)
         {
             Entity e = ecb.CreateEntity();
             float3 pos = playerPos + new float3(math.cos(angle) * radius, centerYOffset + math.sin(angle) * radius, 0f);
@@ -631,7 +658,7 @@ namespace NightDash.ECS.Systems
                 Knockback = knockback,
             });
             ecb.AddComponent(e, new PhysicsVelocity2D { Value = float2.zero });
-            ecb.AddComponent(e, new OrbitState { Radius = radius, AngularSpeed = angularSpeed, Angle = angle, CenterYOffset = centerYOffset });
+            ecb.AddComponent(e, new OrbitState { Radius = radius, AngularSpeed = angularSpeed, Angle = angle, CenterYOffset = centerYOffset, RadiusGrowth = radiusGrowth });
         }
     }
 }

@@ -210,6 +210,7 @@ namespace NightDash.ECS.Systems
                 {
                     OrbitState orbit = SystemAPI.GetComponent<OrbitState>(projectileEntity);
                     orbit.Angle += orbit.AngularSpeed * dt;
+                    orbit.Radius += orbit.RadiusGrowth * dt; // >0 → spirals outward (light ring); 0 → fixed orbit
                     SystemAPI.SetComponent(projectileEntity, orbit);
                     float r = orbit.Radius;
                     projectileTransform.ValueRW.Position = playerPosition + new float3(math.cos(orbit.Angle) * r, orbit.CenterYOffset + math.sin(orbit.Angle) * r, 0f);
@@ -327,6 +328,71 @@ namespace NightDash.ECS.Systems
                 // them. Knockback shoves contacted enemies outward (barrier).
                 if (projectile.ValueRO.TickInterval > 0f)
                 {
+                    // Linear pierce (arrows / bolts / waves): hit each enemy at most
+                    // ONCE as it passes through, checked EVERY frame (not on a tick
+                    // cadence that a fast projectile could skip between), tracked via
+                    // the PierceHitElement buffer. Never consumed; only Lifetime ends it.
+                    if (projectile.ValueRO.Behavior == (byte)ProjectileBehavior.Linear &&
+                        SystemAPI.HasBuffer<PierceHitElement>(projectileEntity))
+                    {
+                        DynamicBuffer<PierceHitElement> pierced = SystemAPI.GetBuffer<PierceHitElement>(projectileEntity);
+                        float pierceRadiusSq = projectile.ValueRO.Radius * projectile.ValueRO.Radius;
+                        float3 pierceCenter = projectileTransform.ValueRO.Position;
+
+                        foreach (var (enemyTransform, enemyStats, enemyEntity) in SystemAPI
+                                     .Query<RefRO<LocalTransform>, RefRW<CombatStats>>()
+                                     .WithAll<EnemyTag>()
+                                     .WithEntityAccess())
+                        {
+                            float3 enemyPos = enemyTransform.ValueRO.Position;
+                            if (math.lengthsq(enemyPos - pierceCenter) > pierceRadiusSq)
+                            {
+                                continue;
+                            }
+
+                            bool alreadyHit = false;
+                            for (int h = 0; h < pierced.Length; h++)
+                            {
+                                if (pierced[h].Value == enemyEntity) { alreadyHit = true; break; }
+                            }
+                            if (alreadyHit)
+                            {
+                                continue;
+                            }
+                            pierced.Add(new PierceHitElement { Value = enemyEntity });
+
+                            CombatStats pierceEnemy = enemyStats.ValueRO;
+                            float pierceDamage = projectile.ValueRO.Damage;
+                            if (hasPlayer)
+                            {
+                                CombatStats playerForCrit = playerStatsRef.ValueRO;
+                                if (playerForCrit.CritChance > 0f && playerForCrit.CritMultiplier > 1f &&
+                                    _critRng.NextFloat() < playerForCrit.CritChance)
+                                {
+                                    pierceDamage *= playerForCrit.CritMultiplier;
+                                }
+                            }
+                            pierceEnemy.CurrentHealth = math.max(0f, pierceEnemy.CurrentHealth - pierceDamage);
+                            enemyStats.ValueRW = pierceEnemy;
+
+                            if (SystemAPI.HasSingleton<StatusEffectConfig>())
+                            {
+                                QueueStatusOnHit(enemyEntity, SystemAPI.HasComponent<BossTag>(enemyEntity));
+                            }
+
+                            NightDashCombatEvents.FireEnemyDamaged(enemyPos, pierceDamage);
+
+                            if (pierceEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, enemyEntity))
+                            {
+                                deadEnemies.Add(enemyEntity);
+                                deadEnemyBossFlags.Add((byte)(SystemAPI.HasComponent<BossTag>(enemyEntity) ? 1 : 0));
+                                deadEnemyPositions.Add(enemyPos);
+                            }
+                        }
+
+                        continue;
+                    }
+
                     projectile.ValueRW.TickTimer -= dt;
                     if (projectile.ValueRO.TickTimer > 0f)
                     {

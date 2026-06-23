@@ -41,5 +41,6 @@ namespace NightDash.ECS.Components
         public float AngularSpeed;  // radians per second
         public float Angle;         // current angle, radians
         public float CenterYOffset; // raises the orbit center above the player (e.g. ring/barrier sit at the torso, not the feet)
+        public float RadiusGrowth;  // world units/sec the radius expands (0 = fixed orbit; >0 = spirals outward, e.g. light ring)
     }
 }

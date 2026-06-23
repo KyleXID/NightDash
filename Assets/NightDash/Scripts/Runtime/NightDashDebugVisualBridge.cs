@@ -85,7 +85,7 @@ namespace NightDash.Runtime
                 { "weapon_dark_lightning",        (VfxDir + "spr_vfx_dark_lightning",   2.2f) },
                 { "weapon_hell_hammer",           (VfxDir + "spr_vfx_hell_hammer",      1.9f) },
                 { "weapon_holy_wave",             (VfxDir + "spr_vfx_holy_wave",        2.0f) },
-                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       5.3f) },  // 고리, 캐릭터 둘러쌈 (반투명)
+                { "weapon_light_ring",            (VfxDir + "spr_vfx_light_ring",       1.4f) },  // 작은 고리 투사체, 나선형 발산
                 { "weapon_rapid_shot",            (VfxDir + "spr_vfx_rapid_shot",       1.3f) },
                 { "weapon_revolver",              (VfxDir + "spr_vfx_revolver",         1.2f) },
                 { "weapon_shadow_arrow",          (VfxDir + "spr_vfx_shadow_arrow",     1.4f) },
@@ -107,7 +107,7 @@ namespace NightDash.Runtime
                 { "weapon_demon_orb",        (VfxDir + "spr_vfx_evolution_demon_orb",        1.4f) },
                 { "weapon_starfall",         (VfxDir + "spr_vfx_evolution_void_starfall",    1.6f) }, // 공허의 별낙하 (starfall_evolved)
                 { "weapon_holy_wave",        (VfxDir + "spr_vfx_evolution_holy_wave",        2.0f) },
-                { "weapon_light_ring",       (VfxDir + "spr_vfx_evolution_light_ring",       5.3f) },
+                { "weapon_light_ring",       (VfxDir + "spr_vfx_evolution_light_ring",       1.4f) },
                 { "weapon_rapid_shot",       (VfxDir + "spr_vfx_evolution_rapid_shot",       1.3f) },
                 { "weapon_revolver",         (VfxDir + "spr_vfx_evolution_revolver",         1.2f) },
                 { "weapon_hell_hammer",      (VfxDir + "spr_vfx_evolution_hell_hammer",      1.9f) },
@@ -510,9 +510,10 @@ namespace NightDash.Runtime
                     if (isPlayer && !string.IsNullOrEmpty(weaponId) && TryResolveWeaponVfx(weaponId, out var vfxInfo))
                     {
                         if (isMelee) tint = new Color(1f, 0.9f, 0.6f, 0.9f);
-                        // Barrier shield & light ring are rendered see-through so they
-                        // don't obscure the player / enemies underneath (readability).
-                        if (weaponId.Contains("dark_barrier") || weaponId.Contains("light_ring"))
+                        // Barrier shield is rendered see-through so it doesn't obscure
+                        // the player / enemies underneath (readability). (Light ring is
+                        // now a small spiralling projectile, so it stays fully opaque.)
+                        if (weaponId.Contains("dark_barrier"))
                             tint = new Color(1f, 1f, 1f, 0.5f);
 
                         // Prefer an animated frame sequence (spr_vfx_<id>_NN).

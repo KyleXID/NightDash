@@ -75,6 +75,15 @@ namespace NightDash.ECS.Components
         public byte Rarity; // UpgradeRarity: 0 Common / 1 Rare / 2 Legendary (rolled per card)
     }
 
+    // Enemies a piercing projectile has already damaged, so a fast pierce shot
+    // hits each enemy exactly once as it passes through (instead of relying on a
+    // tick cadence that fast projectiles can skip between).
+    [InternalBufferCapacity(8)]
+    public struct PierceHitElement : IBufferElementData
+    {
+        public Entity Value;
+    }
+
     [InternalBufferCapacity(16)]
     public struct AvailableWeaponElement : IBufferElementData
     {
