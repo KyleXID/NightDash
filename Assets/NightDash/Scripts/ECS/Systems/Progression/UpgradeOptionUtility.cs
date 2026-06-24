@@ -84,6 +84,14 @@ namespace NightDash.ECS.Systems.Progression
                         continue;
                     }
 
+                    // Don't re-offer a base weapon whose evolved form is already owned
+                    // (e.g. after a debug force-evolve). Otherwise you'd "Gain" the base
+                    // again alongside its evolution.
+                    if (OwnsEvolutionOf(ownedWeapons, availableWeapons[i].Id))
+                    {
+                        continue;
+                    }
+
                     if (!registry.TryGetWeapon(availableWeapons[i].Id.ToString(), out WeaponData weapon) || weapon == null)
                     {
                         continue;
@@ -268,6 +276,20 @@ namespace NightDash.ECS.Systems.Progression
                 }
             }
 
+            return false;
+        }
+
+        // True if an evolved form (_evolved / _abyss) of the given base weapon id
+        // is already owned — used to stop re-offering the base as a new unlock.
+        internal static bool OwnsEvolutionOf(DynamicBuffer<OwnedWeaponElement> ownedWeapons, FixedString64Bytes baseId)
+        {
+            string b = baseId.ToString();
+            for (int i = 0; i < ownedWeapons.Length; i++)
+            {
+                string ownedId = ownedWeapons[i].Id.ToString();
+                if (!ownedId.StartsWith(b)) continue;
+                if (ownedId == b + "_evolved" || ownedId == b + "_abyss") return true;
+            }
             return false;
         }
 

@@ -530,7 +530,9 @@ namespace NightDash.Runtime
                             // right as they land; everything else loops at the default fps.
                             bool playOnce = projectiles[i].PlayOnce != 0;
                             float life = projectiles[i].Lifetime;
-                            float fps = (playOnce && life > 0.01f) ? (frames.Length / life) : ProjectileVfxFps;
+                            // dark_barrier reads better as a slow, calm pulse.
+                            float loopFps = weaponId.Contains("dark_barrier") ? 5f : ProjectileVfxFps;
+                            float fps = (playOnce && life > 0.01f) ? (frames.Length / life) : loopFps;
                             go = CreateAnimatedProjectileView("Projectile", frames, vfxInfo.scale, SortProjectile, tint, fps, loop: !playOnce);
                         }
                         else
@@ -583,9 +585,9 @@ namespace NightDash.Runtime
                         var chainGo = new GameObject("[VFX] WhipChain");
                         var chainRenderer = chainGo.AddComponent<WhipChainRenderer>();
                         bool evoChain = IsEvolved(weaponId);
-                        // Evolution links are drawn as diagonal ovals — pin them upright
-                        // (vertical) instead of letting them rotate along the chain.
-                        float linkAngle = evoChain ? 45f : float.NaN;
+                        // Evolution links are drawn as ~-47° diagonal ovals — pin them
+                        // upright: rotating by -43° lands the long axis at vertical.
+                        float linkAngle = evoChain ? -43f : float.NaN;
                         chainRenderer.Init(LoadChainVariants(evoChain), SortProjectile - 1, ScytheChainTint, linkAngle);
                         _whipChains[entity] = chainGo;
                     }
@@ -1036,12 +1038,16 @@ namespace NightDash.Runtime
             for (int t = 0; t < RangeIndicatorWeapons.Length; t++)
             {
                 string id = RangeIndicatorWeapons[t];
-                FixedString64Bytes idFs = id; // implicit, alloc-free struct conversion
 
+                // Match by BASE id so the guide stays after evolution
+                // (weapon_slash_combo_evolved still maps to weapon_slash_combo).
                 bool ownedNow = false;
                 for (int i = 0; i < owned.Length; i++)
                 {
-                    if (owned[i].Id == idFs) { ownedNow = true; break; }
+                    string ownedId = owned[i].Id.ToString();
+                    if (ownedId.EndsWith("_evolved")) ownedId = ownedId.Substring(0, ownedId.Length - "_evolved".Length);
+                    else if (ownedId.EndsWith("_abyss")) ownedId = ownedId.Substring(0, ownedId.Length - "_abyss".Length);
+                    if (ownedId == id) { ownedNow = true; break; }
                 }
 
                 if (!ownedNow)

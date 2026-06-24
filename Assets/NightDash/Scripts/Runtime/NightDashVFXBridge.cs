@@ -128,9 +128,54 @@ namespace NightDash.Runtime
             }
         }
 
+        private void OnEnable()
+        {
+            NightDash.ECS.Systems.NightDashCombatEvents.OnChainArc += SpawnChainArc;
+        }
+
+        private void OnDisable()
+        {
+            NightDash.ECS.Systems.NightDashCombatEvents.OnChainArc -= SpawnChainArc;
+        }
+
         private void OnDestroy()
         {
             _tracked.Clear();
+        }
+
+        // Draws a brief crimson-violet bolt connecting a chain-lightning source to
+        // the enemy it arced to, so the chain reads clearly (the arced enemy also
+        // flashes its normal hit spark from the damage it took).
+        private static Sprite _lineSprite;
+        private void SpawnChainArc(float3 from, float3 to)
+        {
+            Vector3 a = new Vector3(from.x, from.y, 0f);
+            Vector3 b = new Vector3(to.x, to.y, 0f);
+            Vector3 d = b - a;
+            float len = d.magnitude;
+            if (len < 0.05f) return;
+
+            var go = new GameObject("[VFX] ChainArc");
+            go.transform.position = (a + b) * 0.5f;
+            go.transform.rotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg);
+            go.transform.localScale = new Vector3(len, 0.16f, 1f); // 1×1 PPU-1 sprite → world-unit line
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = GetLineSprite();
+            sr.color = new Color(0.78f, 0.42f, 1f, 0.95f); // crimson-violet lightning
+            sr.sortingOrder = HitSortOrder + 1;
+
+            go.AddComponent<VFXAutoDestroy>().Init(0.13f, fadeOut: true, fadeOutRatio: 1f, maxAlpha: 0.95f);
+        }
+
+        private static Sprite GetLineSprite()
+        {
+            if (_lineSprite != null) return _lineSprite;
+            var tex = new Texture2D(1, 1);
+            tex.SetPixel(0, 0, Color.white);
+            tex.Apply();
+            _lineSprite = Sprite.Create(tex, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+            return _lineSprite;
         }
 
         // Public hook used by RunTeardownBridge before EnemyTag entities are

@@ -245,6 +245,30 @@ namespace NightDash.ECS.Systems
                 }
                 else if (behavior != (byte)ProjectileBehavior.GroundZone)
                 {
+                    // Homing (evolved dark lightning's first bolt): steer velocity toward
+                    // the tracked target each frame; others have no HomingState and fly straight.
+                    if (SystemAPI.HasComponent<HomingState>(projectileEntity))
+                    {
+                        HomingState hs = SystemAPI.GetComponent<HomingState>(projectileEntity);
+                        // Read the target via EntityManager (not SystemAPI) to avoid a
+                        // LocalTransform query-aliasing conflict with the projectile query.
+                        if (state.EntityManager.Exists(hs.Target) && state.EntityManager.HasComponent<LocalTransform>(hs.Target))
+                        {
+                            float2 toTarget = state.EntityManager.GetComponentData<LocalTransform>(hs.Target).Position.xy - projectileTransform.ValueRO.Position.xy;
+                            float2 v = velocity.ValueRO.Value;
+                            float spd = math.length(v);
+                            if (spd > 0.01f && math.lengthsq(toTarget) > 0.0001f)
+                            {
+                                float curAng = math.atan2(v.y, v.x);
+                                float desAng = math.atan2(toTarget.y, toTarget.x);
+                                float diff = math.atan2(math.sin(desAng - curAng), math.cos(desAng - curAng));
+                                float step = math.clamp(diff, -hs.TurnSpeed * dt, hs.TurnSpeed * dt);
+                                float na = curAng + step;
+                                velocity.ValueRW.Value = new float2(math.cos(na), math.sin(na)) * spd;
+                            }
+                        }
+                    }
+
                     projectileTransform.ValueRW.Position += new float3(
                         velocity.ValueRO.Value.x * dt,
                         velocity.ValueRO.Value.y * dt,
@@ -431,6 +455,8 @@ namespace NightDash.ECS.Systems
                                     arcEnemy.CurrentHealth = math.max(0f, arcEnemy.CurrentHealth - arcDamage);
                                     arcStats.ValueRW = arcEnemy;
                                     NightDashCombatEvents.FireEnemyDamaged(arcPos, arcDamage);
+                                    NightDashCombatEvents.FireChainArc(src, arcPos); // visible lightning arc
+
                                     if (arcEnemy.CurrentHealth <= 0f && !CombatHelpers.ContainsEntity(deadEnemies, arcEntity))
                                     {
                                         deadEnemies.Add(arcEntity);

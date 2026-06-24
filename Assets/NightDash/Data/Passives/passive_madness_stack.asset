@@ -21,10 +21,10 @@ MonoBehaviour:
   effects:
   - stat: damage
     op: 1
-    value: 0.25
+    value: 0.16
   - stat: cooldown
     op: 1
-    value: -0.1
+    value: -0.06
   - stat: health
     op: 1
     value: -0.1

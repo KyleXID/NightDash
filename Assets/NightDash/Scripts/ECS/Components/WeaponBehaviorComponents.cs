@@ -35,6 +35,15 @@ namespace NightDash.ECS.Components
         public float TotalLifetime;  // full extend+retract duration (drives the sin phase)
     }
 
+    // Present on a homing projectile (evolved dark lightning's FIRST bolt). It
+    // steers its velocity toward the tracked enemy each frame; the other bolts
+    // fly straight. Cleared/ignored once the target dies.
+    public struct HomingState : IComponentData
+    {
+        public Entity Target;   // enemy to chase
+        public float TurnSpeed; // max steering, radians/sec
+    }
+
     // Present on a chain-lightning projectile (evolved dark lightning / 암흑번개).
     // Each enemy the bolt damages also arcs reduced damage to nearby enemies.
     public struct ChainLightningState : IComponentData

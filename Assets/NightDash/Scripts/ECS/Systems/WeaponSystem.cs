@@ -139,6 +139,7 @@ namespace NightDash.ECS.Systems
                             ownedWeapons.Length,
                             ownedWeapon.Id,
                             weaponData.weaponType,
+                            targetEnemy,
                             enemyPositions);
                         if (fired)
                         {
@@ -218,6 +219,7 @@ namespace NightDash.ECS.Systems
             int weaponCount,
             FixedString64Bytes weaponId,
             WeaponType type,
+            Entity targetEnemy,
             Unity.Collections.NativeList<float3> enemyPositions)
         {
             float3 direction3 = target - origin;
@@ -263,28 +265,37 @@ namespace NightDash.ECS.Systems
                     // target (the star's tail is drawn diagonal, so it must come from
                     // the upper-right). Spawns a good distance away so the descent
                     // reads, and keeps its drawn orientation (no velocity rotation).
-                    // Evolved (void starfall): a 3-meteor shower with a wider splash.
+                    // Evolved (void starfall): a meteor SHOWER, but capped by the live
+                    // enemy count and ONE meteor per DISTINCT enemy. 1 enemy on field →
+                    // exactly 1 meteor, even when evolved. First meteor = initial target.
                     const float DiagDist = 3.0f; // up-right offset from the target
                     const float FallSpeed = 7f;
-                    int meteors = evolved ? 3 : 1;
+                    int enemyCount = math.max(1, enemyPositions.Length);
+                    int meteors = math.min(evolved ? 3 : 1, enemyCount);
                     float splashRadius = evolved ? 2.4f : 1.8f;
                     float splashFactor = evolved ? 0.6f : 0.5f;
+                    // Track already-targeted enemy positions so each meteor hits a different one.
+                    float3 usedA = target, usedB = new float3(float.MaxValue, float.MaxValue, 0f);
                     for (int m = 0; m < meteors; m++)
                     {
-                        // Always land ON an enemy (never empty ground): the FIRST meteor
-                        // hits the initial target; the rest hit OTHER random enemies (a
-                        // shower), falling back to the target when there aren't enough.
                         float3 aimPos;
-                        if (m == 0 || enemyPositions.Length == 0)
+                        if (m == 0)
                         {
                             aimPos = new float3(target.x, target.y, 0f);
                         }
                         else
                         {
-                            float3 pick = enemyPositions[_skyfallRng.NextInt(0, enemyPositions.Length)];
-                            // small jitter so several meteors on the same enemy don't perfectly stack
-                            aimPos = new float3(pick.x + _skyfallRng.NextFloat(-0.7f, 0.7f),
-                                                pick.y + _skyfallRng.NextFloat(-0.7f, 0.7f), 0f);
+                            // Pick a random enemy distinct from the ones already targeted.
+                            aimPos = target;
+                            for (int tries = 0; tries < 12; tries++)
+                            {
+                                float3 cand = enemyPositions[_skyfallRng.NextInt(0, enemyPositions.Length)];
+                                if (math.lengthsq(cand.xy - usedA.xy) < 0.01f) continue;
+                                if (m >= 2 && math.lengthsq(cand.xy - usedB.xy) < 0.01f) continue;
+                                aimPos = new float3(cand.x, cand.y, 0f);
+                                break;
+                            }
+                            if (m == 1) usedB = aimPos;
                         }
                         float3 spawnPos = new float3(aimPos.x + DiagDist + spawnOffset.x, aimPos.y + DiagDist + spawnOffset.y, 0f);
                         float2 dir = math.normalize(new float2(aimPos.x - spawnPos.x, aimPos.y - spawnPos.y));
@@ -352,7 +363,12 @@ namespace NightDash.ECS.Systems
                         if (evolved)
                         {
                             // Chain lightning: each struck enemy arcs reduced damage to nearby ones.
-                            ecb.AddComponent(e, new ChainLightningState { Radius = 2.5f, Factor = 0.5f });
+                            ecb.AddComponent(e, new ChainLightningState { Radius = 2.8f, Factor = 0.5f });
+                            // The FIRST bolt HOMES on the initial target; the rest fly straight.
+                            if (b == 0 && targetEnemy != Entity.Null)
+                            {
+                                ecb.AddComponent(e, new HomingState { Target = targetEnemy, TurnSpeed = 3.0f });
+                            }
                         }
                     }
                     break;
@@ -371,7 +387,9 @@ namespace NightDash.ECS.Systems
                     const float ringLife = 2.4f;
                     const float startRadius = 0.6f;
                     float growth = evolved ? 5.0f : 4.2f;  // world units/sec the ring travels outward (faster = less dwell per enemy)
-                    float spin = evolved ? 4.6f : 3.8f;    // rad/sec spin (spiral tightness)
+                    // Lower spin → the rings travel farther per revolution, so the spiral
+                    // coils are spaced WIDER apart (less dense trail).
+                    float spin = evolved ? 2.6f : 2.0f;    // rad/sec spin (spiral tightness)
                     for (int a = 0; a < arms; a++)
                     {
                         float ang = (2f * math.PI / arms) * a;
@@ -586,11 +604,13 @@ namespace NightDash.ECS.Systems
                     // Base: a single straight shot consumed on first hit. Evolved
                     // gives each ranged weapon a distinct upgrade — multi-shot
                     // spread (rapid/split) and/or pierce (shadow/spear/orb/wave/…).
-                    ResolveLinearEvolution(weaponId, evolved, out int shots, out float spreadDeg, out float linRadius, out float pierceTick, out int bounces);
+                    ResolveLinearEvolution(weaponId, evolved, out int shots, out float spreadDeg, out float linRadius, out float pierceTick, out int bounces, out float dmgFactor, out float lifeFactor);
                     float spread = math.radians(spreadDeg);
                     float speed = math.max(2f, weapon.ProjectileSpeed);
-                    // Bouncing orbs need to live long enough to ricochet between targets.
-                    float life = bounces > 0 ? 3.5f : math.max(0.2f, weapon.Range / math.max(1f, weapon.ProjectileSpeed));
+                    // Bouncing orbs need to live long enough to ricochet; otherwise range
+                    // is scaled by lifeFactor (shotgun = short, revolver = long).
+                    float life = bounces > 0 ? 3.5f : math.max(0.2f, (weapon.Range / math.max(1f, weapon.ProjectileSpeed)) * lifeFactor);
+                    float shotDamage = weapon.Damage * dmgFactor;
                     for (int s = 0; s < shots; s++)
                     {
                         float a = shots > 1 ? (s - (shots - 1) * 0.5f) * (spread / math.max(1, shots - 1)) : 0f;
@@ -599,7 +619,7 @@ namespace NightDash.ECS.Systems
                         ecb.AddComponent(e, LocalTransform.FromPosition(origin + new float3(spawnOffset.x, spawnOffset.y, 0f)));
                         ecb.AddComponent(e, new ProjectileData
                         {
-                            Damage = weapon.Damage,
+                            Damage = shotDamage,
                             Lifetime = life,
                             IsPlayerOwned = 1,
                             Radius = linRadius,
@@ -629,30 +649,41 @@ namespace NightDash.ECS.Systems
             return true;
         }
 
-        // Per-weapon evolution config for the straight-projectile (Linear) family.
-        // Non-evolved weapons always return the base single-shot, single-hit values.
-        // pierceTick > 0 turns a shot into a piercing projectile (CombatSystem treats
-        // TickInterval > 0 as "damage along the whole path, never consumed").
+        // Per-weapon config for the straight-projectile (Linear) family. Split-bullet
+        // and revolver are differentiated even at BASE tier (shotgun vs precise single);
+        // the rest stay a plain single shot until evolved. pierceTick > 0 = piercing
+        // shot; damageFactor/lifeFactor scale per-pellet damage and range.
         private static void ResolveLinearEvolution(
             FixedString64Bytes weaponId, bool evolved,
-            out int shots, out float spreadDeg, out float radius, out float pierceTick, out int bounces)
+            out int shots, out float spreadDeg, out float radius, out float pierceTick, out int bounces,
+            out float damageFactor, out float lifeFactor)
         {
             shots = 1; spreadDeg = 0f; radius = 0.35f; pierceTick = 0f; bounces = 0;
-            if (!evolved) return;
+            damageFactor = 1f; lifeFactor = 1f;
 
             string baseId = weaponId.ToString();
             if (baseId.EndsWith("_evolved")) baseId = baseId.Substring(0, baseId.Length - "_evolved".Length);
 
             switch (baseId)
             {
-                case "weapon_rapid_shot":   shots = 3; spreadDeg = 24f; radius = 0.45f; pierceTick = 0f; break;    // storm triple-arrow (3 separate hits)
-                case "weapon_split_bullet": shots = 5; spreadDeg = 56f; radius = 0.45f; pierceTick = 0f; break;    // hell shotgun (5 separate pellets)
-                case "weapon_revolver":     shots = 1; spreadDeg = 0f;  radius = 0.35f; pierceTick = 0.08f; break; // soulshooter pierce
-                case "weapon_shadow_arrow": shots = 1; spreadDeg = 0f;  radius = 0.50f; pierceTick = 0.10f; break; // void-piercing arrow
-                case "weapon_spear":        shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0.10f; break; // dimension-piercing spear
-                case "weapon_demon_orb":    shots = 1; spreadDeg = 0f;  radius = 0.55f; pierceTick = 0f; bounces = 5; break; // abyssal orb — ricochets across 5 enemies
-                case "weapon_holy_wave":    shots = 1; spreadDeg = 0f;  radius = 0.85f; pierceTick = 0.10f; break; // golden sacred wave (larger)
-                default:                    shots = 1; spreadDeg = 0f;  radius = 0.40f; pierceTick = 0.10f; break; // generic: pierce
+                // SHOTGUN — many weak pellets, wide spread, SHORT range (always, so it
+                // differs from the revolver at base). Evolved = more pellets, wider.
+                case "weapon_split_bullet":
+                    shots = evolved ? 5 : 3; spreadDeg = evolved ? 58f : 40f;
+                    radius = 0.4f; damageFactor = 0.5f; lifeFactor = 0.55f;
+                    break;
+                // REVOLVER — single PRECISE hard-hitting bullet, LONG range. Evolved pierces.
+                case "weapon_revolver":
+                    shots = 1; radius = 0.32f; damageFactor = 1.25f; lifeFactor = 1.35f;
+                    if (evolved) pierceTick = 0.08f;
+                    break;
+                // The rest are a plain single shot until evolved.
+                case "weapon_rapid_shot":   if (evolved) { shots = 3; spreadDeg = 24f; radius = 0.45f; } break; // storm triple-arrow
+                case "weapon_shadow_arrow": if (evolved) { radius = 0.50f; pierceTick = 0.10f; } break;         // void-piercing arrow
+                case "weapon_spear":        if (evolved) { radius = 0.55f; pierceTick = 0.10f; } break;         // dimension-piercing spear
+                case "weapon_demon_orb":    if (evolved) { radius = 0.55f; bounces = 5; } break;                // abyssal orb — ricochets
+                case "weapon_holy_wave":    if (evolved) { radius = 0.85f; pierceTick = 0.10f; } break;         // golden sacred wave
+                default:                    if (evolved) { radius = 0.40f; pierceTick = 0.10f; } break;         // generic: pierce
             }
         }
 

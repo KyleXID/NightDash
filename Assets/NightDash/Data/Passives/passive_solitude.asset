@@ -21,7 +21,7 @@ MonoBehaviour:
   effects:
   - stat: range
     op: 1
-    value: 0.25
+    value: 0.15
   - stat: damage
     op: 1
     value: 0.15

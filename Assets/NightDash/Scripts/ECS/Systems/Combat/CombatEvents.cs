@@ -20,6 +20,14 @@ namespace NightDash.ECS.Systems
         /// <summary>Fired when the player takes damage (contact or projectile). Args: position, damage amount.</summary>
         public static event System.Action<float3, float> OnPlayerDamaged;
 
+        /// <summary>Fired when chain lightning arcs to a nearby enemy. Args: from (struck enemy), to (arced enemy).</summary>
+        public static event System.Action<float3, float3> OnChainArc;
+
+        internal static void FireChainArc(float3 from, float3 to)
+        {
+            OnChainArc?.Invoke(from, to);
+        }
+
         internal static void FireEnemyDamaged(float3 position, float damage)
         {
             OnEnemyDamaged?.Invoke(position, damage);

@@ -21,7 +21,7 @@ MonoBehaviour:
   effects:
   - stat: cooldown
     op: 1
-    value: -0.15
+    value: -0.08
   - stat: move_speed
     op: 1
     value: 0.12
